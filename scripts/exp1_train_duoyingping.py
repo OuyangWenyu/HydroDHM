@@ -24,7 +24,7 @@ def dpl_selfmadehydrodataset_args():
             "source_path": SETTING["local_data_path"]["datasets-interim"],
             "other_settings": {"time_unit": ["1D"]},
         },
-        ctx=[0],
+        ctx=[1],
         model_name="DplLstmXaj",
         # model_name="DplAttrXaj",
         model_hyperparam={
@@ -105,8 +105,8 @@ def dpl_selfmadehydrodataset_args():
         target_as_input=0,
         constant_only=0,
         # train_epoch=100,
-        train_epoch=2,
-        save_epoch=10,
+        train_epoch=50,
+        save_epoch=50,
         model_loader={
             "load_way": "specified",
             # "test_epoch": 100,

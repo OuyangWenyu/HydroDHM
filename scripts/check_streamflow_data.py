@@ -34,7 +34,7 @@ periods = pd.date_range(start=t_range[0], end=t_range[-1], freq="1D")
 for i in range(18):
     plot_rainfall_runoff(
         np.tile(periods, (1, 1)).tolist(),
-        prcps.values()[i, :, 0],
+        prcps[i, :, 0],
         [streamflows.values()[i]],
         leg_lst=["OBS"],
         title=sites_ids[i],
