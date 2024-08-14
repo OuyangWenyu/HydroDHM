@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-08-14 09:01:58
-LastEditTime: 2024-08-14 09:50:21
+LastEditTime: 2024-08-14 14:52:35
 LastEditors: Wenyu Ouyang
 Description: Check streamflow data by plotting the rainfall-runoff relationship
 FilePath: \HydroDHM\scripts\check_streamflow_data.py
@@ -31,11 +31,11 @@ streamflows = datasource.read_ts_xrdataset(
 )
 prcps = datasource.read_ts_xrdataset(sites_ids, t_range, ["total_precipitation_hourly"])
 periods = pd.date_range(start=t_range[0], end=t_range[-1], freq="1D")
-for i in range(18):
+for i in range(len(sites_ids)):
     plot_rainfall_runoff(
         np.tile(periods, (1, 1)).tolist(),
-        prcps[i, :, 0],
-        [streamflows.values()[i]],
+        prcps["1D"]["total_precipitation_hourly"].values[i, :],
+        [streamflows["1D"]["streamflow"].values[i]],
         leg_lst=["OBS"],
         title=sites_ids[i],
         fig_size=(12, 6),
