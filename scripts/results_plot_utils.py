@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-08-13 20:14:37
-LastEditTime: 2024-08-13 20:35:02
+LastEditTime: 2024-08-14 09:08:44
 LastEditors: Wenyu Ouyang
 Description: Functions for plotting the results of the model
 FilePath: \HydroDHM\scripts\results_plot_utils.py
@@ -33,8 +33,7 @@ from hydrodataset import Camels
 from torchhydro import SETTING
 from torchhydro.configs.model_config import MODEL_PARAM_DICT
 
-project_dir = os.getcwd()
-RESULT_DIR = os.path.join(project_dir, "results")
+from scripts import RESULT_DIR
 
 
 def plot_stations_in_sanxia(
