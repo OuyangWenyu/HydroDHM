@@ -12,11 +12,11 @@ def dpl_selfmadehydrodataset_args():
     _type_
         _description_
     """
-    project_name = os.path.join("test_camels", "expdpl61561201")
-    train_period = ["2014-10-01", "2018-10-01"]
-    valid_period = ["2017-10-01", "2021-10-01"]
+    project_name = os.path.join("Data-Limited_Analysis", "changdian_61561_3to1")
+    train_period = ["2017-10-01", "2020-10-01"]
+    valid_period = ["2020-10-01", "2021-10-01"]
     # valid_period = None
-    test_period = ["2017-10-01", "2021-10-01"]
+    test_period = ["2020-10-01", "2021-10-01"]
     return cmd(
         sub=project_name,
         source_cfgs={
@@ -53,18 +53,7 @@ def dpl_selfmadehydrodataset_args():
             "pbm_norm": True,
         },
         gage_id=[
-            # "camels_01013500",
-            # "camels_01022500",
-            # "camels_01030500",
-            # "camels_01031500",
-            # "camels_01047000",
-            # "camels_01052500",
-            # "camels_01054200",
-            # "camels_01055000",
-            # "camels_01057000",
-            # "camels_01170100",
-            # "changdian_61561",
-            "songliao_21401550"
+            "changdian_61561",
         ],
         train_period=train_period,
         valid_period=valid_period,
@@ -106,12 +95,12 @@ def dpl_selfmadehydrodataset_args():
         target_as_input=0,
         constant_only=0,
         # train_epoch=100,
-        train_epoch=2,
-        save_epoch=10,
+        train_epoch=30,
+        save_epoch=1,
         model_loader={
             "load_way": "specified",
             # "test_epoch": 100,
-            "test_epoch": 2,
+            "test_epoch": 30,
         },
         warmup_length=365,
         opt="Adadelta",

@@ -45,3 +45,4 @@ for i in range(len(sites_ids)):
         c_lst="rgb",
         dash_lines=[False, False, True],
     )
+    print(f"Plotting {sites_ids[i]}")
