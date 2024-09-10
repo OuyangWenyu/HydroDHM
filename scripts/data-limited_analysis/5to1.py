@@ -12,8 +12,8 @@ def dpl_selfmadehydrodataset_args():
     _type_
         _description_
     """
-    project_name = os.path.join("Data-Limited_Analysis", "camels_03161000_6to1")
-    train_period = ["2014-10-01", "2020-10-01"]
+    project_name = os.path.join("data-limited_analysis", "changdian_61561_5to1")
+    train_period = ["2015-10-01", "2020-10-01"]
     valid_period = ["2020-10-01", "2021-10-01"]
     # valid_period = None
     test_period = ["2020-10-01", "2021-10-01"]
@@ -53,7 +53,7 @@ def dpl_selfmadehydrodataset_args():
             "pbm_norm": True,
         },
         gage_id=[
-            "camels_03161000",
+            "changdian_61561",
         ],
         train_period=train_period,
         valid_period=valid_period,
@@ -95,12 +95,12 @@ def dpl_selfmadehydrodataset_args():
         target_as_input=0,
         constant_only=0,
         # train_epoch=100,
-        train_epoch=50,
+        train_epoch=30,
         save_epoch=1,
         model_loader={
             "load_way": "specified",
             # "test_epoch": 100,
-            "test_epoch": 50,
+            "test_epoch": 30,
         },
         warmup_length=365,
         opt="Adadelta",

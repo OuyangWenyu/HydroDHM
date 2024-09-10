@@ -12,8 +12,8 @@ def dpl_selfmadehydrodataset_args():
     _type_
         _description_
     """
-    project_name = os.path.join("Data-Limited_Analysis", "changdian_61561_2to1")
-    train_period = ["2018-10-01", "2020-10-01"]
+    project_name = os.path.join("data-limited_analysis", "changdian_61561_4to1")
+    train_period = ["2016-10-01", "2020-10-01"]
     valid_period = ["2020-10-01", "2021-10-01"]
     # valid_period = None
     test_period = ["2020-10-01", "2021-10-01"]
