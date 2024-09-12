@@ -6,9 +6,9 @@ import re
 import csv
 
 # 定义Streamflow_Prediction目录的路径
-root_dir = './results/data-limited_analysis_6to2_14-20_reverse'
-figure_dir = './results/data-limited_analysis/6to2_14-20_reverse'
-csv_file = './results/data-limited_analysis/6to2_14-20_reverse/evaluation_indices_summary.csv'
+root_dir = './results/streamflow_prediction_camels'
+figure_dir = './results/evaluation_indices/camels'
+csv_file = './results/evaluation_indices/camels/evaluation_indices_summary.csv'
 
 # 确保保存图表的目录存在
 os.makedirs(figure_dir, exist_ok=True)
@@ -26,7 +26,7 @@ for location in os.listdir(root_dir):
     location_dir = os.path.join(root_dir, location)
     
     # 使用glob查找匹配的json文件
-    json_files = glob.glob(os.path.join(location_dir, '09_September_2024*.json'))
+    json_files = glob.glob(os.path.join(location_dir, '11_September_2024*.json'))
     
     # 如果找到了匹配的json文件
     if json_files:

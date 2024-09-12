@@ -96,17 +96,26 @@ for basin in sites_ids:
     missing_rate = missing_days / total_days
 
     # 创建一个图形和两个 y 轴
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 8)) 
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(20, 8)) 
 
     # 添加图表标题
     fig.suptitle(f"Observation of Precipitation and Streamflow for {basin}", fontsize=16)
 
-    # 绘制 total_precipitation_hourly，设置 y 轴逆置
-    ax1.plot(ds_basin['time'], ds_basin['total_precipitation_hourly'], 'b-', label='Total Precipitation Hourly')
+    # # 绘制 total_precipitation_hourly，设置 y 轴逆置
+    # ax1.plot(ds_basin['time'], ds_basin['total_precipitation_hourly'], 'b-', label='Total Precipitation Hourly')
+    # ax1.set_xlabel('Time')
+    # ax1.set_ylabel('Precipitation (mm/d)', color='b')
+    # ax1.invert_yaxis()  # y 轴逆置 
+    # ax1.tick_params(axis='y', labelcolor='b')
+
+    # 绘制 total_precipitation_hourly，改为柱状图，设置 y 轴逆置
+    # ax1.bar(ds_basin['time'], ds_basin['total_precipitation_hourly'], color='b', label='Total Precipitation Hourly')
+    ax1.bar(ds_basin['time'], ds_basin['total_precipitation_hourly'], color='b', label='Total Precipitation Hourly', width=0.9)
     ax1.set_xlabel('Time')
     ax1.set_ylabel('Precipitation (mm/d)', color='b')
     ax1.invert_yaxis()  # y 轴逆置 
     ax1.tick_params(axis='y', labelcolor='b')
+
 
     # 绘制 streamflow
     ax2.plot(ds_basin['time'], ds_basin['streamflow'], 'r-', label='Streamflow')
@@ -127,5 +136,15 @@ for basin in sites_ids:
 
     # 关闭图形以释放内存
     plt.close(fig)
+
+    # # 将时间和降雨数据保存为CSV文件
+    # df_precipitation = pd.DataFrame({
+    #     'time': pd.to_datetime(ds_basin['time'].values),
+    #     'precipitation': ds_basin['total_precipitation_hourly'].values
+    # })
+    
+    # # 设置文件路径并保存CSV文件
+    # csv_file_path = os.path.join(output_folder, f'{basin}_precipitation.csv')
+    # df_precipitation.to_csv(csv_file_path, index=False)
 
     print(f"Saved figure for basin {basin} to {file_path}")

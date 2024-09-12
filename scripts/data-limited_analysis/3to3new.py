@@ -6,11 +6,11 @@ from concurrent.futures import ProcessPoolExecutor
 
 
 def dpl_selfmadehydrodataset_args(gage_id):
-    project_name = os.path.join("streamflow_prediction_camels", gage_id)
-    train_period = ["2014-10-01", "2019-10-01"]
-    valid_period = ["2018-10-01", "2023-10-01"]
+    project_name = os.path.join("data-limited_analysis_3to3_1518_1821", gage_id)
+    train_period = ["2015-10-01", "2018-10-01"]
+    valid_period = ["2018-10-01", "2021-10-01"]
     # valid_period = None
-    test_period = ["2018-10-01", "2023-10-01"]
+    test_period = ["2018-10-01", "2021-10-01"]
     return cmd(
         sub=project_name,
         source_cfgs={
@@ -21,6 +21,7 @@ def dpl_selfmadehydrodataset_args(gage_id):
         ctx=[1],
         model_name="DplLstmXaj",
         # model_name="DplAttrXaj",
+        # model_name="DplNnModuleXaj", # 替换模块
         model_hyperparam={
             "n_input_features": 6,
             # "n_input_features": 19,
@@ -32,8 +33,18 @@ def dpl_selfmadehydrodataset_args(gage_id):
             "param_test_way": "final",
             "source_book": "HF",
             "source_type": "sources",
+            # "et_output": 1, # 添加替换模块参数
+            # "param_var_index": [], # 添加替换模块参数
         },
-        loss_func="RMSESum",
+        # loss_func="RMSESum",
+        loss_func="MultiOutLoss", # 替换损失函数
+        loss_param={
+            "loss_funcs": "RMSESum",
+            "data_gap": [0, 0],
+            "device": [1],
+            "item_weight": [1, 0],
+            "limit_part": [1],
+        },  # 添加参数
         dataset="DplDataset",
         scaler="DapengScaler",
         scaler_params={
@@ -83,7 +94,9 @@ def dpl_selfmadehydrodataset_args(gage_id):
             # "snw_pc_syr",
             # "glc_cl_smj",
         ],
-        var_out=["streamflow"],
+        var_out=["streamflow", "total_evaporation_hourly"], # 添加参数
+        n_output=2, # 添加参数
+        fill_nan=["no", "no"], # 添加参数
         target_as_input=0,
         constant_only=0,
         # train_epoch=100,
@@ -132,6 +145,7 @@ def dpl_selfmadehydrodataset_args(gage_id):
         #     for epoch in range(1, 101)
         # },  # 指定每个阶段epoch的学习率
         which_first_tensor="sequence",
+        metrics=["NSE", "RMSE", "Corr", "KGE", "FHV", "FLV"],
     )
 
 
@@ -150,64 +164,13 @@ def run_all_gages(gage_ids):
 
 if __name__ == "__main__":
     gage_ids = [
-        # "changdian_61561",
-        # "changdian_61700",
-        # "changdian_61716",
-        # "changdian_62618",
-        # "changdian_91000",
 
-        # "camels_01539000",
-        # "camels_02231000",
-        # "camels_03161000",
-        # "camels_03300400",
-        # "camels_07261000",
-        "camels_11532500",
-        "camels_12025000",
-        "camels_12035000",
-        "camels_12145500",
-        "camels_14301000",
-        "camels_14306500",
-        "camels_14325000",
+        "changdian_61561",
+        "changdian_61700",
+        "changdian_61716",
+        "changdian_62618",
+        "changdian_91000",
 
-        # "changdian_60650",
-        # "changdian_60668",
-        # "changdian_61239",
-        # "changdian_61277",
-        # "changdian_62018",
-        # "changdian_62315",
-        # "changdian_63002",
-        # "changdian_63007",
-        # "changdian_63458",
-        # "changdian_63486",
-        # "changdian_63490",
-        # "changdian_90813",
-        # "changdian_91700",
-        # "changdian_92114",
-        # "changdian_92116",
-        # "changdian_92118",
-        # "changdian_92119",
-        # "changdian_92146",
-        # "changdian_92353",
-        # "changdian_92354",
-        # "changdian_94470",
-        # "changdian_94560",
-        # "changdian_94850",
-        # "changdian_95350",
-
-        # "anhui_62909400",
-        # "songliao_10911000",
-        # "songliao_10912404",
-        # "songliao_11002210",
-        # "songliao_11400900",
-        # "songliao_11606000",
-        # "songliao_21110150",
-        # "songliao_21110400",
-        # "songliao_21113800",
-        # "songliao_21200100",
-        # "songliao_21300500",
-        # "songliao_21401050",
-        # "songliao_21401300",
-        
         # Add your gage IDs here
         # Add more gage IDs as needed
     ]

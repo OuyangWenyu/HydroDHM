@@ -6,11 +6,11 @@ from concurrent.futures import ProcessPoolExecutor
 
 
 def dpl_selfmadehydrodataset_args(gage_id):
-    project_name = os.path.join("data-limited_analysis_6to1_14-20_lrchange_reverse", gage_id)
-    train_period = ["2019-10-01", "2021-10-01"]
-    valid_period = ["2014-10-01", "2020-10-01"]
+    project_name = os.path.join("data-limited_analysis_2to3_1618_1821", gage_id)
+    train_period = ["2016-10-01", "2018-10-01"]
+    valid_period = ["2018-10-01", "2021-10-01"]
     # valid_period = None
-    test_period = ["2014-10-01", "2020-10-01"]
+    test_period = ["2018-10-01", "2021-10-01"]
     return cmd(
         sub=project_name,
         source_cfgs={
@@ -18,9 +18,10 @@ def dpl_selfmadehydrodataset_args(gage_id):
             "source_path": SETTING["local_data_path"]["datasets-interim"],
             "other_settings": {"time_unit": ["1D"]},
         },
-        ctx=[2],
+        ctx=[1],
         model_name="DplLstmXaj",
         # model_name="DplAttrXaj",
+        # model_name="DplNnModuleXaj", # 替换模块
         model_hyperparam={
             "n_input_features": 6,
             # "n_input_features": 19,
@@ -32,8 +33,18 @@ def dpl_selfmadehydrodataset_args(gage_id):
             "param_test_way": "final",
             "source_book": "HF",
             "source_type": "sources",
+            # "et_output": 1, # 添加替换模块参数
+            # "param_var_index": [], # 添加替换模块参数
         },
-        loss_func="RMSESum",
+        # loss_func="RMSESum",
+        loss_func="MultiOutLoss", # 替换损失函数
+        loss_param={
+            "loss_funcs": "RMSESum",
+            "data_gap": [0, 0],
+            "device": [1],
+            "item_weight": [1, 0],
+            "limit_part": [1],
+        },  # 添加参数
         dataset="DplDataset",
         scaler="DapengScaler",
         scaler_params={
@@ -83,7 +94,9 @@ def dpl_selfmadehydrodataset_args(gage_id):
             # "snw_pc_syr",
             # "glc_cl_smj",
         ],
-        var_out=["streamflow"],
+        var_out=["streamflow", "total_evaporation_hourly"], # 添加参数
+        n_output=2, # 添加参数
+        fill_nan=["no", "no"], # 添加参数
         target_as_input=0,
         constant_only=0,
         # train_epoch=100,
@@ -132,6 +145,7 @@ def dpl_selfmadehydrodataset_args(gage_id):
         #     for epoch in range(1, 101)
         # },  # 指定每个阶段epoch的学习率
         which_first_tensor="sequence",
+        metrics=["NSE", "RMSE", "Corr", "KGE", "FHV", "FLV"],
     )
 
 

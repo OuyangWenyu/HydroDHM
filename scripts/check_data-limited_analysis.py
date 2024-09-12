@@ -6,10 +6,10 @@ import re
 import csv
 
 # 定义Streamflow_Prediction目录的路径
-root_dir = './results/streamflow_prediction/streamflow_prediction_100epoch_lrchangenew05new'
-figure_dir = './results/evaluation_indices/100epoch_lrchangenew05new'
-csv_file = './results/evaluation_indices/100epoch_lrchangenew05new/evaluation_indices_summary.csv'
-
+root_dir = './results/data-limited_analysis_3to3_1518_1821'
+figure_dir = './results/data-limited_analysis/3to3_1518_1821'
+csv_file = './results/data-limited_analysis/3to3_1518_1821/evaluation_indices_summary.csv'
+    
 # 确保保存图表的目录存在
 os.makedirs(figure_dir, exist_ok=True)
 
@@ -17,16 +17,16 @@ os.makedirs(figure_dir, exist_ok=True)
 with open(csv_file, mode='w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(['basin_id', 'train_loss_final', 'validation_loss_final', 
-                     'dpl_nse_final', 'dpl_rmse_final', 'dpl_r2_final', 'dpl_kge_final', 'dpl_fhv_final', 'dpl_flv_final', 
+                     'dpl_nse_final', 'dpl_rmse_final', 'dpl_corr_final', 'dpl_kge_final', 'dpl_fhv_final', 'dpl_flv_final', 
                      'epoch_of_max_nse', 'dpl_nse_max', 
-                     'dpl_rmse_relational', 'dpl_r2_relational', 'dpl_kge_relational', 'dpl_fhv_relational', 'dpl_flv_relational'])
+                     'dpl_rmse_relational', 'dpl_corr_relational', 'dpl_kge_relational', 'dpl_fhv_relational', 'dpl_flv_relational'])
 
 # 遍历Streamflow_Prediction目录中的所有文件夹
 for location in os.listdir(root_dir):
     location_dir = os.path.join(root_dir, location)
     
     # 使用glob查找匹配的json文件
-    json_files = glob.glob(os.path.join(location_dir, '08_September_2024*.json'))
+    json_files = glob.glob(os.path.join(location_dir, '11_September_2024*.json'))
     
     # 如果找到了匹配的json文件
     if json_files:
@@ -36,13 +36,13 @@ for location in os.listdir(root_dir):
         with open(json_file, 'r') as f:
             data = json.load(f)
         
-        # 提取epoch, train_loss, validation_loss, NSE, rmse, r2, kge, flv 和 fhv值
+        # 提取epoch, train_loss, validation_loss, NSE, rmse, corr, kge, flv 和 fhv值
         epochs = []
         train_losses = []
         validation_losses = []
         nse_values = []
         rmse_values = []
-        r2_values = []
+        corr_values = []
         kge_values = []
         fhv_values = []
         flv_values = []
@@ -66,7 +66,7 @@ for location in os.listdir(root_dir):
             rmse_values.append(run['validation_metric']['RMSE of streamflow'][0])
             
             # 提取R²值
-            r2_values.append(run['validation_metric']['R2 of streamflow'][0])
+            corr_values.append(run['validation_metric']['Corr of streamflow'][0])
             
             # 提取KGE值
             kge_values.append(run['validation_metric']['KGE of streamflow'][0])
@@ -83,7 +83,7 @@ for location in os.listdir(root_dir):
         
         # 提取与 epoch_of_max_nse 对应的其他指标值
         rmse_at_max_nse = rmse_values[epochs.index(epoch_of_max_nse)]
-        r2_at_max_nse = r2_values[epochs.index(epoch_of_max_nse)]
+        corr_at_max_nse = corr_values[epochs.index(epoch_of_max_nse)]
         kge_at_max_nse = kge_values[epochs.index(epoch_of_max_nse)]
         fhv_at_max_nse = fhv_values[epochs.index(epoch_of_max_nse)]
         flv_at_max_nse = flv_values[epochs.index(epoch_of_max_nse)]
@@ -122,10 +122,10 @@ for location in os.listdir(root_dir):
         final_nse = nse_values[-1]
         axs[1].text(final_epoch, final_nse + 0.02, f'Final NSE: {final_nse:.2f}', fontsize=15, color='green', ha='center', fontweight='bold')
 
-        # 下面5个子图：绘制RMSE, R², KGE, FLV, FHV图表
+        # 下面5个子图：绘制RMSE, Corr, KGE, FLV, FHV图表
         metrics = [
             ('RMSE', rmse_values, 'RMSE'),
-            ('R²', r2_values, 'R²'),
+            ('Corr', corr_values, 'Corr'),
             ('KGE', kge_values, 'KGE'),
             ('FHV', fhv_values, 'FHV'),
             ('FLV', flv_values, 'FLV')
@@ -151,7 +151,7 @@ for location in os.listdir(root_dir):
         output_filename = os.path.join(figure_dir, f'evaluation_indices_of_{location}.png')
         plt.savefig(output_filename, dpi=600)
         
-        # 将最终的train_loss, validation_loss, nse, rmse, r2, kge, fhv, flv写入CSV，保留3位小数，并增加最大epoch对应的值
+        # 将最终的train_loss, validation_loss, nse, rmse, corr, kge, fhv, flv写入CSV，保留3位小数，并增加最大epoch对应的值
         with open(csv_file, mode='a', newline='') as file:
             writer = csv.writer(file)
             writer.writerow([location, 
@@ -159,14 +159,14 @@ for location in os.listdir(root_dir):
                              f'{final_validation_loss:.3f}', 
                              f'{final_nse:.3f}',
                              f'{rmse_values[-1]:.3f}', 
-                             f'{r2_values[-1]:.3f}', 
+                             f'{corr_values[-1]:.3f}', 
                              f'{kge_values[-1]:.3f}',
                              f'{fhv_values[-1]:.3f}', 
                              f'{flv_values[-1]:.3f}',                         
                              epoch_of_max_nse,
                              f'{max_nse:.3f}',
                              f'{rmse_at_max_nse:.3f}', 
-                             f'{r2_at_max_nse:.3f}', 
+                             f'{corr_at_max_nse:.3f}', 
                              f'{kge_at_max_nse:.3f}',
                              f'{fhv_at_max_nse:.3f}', 
                              f'{flv_at_max_nse:.3f}'])

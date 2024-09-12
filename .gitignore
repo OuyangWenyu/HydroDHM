@@ -129,4 +129,4 @@ dmypy.json
 .pyre/
 .vscode/
 results/
-results_old
+results_old/

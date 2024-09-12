@@ -2,21 +2,15 @@ import os
 from torchhydro import SETTING
 from torchhydro.configs.config import default_config_file, update_cfg, cmd
 from torchhydro.trainers.trainer import train_and_evaluate
+from concurrent.futures import ProcessPoolExecutor
 
 
-def dpl_selfmadehydrodataset_args():
-    """_summary_
-
-    Returns
-    -------
-    _type_
-        _description_
-    """
-    project_name = os.path.join("data-limited_analysis", "changdian_61561_5to1")
-    train_period = ["2015-10-01", "2020-10-01"]
-    valid_period = ["2020-10-01", "2021-10-01"]
+def dpl_selfmadehydrodataset_args(gage_id):
+    project_name = os.path.join("data-limited_analysis_6to2_14-20", gage_id)
+    train_period = ["2014-10-01", "2020-10-01"]
+    valid_period = ["2019-10-01", "2021-10-01"]
     # valid_period = None
-    test_period = ["2020-10-01", "2021-10-01"]
+    test_period = ["2019-10-01", "2021-10-01"]
     return cmd(
         sub=project_name,
         source_cfgs={
@@ -47,14 +41,12 @@ def dpl_selfmadehydrodataset_args():
                 "streamflow",
             ],
             "gamma_norm_cols": [
-                "total_precipitation_sum",
-                "potential_evaporation_sum",
+                "total_precipitation_hourly",
+                "potential_evaporation_hourly",
             ],
             "pbm_norm": True,
         },
-        gage_id=[
-            "changdian_61561",
-        ],
+        gage_id=[gage_id],
         train_period=train_period,
         valid_period=valid_period,
         test_period=test_period,
@@ -95,25 +87,77 @@ def dpl_selfmadehydrodataset_args():
         target_as_input=0,
         constant_only=0,
         # train_epoch=100,
-        train_epoch=30,
+        train_epoch=100,
         save_epoch=1,
         model_loader={
             "load_way": "specified",
             # "test_epoch": 100,
-            "test_epoch": 30,
+            "test_epoch": 100,
         },
         warmup_length=365,
         opt="Adadelta",
+        # opt_param={
+        #     "lr":0.1,
+        # },# 固定学习率
+        # lr_scheduler={
+        #     # "lr":0.1,
+        #     0: 0.1,
+        #     1: 0.1, 
+        #     2: 0.05, 
+        #     3: 0.02,
+        #     4: 0.02,
+        # },# 指定每个epoch的学习率
+        # lr_scheduler = {
+        #     epoch: 0.5 if 1 <= epoch <= 4 else 
+        #             0.2 if 5 <= epoch <= 19 else
+        #             0.1 if 20 <= epoch <= 49 else 
+        #             0.05 if 50 <= epoch <= 79 else 
+        #             0.02 if 80 <= epoch <= 94 else
+        #             0.01
+        #     for epoch in range(1, 101)
+        # },
+        lr_scheduler = {
+            epoch: 0.5 if 1 <= epoch <= 9 else 
+                    0.2 if 10 <= epoch <= 29 else
+                    0.1 if 30 <= epoch <= 69 else 
+                    0.05 if 70 <= epoch <= 89 else 
+                    0.02
+            for epoch in range(1, 101)
+        },
+        # lr_scheduler = {
+        #     epoch: 0.1 if 1 <= epoch <= 9 else 
+        #             0.01 if 10 <= epoch <= 49 else 
+        #             0.001 if 50 <= epoch <= 79 else 
+        #             0.0001
+        #     for epoch in range(1, 101)
+        # },  # 指定每个阶段epoch的学习率
         which_first_tensor="sequence",
     )
 
 
-def run_dpl_exp1():
+def run_dpl_exp(gage_id):
     cfg = default_config_file()
-    args_ = dpl_selfmadehydrodataset_args()
+    args_ = dpl_selfmadehydrodataset_args(gage_id)
     update_cfg(cfg, args_)
     train_and_evaluate(cfg)
-    print("All processes are finished!")
+    print(f"Process for {gage_id} is finished!")
 
 
-run_dpl_exp1()
+def run_all_gages(gage_ids):
+    with ProcessPoolExecutor(max_workers=len(gage_ids)) as executor:
+        executor.map(run_dpl_exp, gage_ids)
+
+
+if __name__ == "__main__":
+    gage_ids = [
+
+        "changdian_61561",
+        "changdian_61700",
+        "changdian_61716",
+        "changdian_62618",
+        "changdian_91000",
+
+        # Add your gage IDs here
+        # Add more gage IDs as needed
+    ]
+    run_all_gages(gage_ids)

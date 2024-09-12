@@ -51,8 +51,8 @@ def dpl_selfmadehydrodataset_args():
                 "streamflow",
             ],
             "gamma_norm_cols": [
-                "total_precipitation_sum",
-                "potential_evaporation_sum",
+                "total_precipitation_hourly",
+                "potential_evaporation_hourly",
             ],
             "pbm_norm": True,
         },
@@ -106,7 +106,9 @@ def dpl_selfmadehydrodataset_args():
             # "snw_pc_syr",
             # "glc_cl_smj",
         ],
-        var_out=["streamflow"],
+        var_out=["streamflow", "evap"],
+        n_output=2,
+        fill_nan=["no", "no"],
         target_as_input=0,
         constant_only=0,
         # train_epoch=100,
@@ -119,8 +121,13 @@ def dpl_selfmadehydrodataset_args():
         },
         warmup_length=365,
         opt="Adadelta",
-        opt_param ={
-            "lr":0.001,
+        lr_scheduler = {
+            epoch: 0.5 if 1 <= epoch <= 9 else 
+                    0.2 if 10 <= epoch <= 29 else
+                    0.1 if 30 <= epoch <= 69 else 
+                    0.05 if 70 <= epoch <= 89 else 
+                    0.02
+            for epoch in range(1, 101)
         },
         which_first_tensor="sequence",
     )
