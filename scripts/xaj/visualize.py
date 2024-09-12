@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-11-19 17:27:05
-LastEditTime: 2024-09-12 08:55:53
+LastEditTime: 2024-09-12 10:07:24
 LastEditors: Wenyu Ouyang
 Description: the script to postprocess results
-FilePath: /HydroDHM/scripts/xaj/visualize.py
+FilePath: \HydroDHM\scripts\xaj\visualize.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 
@@ -56,6 +56,7 @@ def _visualize(cali_dir, basins, warmup, param_dir, eval_train_dir, eval_test_di
         save_fig_train = os.path.join(eval_train_dir, f"train_sim_obs_{basin}.png")
         plot_sim_and_obs(
             ds_train["time"].isel(time=slice(warmup, None)),
+            ds_train["prcp"].sel(basin=basin).isel(time=slice(warmup, None)),
             ds_train["qsim"].sel(basin=basin).isel(time=slice(warmup, None)),
             ds_train["qobs"].sel(basin=basin).isel(time=slice(warmup, None)),
             save_fig_train,
@@ -65,6 +66,7 @@ def _visualize(cali_dir, basins, warmup, param_dir, eval_train_dir, eval_test_di
         save_fig_test = os.path.join(eval_test_dir, f"test_sim_obs_{basin}.png")
         plot_sim_and_obs(
             ds_test["time"].isel(time=slice(warmup, None)),
+            ds_test["prcp"].sel(basin=basin).isel(time=slice(warmup, None)),
             ds_test["qsim"].sel(basin=basin).isel(time=slice(warmup, None)),
             ds_test["qobs"].sel(basin=basin).isel(time=slice(warmup, None)),
             save_fig_test,
