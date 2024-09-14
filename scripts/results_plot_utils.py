@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-08-13 20:14:37
-LastEditTime: 2024-08-14 16:43:40
+LastEditTime: 2024-09-12 18:02:55
 LastEditors: Wenyu Ouyang
 Description: Functions for plotting the results of the model
 FilePath: \HydroDHM\scripts\results_plot_utils.py
@@ -28,13 +28,13 @@ from hydroutils.hydro_plot import (
 from hydroutils.hydro_time import t_range_days
 from hydrodataset import Camels
 from scripts.results_utils import (
-    MODEL_PARAM_TEST_WAY,
     get_json_file,
     get_latest_pbm_param_file,
     get_pbm_params_from_dpl,
     get_pbm_params_from_hydromodelxaj,
 )
 from torchhydro import SETTING
+from torchhydro.configs.model_config import MODEL_PARAM_TEST_WAY
 
 from scripts import RESULT_DIR, CASE_DIR
 

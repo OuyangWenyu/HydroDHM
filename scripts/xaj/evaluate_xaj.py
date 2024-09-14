@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-03-26 12:00:12
-LastEditTime: 2024-09-12 09:15:57
+LastEditTime: 2024-09-14 19:07:34
 LastEditors: Wenyu Ouyang
 Description: evaluate a calibrated hydrological model
-FilePath: /HydroDHM/scripts/xaj/evaluate_xaj.py
+FilePath: \HydroDHM\scripts\xaj\evaluate_xaj.py
 Copyright (c) 2023-2024 Wenyu Ouyang. All rights reserved.
 """
 
@@ -69,17 +69,19 @@ def _evaluate(cali_dir, param_dir, train_data, test_data):
     eval_test_dir = os.path.join(param_dir, "test")
     train_eval = Evaluator(cali_dir, param_dir, eval_train_dir)
     test_eval = Evaluator(cali_dir, param_dir, eval_test_dir)
-    qsim_train, qobs_train = train_eval.predict(train_data)
-    qsim_test, qobs_test = test_eval.predict(test_data)
+    qsim_train, qobs_train, etsim_train = train_eval.predict(train_data)
+    qsim_test, qobs_test, etsim_test = test_eval.predict(test_data)
     train_eval.save_results(
         train_data,
         qsim_train,
         qobs_train,
+        etsim_train
     )
     test_eval.save_results(
         test_data,
         qsim_test,
         qobs_test,
+        etsim_test
     )
 
 

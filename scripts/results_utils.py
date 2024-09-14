@@ -1,55 +1,163 @@
-from pathlib import Path
-from hydroutils.hydro_file import unserialize_json
+import os
+import sys
+import yaml
 import numpy as np
 import pandas as pd
-from scripts import CASE_DIR
+import xarray as xr
+from pathlib import Path
 
-
-import os
-
+from hydroutils import hydro_time
+from hydroutils.hydro_stat import stat_error
+from hydroutils.hydro_file import unserialize_json
+from hydromodel.datasets.data_preprocess import cross_val_split_tsdata
+from hydrodatasource.reader.data_source import SelfMadeHydroDataset
 from torchhydro.configs.model_config import MODEL_PARAM_DICT
 
+sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
+from definitions import RESULT_DIR, DATASET_DIR
+from scripts.evaluate_xaj import _evaluate_1fold
 
-MODEL_PARAM_TEST_WAY = {
-    # 0. "train_final" -- use the final training period's parameter for each test period
-    "final_train_period": "train_final",
-    # 1. "final" -- use the final testing period's parameter for each test period
-    "final_period": "final",
-    # 2. "mean_time" -- Mean values of all training periods' parameters are used
-    "mean_all_period": "mean_time",
-    # 3. "mean_basin" -- Mean values of all basins' final training periods' parameters is used
-    "mean_all_basin": "mean_basin",
-    # 4. "var" -- use time series parameters and constant parameters in testing period
-    "time_varying": "var",
-    "time_scroll": "dynamic",
-}
+# ET_MODIS_NAME = "ET_modis16a2006"
+ET_MODIS_NAME = "ET_modis16a2gf061"
 
 
-def get_latest_dirs_for_sceua_xaj(exp, comment, cv_fold=2):
-    """A same comment means the experiments with same configuration, but different runs.
-
-    We choose the latest experiment.
+def read_sceua_xaj_streamflow(result_dir):
+    """Read one directory of SCEUA-XAJ results from hydromodel project
 
     Parameters
     ----------
-    comment : _type_
-        _description_
+    result_dir : str
+        the directory of SCEUA-XAJ results
 
     Returns
     -------
-    _type_
-        _description_
+    tuple[xr.DataArray, xr.DataArray, xr.DataArray, xr.DataArray]
+        qsim_train, qsim_test, qobs_train, qobs_test
     """
-    all_dirs = os.listdir(os.path.join(CASE_DIR, exp))
-    dirs = []
-    for i in range(cv_fold):
-        chosen_dirs = [
-            dir for dir in all_dirs if dir.endswith(f"fold{str(i)}_" + comment)
-        ]
-        chosen_dirs.sort()
-        fold_i = chosen_dirs[-1]
-        dirs.append(fold_i)
-    return dirs
+    train_result_file = os.path.join(
+        result_dir, "sceua_xaj", "train", "xaj_mz_evaluation_results.nc"
+    )
+    test_result_file = os.path.join(
+        result_dir,
+        "sceua_xaj",
+        "test",
+        "xaj_mz_evaluation_results.nc",
+    )
+    data_train = xr.open_dataset(train_result_file)
+    data_test = xr.open_dataset(test_result_file)
+    qsim_train = data_train["qsim"]
+    qsim_test = data_test["qsim"]
+    qobs_train = data_train["qobs"]
+    qobs_test = data_test["qobs"]
+    return (
+        qsim_train,
+        qsim_test,
+        qobs_train,
+        qobs_test,
+    )
+
+
+def read_sceua_xaj_streamflow_metric(result_dir):
+    """read SCEUA-XAJ metrics from one hydromodel project directory
+
+    Parameters
+    ----------
+    result_dir : _type_
+        the directory of SCEUA-XAJ results
+    """
+    train_metrics_file = os.path.join(
+        result_dir,
+        "sceua_xaj",
+        "train",
+        "basins_metrics.csv",
+    )
+    test_metrics_file = os.path.join(
+        result_dir,
+        "sceua_xaj",
+        "test",
+        "basins_metrics.csv",
+    )
+    basin_id_train_metric = pd.read_csv(train_metrics_file, index_col=0)
+    basin_id_test_metric = pd.read_csv(test_metrics_file, index_col=0)
+    print("The metrics of training results of basin " + result_dir + " are:")
+    print(basin_id_train_metric)
+    print("The metrics of testing results of basin " + result_dir + " are:")
+    print(basin_id_test_metric)
+    return basin_id_train_metric, basin_id_test_metric
+
+
+def read_sceua_xaj_et(result_dir, et_type=ET_MODIS_NAME):
+    config_yml_file = os.path.join(result_dir, "config.yaml")
+    with open(config_yml_file, "r") as file:
+        config_data = yaml.safe_load(file)
+    basin_ids = config_data["basin_id"]
+
+    train_result_file = os.path.join(
+        result_dir,
+        "sceua_xaj",
+        "train",
+        "xaj_mz_evaluation_results.nc",
+    )
+    test_result_file = os.path.join(
+        result_dir,
+        "sceua_xaj",
+        "test",
+        "xaj_mz_evaluation_results.nc",
+    )
+    et_sim_train_ = xr.open_dataset(train_result_file)
+    et_sim_test_ = xr.open_dataset(test_result_file)
+    if "etsim" not in et_sim_train_ or "etsim" not in et_sim_test_:
+        train_and_test_data = cross_val_split_tsdata(
+            config_data["data_type"],
+            config_data["data_dir"],
+            config_data["cv_fold"],
+            config_data["calibrate_period"],
+            config_data["test_period"],
+            config_data["period"],
+            config_data["warmup"],
+            config_data["basin_id"],
+        )
+        _evaluate_1fold(train_and_test_data, result_dir)
+    t_range_train = [et_sim_train_.time.values[0], et_sim_train_.time.values[-1]]
+    t_range_test = [et_sim_test_.time.values[0], et_sim_test_.time.values[-1]]
+
+    selfmadehydrodataset = SelfMadeHydroDataset(DATASET_DIR, time_unit=["8D"])
+    et_obs_train_ = selfmadehydrodataset.read_ts_xrdataset(
+        basin_ids, t_range_train, [et_type]
+    )
+    et_obs_test_ = selfmadehydrodataset.read_ts_xrdataset(
+        basin_ids, t_range_test, [et_type]
+    )
+
+    et_sim_train = et_sim_train_["etsim"]
+    et_sim_test = et_sim_test_["etsim"]
+    et_obs_train = et_obs_train_["8D"][et_type]
+    et_obs_test = et_obs_test_["8D"][et_type]
+    return et_sim_train, et_sim_test, et_obs_train, et_obs_test
+
+
+def read_sceua_xaj_et_metric(result_dir, et_type=ET_MODIS_NAME):
+    (
+        pred_train_,
+        pred_valid_,
+        obs_train_,
+        obs_valid_,
+    ) = read_sceua_xaj_et(result_dir, et_type)
+    inds_df_train = pd.DataFrame(
+        stat_error(
+            obs_train_.transpose("basin", "time").values,
+            pred_train_.transpose("basin", "time").values,
+            fill_nan="mean",
+        )
+    )
+    inds_df_valid = pd.DataFrame(
+        stat_error(
+            obs_valid_.transpose("basin", "time").values,
+            pred_valid_.transpose("basin", "time").values,
+            fill_nan="mean",
+        )
+    )
+    return inds_df_train, inds_df_valid
 
 
 def get_pbm_params_from_hydromodelxaj(
@@ -67,33 +175,6 @@ def get_pbm_params_from_hydromodelxaj(
     )
     params = pd.read_csv(params_file, index_col=0).values
     return parameters, params
-
-
-def get_latest_pbm_param_file(param_dir):
-    """Get the latest parameter file of physics-based models in the current directory.
-
-    Parameters
-    ----------
-    param_dir : str
-        The directory of parameter files.
-
-    Returns
-    -------
-    str
-        The latest parameter file.
-    """
-    param_file_lst = [
-        os.path.join(param_dir, f)
-        for f in os.listdir(param_dir)
-        if f.startswith("pb_params") and f.endswith(".csv")
-    ]
-    param_files = [Path(f) for f in param_file_lst]
-    param_file_names_lst = [param_file.stem.split("_") for param_file in param_files]
-    ctimes = [
-        int(param_file_names[param_file_names.index("params") + 1])
-        for param_file_names in param_file_names_lst
-    ]
-    return param_files[ctimes.index(max(ctimes))]
 
 
 def get_pbm_params_from_dpl(cfg_dir_flow):
@@ -141,92 +222,8 @@ def get_pbm_params_from_dpl(cfg_dir_flow):
     return parameters, params
 
 
-def get_common_path_name(origin_pc_test_path, replace_item):
-    if type(origin_pc_test_path) is list:
-        return [
-            get_common_path_name(a_path, replace_item) for a_path in origin_pc_test_path
-        ]
-    if origin_pc_test_path.startswith("/"):
-        # linux
-        origin_pc_test_path_lst = origin_pc_test_path.split("/")
-    else:
-        # windows
-        origin_pc_test_path_lst = origin_pc_test_path.split("\\")
-    # NOTE: this is a hard code
-    if replace_item == "data_path":
-        pos_lst = [i for i, e in enumerate(origin_pc_test_path_lst) if e == "data"]
-        the_root_dir = definitions.DATASET_DIR
-    else:
-        pos_lst = [i for i, e in enumerate(origin_pc_test_path_lst) if e == "HydroSPB"]
-        the_root_dir = definitions.ROOT_DIR
-    if not pos_lst:
-        raise ValueError("Can not find the common path name")
-    elif len(pos_lst) == 1:
-        where_start_same_in_origin_pc = pos_lst[0] + 1
-    else:
-        for i in pos_lst:
-            if os.path.exists(
-                os.path.join(
-                    the_root_dir, os.sep.join(origin_pc_test_path_lst[i + 1 :])
-                )
-            ):
-                where_start_same_in_origin_pc = i + 1
-                break
-
-    return os.sep.join(origin_pc_test_path_lst[where_start_same_in_origin_pc:])
-
-
-def get_the_new_path_with_diff_part(cfg_json, replace_item):
-    the_item = cfg_json["data_params"][replace_item]
-    if the_item is None:
-        return None
-    common_path_name = get_common_path_name(the_item, replace_item)
-    dff_path_name = (
-        definitions.DATASET_DIR if replace_item == "data_path" else definitions.ROOT_DIR
-    )
-    if type(common_path_name) is list:
-        return [os.path.join(dff_path_name, a_path) for a_path in common_path_name]
-    return os.path.join(dff_path_name, common_path_name)
-
-
-def update_cfg_as_move_to_another_pc(cfg_json):
-    """update cfg as move to another pc
-
-    Returns
-    -------
-    _type_
-        _description_
-    """
-    cfg_json["data_params"]["test_path"] = get_the_new_path_with_diff_part(
-        cfg_json, "test_path"
-    )
-    cfg_json["data_params"]["data_path"] = get_the_new_path_with_diff_part(
-        cfg_json, "data_path"
-    )
-    cfg_json["data_params"]["cache_path"] = get_the_new_path_with_diff_part(
-        cfg_json, "cache_path"
-    )
-    cfg_json["data_params"]["validation_path"] = get_the_new_path_with_diff_part(
-        cfg_json, "validation_path"
-    )
-
-
-def get_json_file(cfg_dir):
-    json_files_lst = []
-    json_files_ctime = []
-    for file in os.listdir(cfg_dir):
-        if (
-            fnmatch.fnmatch(file, "*.json")
-            and "_stat" not in file  # statistics json file
-            and "_dict" not in file  # data cache json file
-        ):
-            json_files_lst.append(os.path.join(cfg_dir, file))
-            json_files_ctime.append(os.path.getctime(os.path.join(cfg_dir, file)))
-    sort_idx = np.argsort(json_files_ctime)
-    cfg_file = json_files_lst[sort_idx[-1]]
-    cfg_json = unserialize_json(cfg_file)
-    if cfg_json["data_params"]["test_path"] != cfg_dir:
-        # sometimes we will use files copied from other device, so the dir is not correct for this device
-        update_cfg_as_move_to_another_pc(cfg_json=cfg_json)
-
-    return cfg_json
+if __name__ == "__main__":
+    # read_sceua_xaj_streamflow(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
+    # read_sceua_xaj_streamflow_metric(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
+    # read_sceua_xaj_et(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
+    read_sceua_xaj_et_metric(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
