@@ -1,4 +1,6 @@
+import fnmatch
 import os
+import shutil
 import sys
 import yaml
 import numpy as np
@@ -6,12 +8,15 @@ import pandas as pd
 import xarray as xr
 from pathlib import Path
 
-from hydroutils import hydro_time
 from hydroutils.hydro_stat import stat_error
 from hydroutils.hydro_file import unserialize_json
 from hydromodel.datasets.data_preprocess import cross_val_split_tsdata
 from hydrodatasource.reader.data_source import SelfMadeHydroDataset
+from torchhydro.configs.config import cmd, update_cfg
 from torchhydro.configs.model_config import MODEL_PARAM_DICT
+from torchhydro.trainers.resulter import Resulter
+from torchhydro.trainers.trainer import train_and_evaluate
+from torchhydro.trainers.train_utils import read_pth_from_model_loader
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
 from definitions import RESULT_DIR, DATASET_DIR
@@ -160,6 +165,300 @@ def read_sceua_xaj_et_metric(result_dir, et_type=ET_MODIS_NAME):
     return inds_df_train, inds_df_valid
 
 
+def get_json_file(cfg_dir):
+    json_files_lst = []
+    json_files_ctime = []
+    for file in os.listdir(cfg_dir):
+        if (
+            fnmatch.fnmatch(file, "*.json")
+            and "_stat" not in file  # statistics json file
+            and "_dict" not in file  # data cache json file
+        ):
+            json_files_lst.append(os.path.join(cfg_dir, file))
+            json_files_ctime.append(os.path.getctime(os.path.join(cfg_dir, file)))
+    sort_idx = np.argsort(json_files_ctime)
+    cfg_file = json_files_lst[sort_idx[-1]]
+    cfg_json = unserialize_json(cfg_file)
+    return cfg_json
+
+
+def update_dl_cfg_paths(cfg_dir_):
+    """Update the paths in cfgs when results from one computer are used in another computer
+
+    Parameters
+    ----------
+    cfg_dir_ : _type_
+        _description_
+    """
+    cfg_ = get_json_file(cfg_dir_)
+    cfg_["data_cfgs"]["source_cfgs"]["source_path"] = DATASET_DIR
+    cfg_["data_cfgs"]["validation_path"] = cfg_dir_
+    cfg_["data_cfgs"]["test_path"] = cfg_dir_
+    return cfg_
+
+
+def cfg4trainperiod(cfg):
+    """A new cfg for training period data simulation
+
+    Parameters
+    ----------
+    project_name : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+    train_period = cfg["data_cfgs"]["t_range_train"]
+    valid_period = train_period
+    test_period = train_period
+    old_model_loader = cfg["evaluation_cfgs"]["model_loader"]
+    old_pth_dir = cfg["data_cfgs"]["test_path"]
+    weight_path = read_pth_from_model_loader(old_model_loader, old_pth_dir)
+    new_args = cmd(
+        model_type="MTL",
+        ctx=[0],
+        # loss_func="RMSESum",
+        loss_func="MultiOutLoss",
+        loss_param={
+            "loss_funcs": "RMSESum",
+            "data_gap": [0, 0],
+            "device": [0],
+            "item_weight": [1, 0],
+            "limit_part": [1],
+        },
+        train_period=train_period,
+        valid_period=valid_period,
+        test_period=test_period,
+        # NOTE: although we set total_evaporation_hourly as output, it is not used in the training process
+        var_out=["streamflow", "total_evaporation_hourly"],
+        n_output=2,
+        # TODO: if chose "mean", metric results' format is different, this should be refactored
+        fill_nan=["no", "no"],
+        train_mode=0,
+        weight_path=weight_path,
+        model_loader={"load_way": "pth", "pth_path": weight_path},
+        continue_train=0,
+    )
+    update_cfg(cfg, new_args)
+    cfg["data_cfgs"]["validation_path"] = (
+        cfg["data_cfgs"]["validation_path"] + "_trainperiod"
+    )
+    cfg["data_cfgs"]["test_path"] = cfg["data_cfgs"]["test_path"] + "_trainperiod"
+    if not os.path.exists(cfg["data_cfgs"]["test_path"]):
+        os.makedirs(cfg["data_cfgs"]["test_path"])
+    # find the data_dict.json file and copy it to the new directory
+    for file in os.listdir(old_pth_dir):
+        if fnmatch.fnmatch(file, "*.json") and "_stat" in file:  # statistics json file
+            data_dict_file = os.path.join(old_pth_dir, file)
+            break
+    shutil.copy2(
+        data_dict_file,
+        os.path.join(cfg["data_cfgs"]["test_path"], data_dict_file.split(os.sep)[-1]),
+    )
+    return cfg
+
+
+def cfgrunagain(cfg):
+    """A new cfg for test period data simulation
+
+    Parameters
+    ----------
+    project_name : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+    old_model_loader = cfg["evaluation_cfgs"]["model_loader"]
+    old_pth_dir = cfg["data_cfgs"]["test_path"]
+    weight_path = read_pth_from_model_loader(old_model_loader, old_pth_dir)
+    new_args = cmd(
+        model_type="MTL",
+        ctx=[0],
+        # loss_func="RMSESum",
+        loss_func="MultiOutLoss",
+        loss_param={
+            "loss_funcs": "RMSESum",
+            "data_gap": [0, 0],
+            "device": [0],
+            "item_weight": [1, 0],
+            "limit_part": [1],
+        },
+        # NOTE: although we set total_evaporation_hourly as output, it is not used in the training process
+        var_out=["streamflow", "total_evaporation_hourly"],
+        n_output=2,
+        # TODO: if chose "mean", metric results' format is different, this should be refactored
+        fill_nan=["no", "no"],
+        train_mode=0,
+        weight_path=weight_path,
+        continue_train=0,
+    )
+    update_cfg(cfg, new_args)
+    return cfg
+
+
+def read_dpl_model_q_and_simet(cfg_dir_, cfg_dir_train=None, cfg_runagain=False):
+    """read dl models simulations
+
+    Parameters
+    ----------
+    cfg_dir_: str
+        the directory of the DL model
+    cfg_dir_train: str, optional
+        the directory of the DL model for its training period data simulation
+        if not provided, the training period data simulation will be the value specified in the cfg_dir_
+    cfg_runagain: bool, optional
+        whether to run the DL model in cfg_dir_ for cfg_dir_ again, by default False
+
+    Returns
+    -------
+    tuple[xr.Dataset, xr.Dataset, xr.Dataset, xr.Dataset]
+        pred_train, pred_test, obs_train, obs_test: the et obs is not our needed obs
+    """
+    if cfg_dir_train is None:
+        # we need to run the trained model to get the training period data simulation
+        cfg_train = update_dl_cfg_paths(cfg_dir_)
+        cfg_train = cfg4trainperiod(cfg_train)
+        try:
+            train_and_evaluate(cfg_train)
+        except KeyError:
+            cfg_train["training_cfgs"]["train_mode"] = True
+            cfg_train["data_cfgs"]["stat_dict_file"] = None
+            train_and_evaluate(cfg_train)
+        cfg_dir_train = cfg_train["data_cfgs"]["test_path"]
+    cfg_train = get_json_file(cfg_dir_train)
+    resulter = Resulter(cfg_train)
+    pred_train, obs_train = resulter.load_result()
+    cfg_test = update_dl_cfg_paths(cfg_dir_)
+    if cfg_runagain:
+        cfg_test = cfgrunagain(cfg_test)
+        try:
+            train_and_evaluate(cfg_test)
+        except KeyError:
+            cfg_test["training_cfgs"]["train_mode"] = True
+            cfg_test["data_cfgs"]["stat_dict_file"] = None
+            train_and_evaluate(cfg_test)
+    resulter = Resulter(cfg_test)
+    pred_test, obs_test = resulter.load_result()
+    return pred_train, pred_test, obs_train, obs_test
+
+
+def read_dpl_model_streamflow_metric(
+    exp, epoch, cv_fold=2, streamflow_unit="ft3/s", **kwargs
+):
+    """read the metrics of DL models for one basin in k-fold cross validation
+
+    Parameters
+    ----------
+    epoch : int
+        the epoch of the DL model
+    cv_fold : int, optional
+        the number of folds in cross validation, by default 2
+    """
+    inds_df_trains_lst = []
+    inds_df_valids_lst = []
+    for i in range(cv_fold):
+        (
+            pred_train_,
+            obs_train_,
+            pred_valid_,
+            obs_valid_,
+        ) = read_dpl_model_q_and_simet(exp, epoch, i, streamflow_unit, **kwargs)
+        inds_df_train = pd.DataFrame(stat_error(obs_train_, pred_train_))
+        inds_df_valid = pd.DataFrame(stat_error(obs_valid_, pred_valid_))
+        inds_df_trains_lst.append(inds_df_train)
+        inds_df_valids_lst.append(inds_df_valid)
+    inds_df_trains = pd.concat(inds_df_trains_lst).mean()
+    inds_df_valids = pd.concat(inds_df_valids_lst).mean()
+    return inds_df_trains, inds_df_valids
+
+
+def read_dpl_model_et(exp, epoch, cv_fold_i, et_type=ET_MODIS_NAME):
+    the_exp = exp + "0" + str(cv_fold_i)
+    exp_dir = os.path.join(definitions.ROOT_DIR, "hydroSPB", "example", the_exp)
+    cfg_exp = get_json_file(exp_dir)
+    gage_id_lst = cfg_exp["data_params"]["object_ids"]
+    train_period = cfg_exp["data_params"]["t_range_train"]
+    test_period = cfg_exp["data_params"]["t_range_test"]
+    train_period_lst = hydro_utils.t_range_days(train_period)
+    test_period_lst = hydro_utils.t_range_days(test_period)
+    warmup = cfg_exp["data_params"]["warmup_length"]
+    etobs_train = read_et_obs_for_1basin(gage_id_lst[0], train_period, et_type=et_type)
+    etobs_train = etobs_train.reshape(etobs_train.shape[0], etobs_train.shape[1]).T
+    etobs_test = read_et_obs_for_1basin(gage_id_lst[0], test_period, et_type=et_type)
+    etobs_test = etobs_test.reshape(etobs_test.shape[0], etobs_test.shape[1]).T
+    etsim_train = np.load(
+        os.path.join(exp_dir, f"epoch{str(epoch)}fold{str(cv_fold_i)}train_pred.npy")
+    )[:, :, -1].T
+
+    etsim_test = np.load(
+        os.path.join(exp_dir, f"epoch{str(epoch)}fold{str(cv_fold_i)}valid_pred.npy")
+    )[:, :, -1].T
+
+    etsim_train_result = pd.DataFrame(
+        etsim_train,
+        index=pd.to_datetime(train_period_lst).values[warmup:].astype("datetime64[D]"),
+        columns=gage_id_lst,
+    )
+    etsim_test_result = pd.DataFrame(
+        etsim_test,
+        index=pd.to_datetime(test_period_lst).values[warmup:].astype("datetime64[D]"),
+        columns=gage_id_lst,
+    )
+    etobs_train_result = pd.DataFrame(
+        etobs_train[warmup:],
+        index=pd.to_datetime(train_period_lst).values[warmup:].astype("datetime64[D]"),
+        columns=gage_id_lst,
+    )
+    etobs_test_result = pd.DataFrame(
+        etobs_test[warmup:],
+        index=pd.to_datetime(test_period_lst).values[warmup:].astype("datetime64[D]"),
+        columns=gage_id_lst,
+    )
+    return (
+        etsim_train_result,
+        etsim_test_result,
+        etobs_train_result,
+        etobs_test_result,
+    )
+
+
+def read_dpl_model_et_metric(exp, epoch, cv_fold=2, **kwargs):
+    """read the metrics of DL models for one basin in k-fold cross validation
+
+    Parameters
+    ----------
+    epoch : int
+        the epoch of the DL model
+    cv_fold : int, optional
+        the number of folds in cross validation, by default 2
+    """
+    inds_df_trains_lst = []
+    inds_df_valids_lst = []
+    for i in range(cv_fold):
+        (
+            pred_train_,
+            pred_valid_,
+            obs_train_,
+            obs_valid_,
+        ) = read_dpl_model_et(exp, epoch, i, **kwargs)
+        inds_df_train = pd.DataFrame(
+            stat_error(obs_train_.values.T, pred_train_.values.T, fill_nan="mean")
+        )
+        inds_df_valid = pd.DataFrame(
+            stat_error(obs_valid_.values.T, pred_valid_.values.T, fill_nan="mean")
+        )
+        inds_df_trains_lst.append(inds_df_train)
+        inds_df_valids_lst.append(inds_df_valid)
+    inds_df_trains = pd.concat(inds_df_trains_lst).mean()
+    inds_df_valids = pd.concat(inds_df_valids_lst).mean()
+    return inds_df_trains, inds_df_valids
+
+
 def get_pbm_params_from_hydromodelxaj(
     exp, kfold, the_fold, sceua_plan, example, cfg_dir_flow
 ):
@@ -226,4 +525,21 @@ if __name__ == "__main__":
     # read_sceua_xaj_streamflow(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
     # read_sceua_xaj_streamflow_metric(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
     # read_sceua_xaj_et(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
-    read_sceua_xaj_et_metric(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
+    # read_sceua_xaj_et_metric(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
+    read_dpl_model_q_and_simet(
+        os.path.join(
+            RESULT_DIR,
+            "dPL",
+            "streamflow_prediction",
+            "streamflow_prediction_50epoch",
+            "changdian_61561",
+        ),
+        os.path.join(
+            RESULT_DIR,
+            "dPL",
+            "streamflow_prediction",
+            "streamflow_prediction_50epoch",
+            "changdian_61561_trainperiod",
+        ),
+        cfg_runagain=True,
+    )
