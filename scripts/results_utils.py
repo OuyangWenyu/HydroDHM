@@ -22,8 +22,8 @@ sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
 from definitions import RESULT_DIR, DATASET_DIR
 from scripts.evaluate_xaj import _evaluate_1fold
 
-# ET_MODIS_NAME = "ET_modis16a2006"
-ET_MODIS_NAME = "ET_modis16a2gf061"
+ET_MODIS_NAME = "ET_modis16a2006"
+# ET_MODIS_NAME = "ET_modis16a2gf061"
 
 
 def read_sceua_xaj_streamflow(result_dir):
@@ -155,20 +155,61 @@ def read_sceua_xaj_et_metric(result_dir, et_type=ET_MODIS_NAME):
         obs_train_,
         obs_valid_,
     ) = read_sceua_xaj_et(result_dir, et_type)
+    inds_df_train, inds_df_valid = _xrarray_cal_et_metric(
+        pred_train_, pred_valid_, obs_train_, obs_valid_
+    )
+    return inds_df_train, inds_df_valid
+
+
+def _xrarray_cal_et_metric(pred_train_, pred_valid_, obs_train_, obs_valid_):
+    # Convert xarray time to pandas Timestamps for range calculation
+    obs_train_time_min = pd.Timestamp(obs_train_.time.min().item())
+    obs_train_time_max = pd.Timestamp(obs_train_.time.max().item())
+    pred_train_time_min = pd.Timestamp(pred_train_.time.min().item())
+    pred_train_time_max = pd.Timestamp(pred_train_.time.max().item())
+
+    # Create common time index for training data
+    common_time_index_train = pd.date_range(
+        start=max(obs_train_time_min, pred_train_time_min),
+        end=min(obs_train_time_max, pred_train_time_max),
+        freq="D",
+    )
+
+    # Reindex obs_train_ and pred_train_ to align by time
+    obs_train_aligned = obs_train_.reindex(time=common_time_index_train, method=None)
+    pred_train_aligned = pred_train_.reindex(time=common_time_index_train, method=None)
+
+    # Similarly, align validation data
+    obs_valid_time_min = pd.Timestamp(obs_valid_.time.min().item())
+    obs_valid_time_max = pd.Timestamp(obs_valid_.time.max().item())
+    pred_valid_time_min = pd.Timestamp(pred_valid_.time.min().item())
+    pred_valid_time_max = pd.Timestamp(pred_valid_.time.max().item())
+
+    common_time_index_valid = pd.date_range(
+        start=max(obs_valid_time_min, pred_valid_time_min),
+        end=min(obs_valid_time_max, pred_valid_time_max),
+        freq="D",
+    )
+
+    obs_valid_aligned = obs_valid_.reindex(time=common_time_index_valid, method=None)
+    pred_valid_aligned = pred_valid_.reindex(time=common_time_index_valid, method=None)
+
+    # Now compute metrics using aligned data
     inds_df_train = pd.DataFrame(
         stat_error(
-            obs_train_.transpose("basin", "time").values,
-            pred_train_.transpose("basin", "time").values,
+            obs_train_aligned.transpose("basin", "time").values,
+            pred_train_aligned.transpose("basin", "time").values,
             fill_nan="mean",
         )
     )
     inds_df_valid = pd.DataFrame(
         stat_error(
-            obs_valid_.transpose("basin", "time").values,
-            pred_valid_.transpose("basin", "time").values,
+            obs_valid_aligned.transpose("basin", "time").values,
+            pred_valid_aligned.transpose("basin", "time").values,
             fill_nan="mean",
         )
     )
+
     return inds_df_train, inds_df_valid
 
 
@@ -417,15 +458,19 @@ def read_dpl_model_metric(cfg_dir_test, cfg_dir_train):
     cv_fold : int, optional
         the number of folds in cross validation, by default 2
     """
-    (
-        pred_train_,
-        obs_train_,
-        pred_valid_,
-        obs_valid_,
-    ) = read_dpl_model_q_and_et(cfg_dir_test, cfg_dir_train)
-    inds_df_train = pd.DataFrame(stat_error(obs_train_, pred_train_))
-    inds_df_valid = pd.DataFrame(stat_error(obs_valid_, pred_valid_))
-    return inds_df_train, inds_df_valid
+    qs, ets = read_dpl_model_q_and_et(cfg_dir_test, cfg_dir_train)
+    train_metrics_file = os.path.join(
+        cfg_dir_train,
+        "metric_streamflow.csv",
+    )
+    test_metrics_file = os.path.join(
+        cfg_dir_test,
+        "metric_streamflow.csv",
+    )
+    train_metric_q = pd.read_csv(train_metrics_file, index_col=0)
+    test_metric_q = pd.read_csv(test_metrics_file, index_col=0)
+    inds_df_train_et, inds_df_valid_et = _xrarray_cal_et_metric(*ets)
+    return [train_metric_q, test_metric_q, inds_df_train_et, inds_df_valid_et]
 
 
 def get_pbm_params_from_hydromodelxaj(
@@ -494,24 +539,26 @@ if __name__ == "__main__":
     # read_sceua_xaj_streamflow(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
     # read_sceua_xaj_streamflow_metric(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
     # read_sceua_xaj_et(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
-    # read_sceua_xaj_et_metric(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
-    read_dpl_model_q_and_et(
-        os.path.join(
-            RESULT_DIR,
-            "dPL",
-            "streamflow_prediction",
-            "streamflow_prediction_50epoch",
-            "changdian_61561",
-        ),
-        os.path.join(
-            RESULT_DIR,
-            "dPL",
-            "streamflow_prediction",
-            "streamflow_prediction_50epoch",
-            "changdian_61561_trainperiod",
-        ),
-        # cfg_runagain=True,
+    read_sceua_xaj_et_metric(
+        os.path.join(RESULT_DIR, "XAJ", "result_old", "changdian_61561")
     )
+    # read_dpl_model_q_and_et(
+    #     os.path.join(
+    #         RESULT_DIR,
+    #         "dPL",
+    #         "streamflow_prediction",
+    #         "streamflow_prediction_50epoch",
+    #         "changdian_61561",
+    #     ),
+    #     os.path.join(
+    #         RESULT_DIR,
+    #         "dPL",
+    #         "streamflow_prediction",
+    #         "streamflow_prediction_50epoch",
+    #         "changdian_61561_trainperiod",
+    #     ),
+    #     cfg_runagain=True,
+    # )
     # read_dpl_model_metric(
     #     os.path.join(
     #         RESULT_DIR,
