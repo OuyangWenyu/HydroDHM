@@ -91,10 +91,20 @@ def read_sceua_xaj_streamflow_metric(result_dir):
     return basin_id_train_metric, basin_id_test_metric
 
 
-def read_sceua_xaj_et(result_dir, et_type=ET_MODIS_NAME):
+def update_hydromodel_cfgs(result_dir):
     config_yml_file = os.path.join(result_dir, "config.yaml")
     with open(config_yml_file, "r") as file:
         config_data = yaml.safe_load(file)
+    config_data["data_dir"] = DATASET_DIR
+    config_data["param_range_file"] = os.path.join(result_dir, "param_range.yaml")
+    # save the updated config file
+    with open(config_yml_file, "w") as file:
+        yaml.dump(config_data, file)
+    return config_data
+
+
+def read_sceua_xaj_et(result_dir, et_type=ET_MODIS_NAME):
+    config_data = update_hydromodel_cfgs(result_dir)
     basin_ids = config_data["basin_id"]
 
     train_result_file = os.path.join(
@@ -112,6 +122,9 @@ def read_sceua_xaj_et(result_dir, et_type=ET_MODIS_NAME):
     et_sim_train_ = xr.open_dataset(train_result_file)
     et_sim_test_ = xr.open_dataset(test_result_file)
     if "etsim" not in et_sim_train_ or "etsim" not in et_sim_test_:
+        # close the opened files
+        et_sim_train_.close()
+        et_sim_test_.close()
         train_and_test_data = cross_val_split_tsdata(
             config_data["data_type"],
             config_data["data_dir"],
@@ -123,6 +136,8 @@ def read_sceua_xaj_et(result_dir, et_type=ET_MODIS_NAME):
             config_data["basin_id"],
         )
         _evaluate_1fold(train_and_test_data, result_dir)
+        et_sim_train_ = xr.open_dataset(train_result_file)
+        et_sim_test_ = xr.open_dataset(test_result_file)
     t_range_train = [et_sim_train_.time.values[0], et_sim_train_.time.values[-1]]
     t_range_test = [et_sim_test_.time.values[0], et_sim_test_.time.values[-1]]
 
@@ -540,7 +555,7 @@ if __name__ == "__main__":
     # read_sceua_xaj_streamflow_metric(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
     # read_sceua_xaj_et(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
     read_sceua_xaj_et_metric(
-        os.path.join(RESULT_DIR, "XAJ", "result_old", "changdian_61561")
+        os.path.join(RESULT_DIR, "XAJ", "result_old", "changdian_61700")
     )
     # read_dpl_model_q_and_et(
     #     os.path.join(
