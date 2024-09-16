@@ -8,6 +8,7 @@ import pandas as pd
 import seaborn as sns
 import cartopy.io.shapereader as shpreader
 
+from tqdm import tqdm
 from pathlib import Path
 from matplotlib import pyplot as plt
 
@@ -25,10 +26,12 @@ from torchhydro import SETTING
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent))
 from definitions import DATASET_DIR, RESULT_DIR
 from hydrodhm.utils.results_utils import (
+    _save_pbm_params,
     get_json_file,
     get_latest_pbm_param_file,
     get_pbm_params_from_dpl,
     get_pbm_params_from_hydromodelxaj,
+    read_tb_log_loss,
 )
 
 
@@ -227,9 +230,8 @@ def plot_xaj_params_heatmap(
             a_result_dir = result_dirs[i]
             first_params_file = get_latest_pbm_param_file(a_result_dir)
             if first_params_file is None:
-                raise ValueError(
-                    "No parameter file found; Please run get_pbm_params_from_dpl function first"
-                )
+                _save_pbm_params(a_result_dir)
+                first_params_file = get_latest_pbm_param_file(a_result_dir)
             params_type = pd.read_csv(first_params_file).columns.values[1:]
             params_type = np.array(
                 ["$\Theta$" if tmp == "THETA" else tmp for tmp in params_type]
@@ -436,9 +438,7 @@ def plot_computing_time(exps, leg_names):
 
 
 def plot_camels_nse_map(inds_df_lst, exps):
-    camels = SelfMadeHydroDataset(
-        os.path.join(definitions.DATASET_DIR, "camels", "camels_us")
-    )
+    camels = SelfMadeHydroDataset(DATASET_DIR)
     lat_lon = camels.read_constant_cols(
         camels.camels_sites["gauge_id"].values, ["gauge_lat", "gauge_lon"]
     )
@@ -468,69 +468,33 @@ def plot_camels_nse_map(inds_df_lst, exps):
         )
 
 
-def plot_ts_for_basin_fold(
-    leg_lst,
-    basin_id,
-    fold,
-    step_lst,
-    value_lst,
-    ylabel,
-    where_save="transfer_learning",
-    sub_dir=os.path.join("results", "tensorboard"),
-    batch_size=None,
-):
-    """Lineplot for loss and metric of DL models for one basin in a fold experiment
-
-    Parameters
-    ----------
-    leg_lst : list
-        a list of legends
-    basin_id : _type_
-        _description_
-    fold : _type_
-        _description_
-    step_lst : _type_
-        _description_
-    value_lst : _type_
-        _description_
-    ylabel : _type_
-        _description_
-    where_save : str, optional
-        _description_, by default "transfer_learning"
-    """
-    result_dir = os.path.join(
-        RESULT_DIR,
-        where_save,
-        sub_dir,
-    )
-    if not os.path.exists(result_dir):
-        os.makedirs(result_dir)
+def plot_losses_ts(dl_result_dirs, leg_lst, ylabel="Loss", fig_dir=None):
+    if fig_dir is None:
+        fig_dir = dl_result_dirs[0]
+    step_lst = []
+    validloss_lst = []
+    loss_lst = []
+    for i, a_exp in tqdm(enumerate(dl_result_dirs)):
+        df_loss, df_validloss = read_tb_log_loss(a_exp)
+        step_lst.append(df_loss["step"].values)
+        loss_lst.append(df_loss["value"].values)
+        validloss_lst.append(df_validloss["value"].values)
     plot_ts(
-        step_lst,
-        value_lst,
+        step_lst + step_lst,
+        loss_lst + validloss_lst,
         leg_lst=leg_lst,
         fig_size=(6, 4),
-        xlabel="代数",
+        xlabel="Epoch",
         ylabel=ylabel,
     )
-    if batch_size is None:
-        plt.savefig(
-            os.path.join(
-                result_dir,
-                f"{basin_id}_fold{fold}_{ylabel}.png",
-            ),
-            dpi=600,
-            bbox_inches="tight",
-        )
-    else:
-        plt.savefig(
-            os.path.join(
-                result_dir,
-                f"{basin_id}_fold{fold}_{ylabel}_bsize{batch_size}.png",
-            ),
-            dpi=600,
-            bbox_inches="tight",
-        )
+    plt.savefig(
+        os.path.join(
+            fig_dir,
+            f"dpl_dplnn_{ylabel}.png",
+        ),
+        dpi=600,
+        bbox_inches="tight",
+    )
 
 
 def plot_xaj_lstm_tl_dpl_rainfall_runoff(
@@ -538,9 +502,7 @@ def plot_xaj_lstm_tl_dpl_rainfall_runoff(
 ):
     if c_lst is None:
         c_lst = ["red", "green", "blue", "black"]
-    camels_cc = SelfMadeHydroDataset(
-        os.path.join(definitions.DATASET_DIR, "camels", "camels_cc"), region="CC"
-    )
+    camels_cc = SelfMadeHydroDataset(DATASET_DIR, region="CC")
     cc_shpfile_dir = os.path.join(
         definitions.ROOT_DIR, "hydroSPB", "example", "shpfile"
     )
@@ -578,6 +540,15 @@ if __name__ == "__main__":
     sceua_xaj_dir = os.path.join(RESULT_DIR, "XAJ", "changdian_61700_4_4")
     dpl_dir = os.path.join(RESULT_DIR, "dPL", "result", "lrchange3", "changdian_61700")
     dpl_nn_dir = os.path.join(RESULT_DIR, "dPL", "result", "module", "changdian_61700")
+    plot_losses_ts(
+        [dpl_dir, dpl_nn_dir],
+        leg_lst=[
+            "dPL_train",
+            "dPL$_{\mathrm{nn}}$_train",
+            "dPL_valid",
+            "dPL$_{\mathrm{nn}}$_valid",
+        ],
+    )
     changdian_61700_name = "changdian_61700_sanhuangmiao"
     plot_xaj_params_heatmap(
         [sceua_xaj_dir, dpl_dir, dpl_nn_dir],

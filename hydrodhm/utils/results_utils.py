@@ -14,7 +14,7 @@ from hydromodel.datasets.data_preprocess import cross_val_split_tsdata
 from hydrodatasource.reader.data_source import SelfMadeHydroDataset
 from torchhydro.configs.config import cmd, update_cfg
 from torchhydro.configs.model_config import MODEL_PARAM_DICT
-from torchhydro.trainers.resulter import Resulter
+from torchhydro.trainers.resulter import Resulter, get_latest_pbm_param_file
 from torchhydro.trainers.trainer import train_and_evaluate
 from torchhydro.trainers.train_utils import read_pth_from_model_loader
 
@@ -533,47 +533,22 @@ def get_pbm_params_from_hydromodelxaj(result_dir):
     return norm_params, denorm_params
 
 
-def get_latest_pbm_param_file(param_dir):
-    """Get the latest parameter file of physics-based models in the current directory.
-
-    Parameters
-    ----------
-    param_dir : str
-        The directory of parameter files.
-
-    Returns
-    -------
-    str
-        The latest parameter file.
-    """
-    param_file_lst = [
-        os.path.join(param_dir, f)
-        for f in os.listdir(param_dir)
-        if f.startswith("pb_params") and f.endswith(".csv")
-    ]
-    param_files = [Path(f) for f in param_file_lst]
-    param_file_names_lst = [param_file.stem.split("_") for param_file in param_files]
-    ctimes = [
-        int(param_file_names[param_file_names.index("params") + 1])
-        for param_file_names in param_file_names_lst
-    ]
-    if len(ctimes) == 0:
-        return None
-    return param_files[ctimes.index(max(ctimes))]
-
-
 def get_pbm_params_from_dpl(result_dir):
     params_file = get_latest_pbm_param_file(result_dir)
     if params_file is None:
-        cfg_ = update_dl_cfg_paths(result_dir)
-        resulter = Resulter(cfg_)
-        resulter.save_intermediate_results(is_pbm_params=True)
+        _save_pbm_params(result_dir)
         params_file = get_latest_pbm_param_file(result_dir)
     parameters = pd.read_csv(params_file).iloc[:, 1:].values
     params = _denorm_pbm_param(parameters)
     params = params.T
     parameters = parameters.T
     return parameters, params
+
+
+def _save_pbm_params(result_dir):
+    cfg_ = update_dl_cfg_paths(result_dir)
+    resulter = Resulter(cfg_)
+    resulter.save_intermediate_results(is_pbm_params=True)
 
 
 def _denorm_pbm_param(norm_params):
@@ -619,6 +594,16 @@ def _denorm_pbm_param(norm_params):
         cg_scale[1] - cg_scale[0]
     )
     return denorm_params
+
+
+def read_tb_log_loss(result_dir):
+    cfg_ = update_dl_cfg_paths(result_dir)
+    resulter = Resulter(cfg_)
+    df_scalar = resulter.read_tensorboard_log(is_scalar=True)
+    df_loss = df_scalar[df_scalar["tag"] == "Loss"]
+    df_validloss = df_scalar[df_scalar["tag"] == "ValidLoss"]
+    df_validnse = df_scalar[df_scalar["tag"] == "ValidstreamflowNSEmean"]
+    return df_loss, df_validloss
 
 
 if __name__ == "__main__":
