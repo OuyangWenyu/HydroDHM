@@ -1,13 +1,3 @@
-"""
-Author: Wenyu Ouyang
-Date: 2024-03-26 12:00:12
-LastEditTime: 2024-09-14 19:07:34
-LastEditors: Wenyu Ouyang
-Description: evaluate a calibrated hydrological model
-FilePath: \HydroDHM\scripts\xaj\evaluate_xaj.py
-Copyright (c) 2023-2024 Wenyu Ouyang. All rights reserved.
-"""
-
 import argparse
 import os
 from pathlib import Path

@@ -18,9 +18,9 @@ from torchhydro.trainers.resulter import Resulter
 from torchhydro.trainers.trainer import train_and_evaluate
 from torchhydro.trainers.train_utils import read_pth_from_model_loader
 
-sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
+sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent))
 from definitions import RESULT_DIR, DATASET_DIR
-from scripts.evaluate_xaj import _evaluate_1fold
+from hydrodhm.run_xaj.evaluate_xaj import _evaluate_1fold
 
 ET_MODIS_NAME = "ET_modis16a2006"
 # ET_MODIS_NAME = "ET_modis16a2gf061"
@@ -612,12 +612,18 @@ def _denorm_pbm_param(norm_params):
     denorm_params[:, 12] = theta_scale[0] + norm_params[:, 12] * (
         theta_scale[1] - theta_scale[0]
     )
-    denorm_params[:, 13] = ci_scale[0] + norm_params[:, 13] * (ci_scale[1] - ci_scale[0])
-    denorm_params[:, 14] = cg_scale[0] + norm_params[:, 14] * (cg_scale[1] - cg_scale[0])
+    denorm_params[:, 13] = ci_scale[0] + norm_params[:, 13] * (
+        ci_scale[1] - ci_scale[0]
+    )
+    denorm_params[:, 14] = cg_scale[0] + norm_params[:, 14] * (
+        cg_scale[1] - cg_scale[0]
+    )
     return denorm_params
 
 
 if __name__ == "__main__":
+    dpl_dir = os.path.join(RESULT_DIR, "dPL", "result", "lrchange3", "changdian_61700")
+    dpl_nn_dir = os.path.join(RESULT_DIR, "dPL", "result", "module", "changdian_61700")
     # read_sceua_xaj_streamflow(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
     # read_sceua_xaj_streamflow_metric(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
     # read_sceua_xaj_et(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
@@ -660,11 +666,4 @@ if __name__ == "__main__":
     #         "changdian_61561_trainperiod",
     #     ),
     # )
-    get_pbm_params_from_dpl(
-        os.path.join(
-            RESULT_DIR,
-            "dPL",
-            "streamflow_prediction",
-            "changdian_61561",
-        )
-    )
+    get_pbm_params_from_dpl(dpl_dir)

@@ -1,42 +1,35 @@
-"""
-Author: Wenyu Ouyang
-Date: 2024-08-13 20:14:37
-LastEditTime: 2024-09-12 18:02:55
-LastEditors: Wenyu Ouyang
-Description: Functions for plotting the results of the model
-FilePath: \HydroDHM\scripts\results_plot_utils.py
-Copyright (c) 2023-2024 Wenyu Ouyang. All rights reserved.
-"""
-
 import os
-
-from matplotlib import pyplot as plt
+import sys
 import cartopy
-import cartopy.io.shapereader as shpreader
 import cartopy.crs as ccrs
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import cartopy.io.shapereader as shpreader
 
+from pathlib import Path
+from matplotlib import pyplot as plt
+
+from hydroutils.hydro_time import t_range_days
 from hydroutils.hydro_plot import (
     plot_boxes_matplotlib,
     plot_ts,
     plot_map_carto,
     plot_rainfall_runoff,
 )
-from hydroutils.hydro_time import t_range_days
-from hydrodataset import Camels
-from scripts.results_utils import (
+from hydrodatasource.reader.data_source import SelfMadeHydroDataset
+from torchhydro.configs.model_config import MODEL_PARAM_TEST_WAY
+from torchhydro import SETTING
+
+sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent))
+from definitions import DATASET_DIR, RESULT_DIR
+from hydrodhm.utils.results_utils import (
     get_json_file,
     get_latest_pbm_param_file,
     get_pbm_params_from_dpl,
     get_pbm_params_from_hydromodelxaj,
 )
-from torchhydro import SETTING
-from torchhydro.configs.model_config import MODEL_PARAM_TEST_WAY
-
-from scripts import RESULT_DIR, CASE_DIR
 
 
 def plot_stations_in_a_boxregion(
@@ -205,156 +198,76 @@ def plot_dpl_comp_boxplots(
 
 
 def plot_xaj_params_heatmap(
-    exps,
+    result_dirs,
     leg_names,
-    sites_Chinese,
-    kfold=1,
-    the_fold=0,
-    sceua_plan="HFsourcesrep1000ngs1000",
-    example="camels",
-    result_dir=None,
+    fig_name,
     param_test_way=[
         None,
         MODEL_PARAM_TEST_WAY["final_period"],
         MODEL_PARAM_TEST_WAY["final_period"],
     ],
-    concat=False,
-    concat_leg_names=None,
+    fig_dir=None,
 ):
     """Plot CAMELS CC XAJ models' parameters heatmap
 
     Parameters
     ----------
-    exps : _type_
-        _description_
+    exp_dirs : _type_
+        the directories of experiments
     leg_names : _type_
         _description_
-    sites_Chinese : _type_
-        Chinese names of sites
-    kfold : int, optional
-        the k of cross fold valid, by default 1
-    the_fold : int, optional
-        which fold we will show, by default 0
-    sceua_plan : str, optional
-        _description_, by default "HFsourcesrep1000ngs1000"
-    example : str, optional
-        _description_, by default "camels"
-    result_dir : _type_, optional
-        _description_, by default None
+    fig_name : _type_
+        name of the figure
     """
-    if result_dir is None:
-        result_dir = os.path.join(RESULT_DIR, example, exps[-1])
-    attrs_type = None
-    parameters_concat = []
-    for i in range(len(exps)):
-        cfg_dir_flow = os.path.join(RESULT_DIR, example, exps[i])
-        if leg_names[i] in ["SCE-UA", "SCEUA", "SCE_UA", "新安江模型"]:
-            parameters, params = get_pbm_params_from_hydromodelxaj(
-                exps[i], kfold, the_fold, sceua_plan, example, cfg_dir_flow
-            )
-        elif param_test_way[i] == MODEL_PARAM_TEST_WAY["final_period"]:
-            parameters, params = get_pbm_params_from_dpl(cfg_dir_flow)
-        elif param_test_way[i] == MODEL_PARAM_TEST_WAY["varying_period"]:
-            # TODO: add varying period params reading
-            parameters, params = get_pbm_params_from_dpl(cfg_dir_flow)
-
-        if attrs_type is None:
-            if leg_names[i] in ["SCE-UA", "SCEUA", "SCE_UA", "新安江模型"]:
-                cfg_dir_flow = os.path.join(
-                    RESULT_DIR,
-                    example,
-                    exps[i + 1],
+    norm_params_concat = []
+    if fig_dir is None:
+        fig_dir = result_dirs[0]
+    for i in range(len(result_dirs)):
+        if leg_names[i] != "eXAJ":
+            a_result_dir = result_dirs[i]
+            first_params_file = get_latest_pbm_param_file(a_result_dir)
+            if first_params_file is None:
+                raise ValueError(
+                    "No parameter file found; Please run get_pbm_params_from_dpl function first"
                 )
-            cfg_flow = get_json_file(cfg_dir_flow)
-            attrs_type = cfg_flow["data_params"]["constant_cols"]
-            sites = cfg_flow["data_params"]["object_ids"]
-            camels = Camels(
-                os.path.join(
-                    SETTING["local_data_path"]["basins-interim"], "camels", "camels_cc"
-                ),
-                download=False,
-                region="CC",
-            )
-            attrs = camels.read_constant_cols(sites, attrs_type)
-            first_params_file = get_latest_pbm_param_file(cfg_dir_flow)
             params_type = pd.read_csv(first_params_file).columns.values[1:]
             params_type = np.array(
                 ["$\Theta$" if tmp == "THETA" else tmp for tmp in params_type]
             )
-        corrs = np.zeros((params.shape[0], len(attrs_type)))
-        for j in range(corrs.shape[0]):
-            for k in range(corrs.shape[1]):
-                corrs[j][k] = np.corrcoef(params[j, :], attrs[:, k])[0, 1]
-
-        corrs_shown = np.hstack((corrs[:, 0:7], corrs[:, 8:10], corrs[:, 11:]))
-        # all low or high prec_timing is same so no corr
-        attrs_type_shown = np.hstack(
-            (attrs_type[:7], attrs_type[8:10], attrs_type[11:])
-        )
-        parameters_concat.append(parameters[:15])
-        pd.DataFrame(params[:15], columns=sites_Chinese, index=params_type).to_csv(
-            os.path.join(
-                result_dir,
-                "dpl_params_" + exps[i] + "_fold" + str(the_fold) + ".csv",
+            break
+    for i in range(len(result_dirs)):
+        a_result_dir = result_dirs[i]
+        if leg_names[i] == "eXAJ":
+            norm_params_, denorm_params_ = get_pbm_params_from_hydromodelxaj(
+                a_result_dir
             )
-        )
-        plt.figure()
-        sns.heatmap(
-            pd.DataFrame(parameters[:15], columns=sites_Chinese, index=params_type),
-            cmap="RdBu_r",
-            fmt=".2g",
-            # square=True,
-            annot=True,
-        )
-        plt.savefig(
-            os.path.join(
-                result_dir,
-                "dpl_params_values_" + exps[i] + "_fold" + str(the_fold) + ".png",
-            ),
-            dpi=600,
-            bbox_inches="tight",
-        )
-        if attrs.shape[-1] > 0:
-            plt.figure()
-            sns.heatmap(
-                pd.DataFrame(corrs_shown, columns=attrs_type_shown, index=params_type),
-                cmap="RdBu_r",
-                # fig_size=corrs.shape,
-                fmt=".2g",
-                # square=False,
-                annot=True,
-            )
-            plt.savefig(
-                os.path.join(
-                    result_dir,
-                    "dpl_params_attrs_" + exps[i] + "_fold" + str(the_fold) + ".png",
-                ),
-                dpi=600,
-                bbox_inches="tight",
-            )
-    if concat:
-        if parameters_concat[0].shape[-1] > 1:
-            raise ValueError("only support concating for one basin")
-        plt.figure()
-        sns.heatmap(
-            pd.DataFrame(
-                np.array(parameters_concat).reshape(len(parameters_concat), -1).T,
-                columns=concat_leg_names,
-                index=params_type,
-            ),
-            cmap="RdBu_r",
-            fmt=".2g",
-            # square=True,
-            annot=True,
-        )
-        plt.savefig(
-            os.path.join(
-                result_dir,
-                f"dpl_params_concat_values_{exps[0]}_fold{str(the_fold)}.png",
-            ),
-            dpi=600,
-            bbox_inches="tight",
-        )
+            norm_params = norm_params_.values.T
+            denorm_params = denorm_params_.values.T
+        elif param_test_way[i] == MODEL_PARAM_TEST_WAY["final_period"]:
+            norm_params, denorm_params = get_pbm_params_from_dpl(a_result_dir)
+        norm_params_concat.append(norm_params[:15])
+    if norm_params_concat[0].shape[-1] > 1:
+        raise ValueError("only support concating for one basin")
+    plt.figure()
+    sns.heatmap(
+        pd.DataFrame(
+            np.array(norm_params_concat).reshape(len(norm_params_concat), -1).T,
+            columns=leg_names,
+            index=params_type,
+        ),
+        cmap="RdBu_r",
+        fmt=".2g",
+        # square=True,
+        annot=True,
+    )
+    plt.savefig(
+        os.path.join(
+            fig_dir,
+            f"pbm_params_concat_values_{fig_name}.png",
+        ),
+        dpi=600,
+        bbox_inches="tight",
+    )
 
 
 def plot_dpl_comp_boxplots(
@@ -523,7 +436,9 @@ def plot_computing_time(exps, leg_names):
 
 
 def plot_camels_nse_map(inds_df_lst, exps):
-    camels = Camels(os.path.join(definitions.DATASET_DIR, "camels", "camels_us"))
+    camels = SelfMadeHydroDataset(
+        os.path.join(definitions.DATASET_DIR, "camels", "camels_us")
+    )
     lat_lon = camels.read_constant_cols(
         camels.camels_sites["gauge_id"].values, ["gauge_lat", "gauge_lon"]
     )
@@ -623,7 +538,7 @@ def plot_xaj_lstm_tl_dpl_rainfall_runoff(
 ):
     if c_lst is None:
         c_lst = ["red", "green", "blue", "black"]
-    camels_cc = Camels(
+    camels_cc = SelfMadeHydroDataset(
         os.path.join(definitions.DATASET_DIR, "camels", "camels_cc"), region="CC"
     )
     cc_shpfile_dir = os.path.join(
@@ -645,10 +560,8 @@ def plot_xaj_lstm_tl_dpl_rainfall_runoff(
         # title=site + " " + sites_Chinese[site_idx],
         title=sites_Chinese["StationNam"].values[0],
         fig_size=(12, 6),
-        # xlabel="date",
-        # ylabel="streamflow (m$^3$/s)",
-        xlabel="日期",
-        ylabel="径流（m$^3$/s）",
+        xlabel="date",
+        ylabel="streamflow (m$^3$/s)",
         linewidth=0.75,
         dash_lines=dash_lines,
         alpha=alpha,
@@ -662,18 +575,17 @@ def plot_xaj_lstm_tl_dpl_rainfall_runoff(
 
 
 if __name__ == "__main__":
-    # Create dummy data
-    data_map = np.random.rand(18)
-    pertile_range = [0, 100]
-    fig_size = (10, 6)
-    cmap_str = "jet"
-    vmin = None
-    vmax = None
-
-    # Call the function
-    plot_stations_in_a_boxregion(
-        data_map, pertile_range, fig_size, cmap_str, vmin, vmax
+    sceua_xaj_dir = os.path.join(RESULT_DIR, "XAJ", "changdian_61700_4_4")
+    dpl_dir = os.path.join(RESULT_DIR, "dPL", "result", "lrchange3", "changdian_61700")
+    dpl_nn_dir = os.path.join(RESULT_DIR, "dPL", "result", "module", "changdian_61700")
+    changdian_61700_name = "changdian_61700_sanhuangmiao"
+    plot_xaj_params_heatmap(
+        [sceua_xaj_dir, dpl_dir, dpl_nn_dir],
+        ["eXAJ", "dXAJ", "dXAJ$_{\mathrm{nn}}$"],
+        changdian_61700_name,
+        param_test_way=[
+            None,
+            MODEL_PARAM_TEST_WAY["final_period"],
+            MODEL_PARAM_TEST_WAY["final_period"],
+        ],
     )
-
-    # Check if the plot is created without any errors
-    plt.show()
