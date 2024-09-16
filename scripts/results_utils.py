@@ -97,9 +97,44 @@ def update_hydromodel_cfgs(result_dir):
         config_data = yaml.safe_load(file)
     config_data["data_dir"] = DATASET_DIR
     config_data["param_range_file"] = os.path.join(result_dir, "param_range.yaml")
+    # read denorm_params file
+    norm_params, denorm_params = get_pbm_params_from_hydromodelxaj(result_dir)
+    if len(denorm_params.columns) > 15:
+        kernel_size = int(denorm_params.iloc[:, 15].iloc[0])
+        config_data["model"]["kernel_size"] = kernel_size
+        denorm_params = denorm_params.iloc[:, :15]
+        norm_params = norm_params.iloc[:, :15]
+        # save the updated denorm_params file
+        denorm_params_file = os.path.join(
+            result_dir, "sceua_xaj", "basins_denorm_params.csv"
+        )
+        denorm_params.to_csv(denorm_params_file)
+        # save the updated norm_params file
+        norm_params_file = os.path.join(
+            result_dir, "sceua_xaj", "basins_norm_params.csv"
+        )
+        norm_params.to_csv(norm_params_file)
+    # read old param_range file
+    with open(config_data["param_range_file"], "r") as file:
+        param_range = yaml.safe_load(file)
+    # delete KERNEL keys in param_range
+    if "KERNEL" in param_range["xaj_mz"]["param_name"]:
+        param_range["xaj_mz"]["param_name"].remove("KERNEL")
+        param_range["xaj_mz"]["param_range"].pop("KERNEL")
+    # update the param_range file
+    with open(config_data["param_range_file"], "w") as file:
+        yaml.dump(param_range, file)
     # save the updated config file
     with open(config_yml_file, "w") as file:
         yaml.dump(config_data, file)
+    # read the calibrated parameter file and delete the KERNEL column
+    param_file = os.path.join(
+        result_dir, "sceua_xaj", result_dir.split(os.sep)[-1] + ".csv"
+    )
+    params = pd.read_csv(param_file)
+    if "parKERNEL" in params.columns:
+        params = params.drop(columns=["parKERNEL"])
+        params.to_csv(param_file, index=False)
     return config_data
 
 
@@ -488,21 +523,14 @@ def read_dpl_model_metric(cfg_dir_test, cfg_dir_train):
     return [train_metric_q, test_metric_q, inds_df_train_et, inds_df_valid_et]
 
 
-def get_pbm_params_from_hydromodelxaj(
-    exp, kfold, the_fold, sceua_plan, example, cfg_dir_flow
-):
-    comment_dir = get_latest_dirs_for_sceua_xaj(
-        example + os.sep + exp, sceua_plan, kfold
-    )
+def get_pbm_params_from_hydromodelxaj(result_dir):
     normlize_param_file = os.path.join(
-        cfg_dir_flow, comment_dir[the_fold], "basins_params.csv"
+        result_dir, "sceua_xaj", "basins_norm_params.csv"
     )
-    parameters = pd.read_csv(normlize_param_file, index_col=0).values
-    params_file = os.path.join(
-        cfg_dir_flow, comment_dir[the_fold], "basins_renormalization_params.csv"
-    )
-    params = pd.read_csv(params_file, index_col=0).values
-    return parameters, params
+    norm_params = pd.read_csv(normlize_param_file, index_col=0)
+    params_file = os.path.join(result_dir, "sceua_xaj", "basins_denorm_params.csv")
+    denorm_params = pd.read_csv(params_file, index_col=0)
+    return norm_params, denorm_params
 
 
 def get_pbm_params_from_dpl(cfg_dir_flow):
@@ -557,6 +585,9 @@ if __name__ == "__main__":
     read_sceua_xaj_et_metric(
         os.path.join(RESULT_DIR, "XAJ", "result_old", "changdian_61700")
     )
+    # get_pbm_params_from_hydromodelxaj(
+    #     os.path.join(RESULT_DIR, "XAJ", "result_old", "changdian_61700")
+    # )
     # read_dpl_model_q_and_et(
     #     os.path.join(
     #         RESULT_DIR,
