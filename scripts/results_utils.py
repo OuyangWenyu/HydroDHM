@@ -533,11 +533,52 @@ def get_pbm_params_from_hydromodelxaj(result_dir):
     return norm_params, denorm_params
 
 
-def get_pbm_params_from_dpl(cfg_dir_flow):
-    params_file = get_latest_pbm_param_file(cfg_dir_flow)
+def get_latest_pbm_param_file(param_dir):
+    """Get the latest parameter file of physics-based models in the current directory.
+
+    Parameters
+    ----------
+    param_dir : str
+        The directory of parameter files.
+
+    Returns
+    -------
+    str
+        The latest parameter file.
+    """
+    param_file_lst = [
+        os.path.join(param_dir, f)
+        for f in os.listdir(param_dir)
+        if f.startswith("pb_params") and f.endswith(".csv")
+    ]
+    param_files = [Path(f) for f in param_file_lst]
+    param_file_names_lst = [param_file.stem.split("_") for param_file in param_files]
+    ctimes = [
+        int(param_file_names[param_file_names.index("params") + 1])
+        for param_file_names in param_file_names_lst
+    ]
+    if len(ctimes) == 0:
+        return None
+    return param_files[ctimes.index(max(ctimes))]
+
+
+def get_pbm_params_from_dpl(result_dir):
+    params_file = get_latest_pbm_param_file(result_dir)
+    if params_file is None:
+        cfg_ = update_dl_cfg_paths(result_dir)
+        resulter = Resulter(cfg_)
+        resulter.save_intermediate_results(is_pbm_params=True)
+        params_file = get_latest_pbm_param_file(result_dir)
     parameters = pd.read_csv(params_file).iloc[:, 1:].values
-    params = np.zeros(parameters.shape)
-    param_range = MODEL_PARAM_DICT["xaj"]["param_range"]
+    params = _denorm_pbm_param(parameters)
+    params = params.T
+    parameters = parameters.T
+    return parameters, params
+
+
+def _denorm_pbm_param(norm_params):
+    denorm_params = np.zeros(norm_params.shape)
+    param_range = MODEL_PARAM_DICT["xaj_mz"]["param_range"]
     k_scale = param_range["K"]
     b_scale = param_range["B"]
     im_sacle = param_range["IM"]
@@ -553,38 +594,36 @@ def get_pbm_params_from_dpl(cfg_dir_flow):
     theta_scale = param_range["THETA"]
     ci_scale = param_range["CI"]
     cg_scale = param_range["CG"]
-    params[:, 0] = k_scale[0] + parameters[:, 0] * (k_scale[1] - k_scale[0])
-    params[:, 1] = b_scale[0] + parameters[:, 1] * (b_scale[1] - b_scale[0])
-    params[:, 2] = im_sacle[0] + parameters[:, 2] * (im_sacle[1] - im_sacle[0])
-    params[:, 3] = um_scale[0] + parameters[:, 3] * (um_scale[1] - um_scale[0])
-    params[:, 4] = lm_scale[0] + parameters[:, 4] * (lm_scale[1] - lm_scale[0])
-    params[:, 5] = dm_scale[0] + parameters[:, 5] * (dm_scale[1] - dm_scale[0])
-    params[:, 6] = c_scale[0] + parameters[:, 6] * (c_scale[1] - c_scale[0])
-    params[:, 7] = sm_scale[0] + parameters[:, 7] * (sm_scale[1] - sm_scale[0])
-    params[:, 8] = ex_scale[0] + parameters[:, 8] * (ex_scale[1] - ex_scale[0])
-    ki = ki_scale[0] + parameters[:, 9] * (ki_scale[1] - ki_scale[0])
-    kg = kg_scale[0] + parameters[:, 10] * (kg_scale[1] - kg_scale[0])
+    denorm_params[:, 0] = k_scale[0] + norm_params[:, 0] * (k_scale[1] - k_scale[0])
+    denorm_params[:, 1] = b_scale[0] + norm_params[:, 1] * (b_scale[1] - b_scale[0])
+    denorm_params[:, 2] = im_sacle[0] + norm_params[:, 2] * (im_sacle[1] - im_sacle[0])
+    denorm_params[:, 3] = um_scale[0] + norm_params[:, 3] * (um_scale[1] - um_scale[0])
+    denorm_params[:, 4] = lm_scale[0] + norm_params[:, 4] * (lm_scale[1] - lm_scale[0])
+    denorm_params[:, 5] = dm_scale[0] + norm_params[:, 5] * (dm_scale[1] - dm_scale[0])
+    denorm_params[:, 6] = c_scale[0] + norm_params[:, 6] * (c_scale[1] - c_scale[0])
+    denorm_params[:, 7] = sm_scale[0] + norm_params[:, 7] * (sm_scale[1] - sm_scale[0])
+    denorm_params[:, 8] = ex_scale[0] + norm_params[:, 8] * (ex_scale[1] - ex_scale[0])
+    ki = ki_scale[0] + norm_params[:, 9] * (ki_scale[1] - ki_scale[0])
+    kg = kg_scale[0] + norm_params[:, 10] * (kg_scale[1] - kg_scale[0])
     # ki+kg should be smaller than 1; if not, we scale them
-    params[:, 9] = np.where(ki + kg < 1.0, ki, 1 / (ki + kg) * ki)
-    params[:, 10] = np.where(ki + kg < 1.0, kg, 1 / (ki + kg) * kg)
-    params[:, 11] = a_scale[0] + parameters[:, 11] * (a_scale[1] - a_scale[0])
-    params[:, 12] = theta_scale[0] + parameters[:, 12] * (
+    denorm_params[:, 9] = np.where(ki + kg < 1.0, ki, 1 / (ki + kg) * ki)
+    denorm_params[:, 10] = np.where(ki + kg < 1.0, kg, 1 / (ki + kg) * kg)
+    denorm_params[:, 11] = a_scale[0] + norm_params[:, 11] * (a_scale[1] - a_scale[0])
+    denorm_params[:, 12] = theta_scale[0] + norm_params[:, 12] * (
         theta_scale[1] - theta_scale[0]
     )
-    params[:, 13] = ci_scale[0] + parameters[:, 13] * (ci_scale[1] - ci_scale[0])
-    params[:, 14] = cg_scale[0] + parameters[:, 14] * (cg_scale[1] - cg_scale[0])
-    params = params.T
-    parameters = parameters.T
-    return parameters, params
+    denorm_params[:, 13] = ci_scale[0] + norm_params[:, 13] * (ci_scale[1] - ci_scale[0])
+    denorm_params[:, 14] = cg_scale[0] + norm_params[:, 14] * (cg_scale[1] - cg_scale[0])
+    return denorm_params
 
 
 if __name__ == "__main__":
     # read_sceua_xaj_streamflow(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
     # read_sceua_xaj_streamflow_metric(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
     # read_sceua_xaj_et(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
-    read_sceua_xaj_et_metric(
-        os.path.join(RESULT_DIR, "XAJ", "result_old", "changdian_61700")
-    )
+    # read_sceua_xaj_et_metric(
+    #     os.path.join(RESULT_DIR, "XAJ", "result_old", "changdian_61700")
+    # )
     # get_pbm_params_from_hydromodelxaj(
     #     os.path.join(RESULT_DIR, "XAJ", "result_old", "changdian_61700")
     # )
@@ -621,3 +660,11 @@ if __name__ == "__main__":
     #         "changdian_61561_trainperiod",
     #     ),
     # )
+    get_pbm_params_from_dpl(
+        os.path.join(
+            RESULT_DIR,
+            "dPL",
+            "streamflow_prediction",
+            "changdian_61561",
+        )
+    )
