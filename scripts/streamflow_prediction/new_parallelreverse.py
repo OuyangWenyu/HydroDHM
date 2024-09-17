@@ -6,11 +6,11 @@ from concurrent.futures import ProcessPoolExecutor
 
 
 def dpl_selfmadehydrodataset_args(gage_id):
-    project_name = os.path.join("streamflow_prediction_camels20_reverse", gage_id)
+    project_name = os.path.join("streamflow_prediction_camels15y_reverse", gage_id)
     train_period = ["2018-10-01", "2023-10-01"]
-    valid_period = ["2014-10-01", "2019-10-01"]
+    valid_period = ["2004-10-01", "2019-10-01"]
     # valid_period = None
-    test_period = ["2014-10-01", "2019-10-01"]
+    test_period = ["2004-10-01", "2019-10-01"]
     return cmd(
         sub=project_name,
         source_cfgs={
@@ -173,20 +173,6 @@ if __name__ == "__main__":
         # "changdian_62618",
         # "changdian_91000",
 
-        # "camels_01539000",
-        # "camels_02231000",
-        # "camels_03161000",
-        # "camels_03300400",
-        # "camels_07261000",
-
-        # "camels_11532500",
-        # "camels_12025000",
-        # "camels_12035000",
-        # "camels_12145500",
-        # "camels_14301000",
-        # "camels_14306500",
-        # "camels_14325000",
-
         # "changdian_60650",
         # "changdian_60668",
         # "changdian_61239",
@@ -212,6 +198,46 @@ if __name__ == "__main__":
         # "changdian_94850",
         # "changdian_95350",
 
+
+        # "camels_01539000",
+        # "camels_02231000",
+        # "camels_03161000",
+        # "camels_03300400",
+        # "camels_07261000",
+
+        # "camels_11532500",
+        # "camels_12025000",
+        # # "camels_12035000",
+        # "camels_12145500",
+        # "camels_14301000",
+        # "camels_14306500",
+        # "camels_14325000",
+
+
+        # "camels_01440000",
+        # "camels_01440400",
+        # "camels_01532000",
+        # "camels_01552000",
+        # "camels_02070000",
+        # "camels_02137727",
+        # "camels_02140991",
+        # "camels_02177000",
+        # "camels_02212600",
+        "camels_02246000",
+        # "camels_02427250",
+        # "camels_03500000",
+
+
+        # "camels_03346000",
+        "camels_05501000",
+        # "camels_05514500",
+        "camels_07057500",
+        # "camels_07066000",
+        # "camels_07145700",
+        # "camels_07263295",
+        # "camels_07359610",
+        
+
         # "anhui_62909400",
         # "songliao_10911000",
         # "songliao_10912404",
@@ -225,28 +251,6 @@ if __name__ == "__main__":
         # "songliao_21300500",
         # "songliao_21401050",
         # "songliao_21401300",
-        
-        "camels_02246000",
-        "camels_01552000",
-        "camels_02177000",
-        # "camels_03500000",
-        # "camels_02140991",
-        "camels_01532000",
-        # "camels_02070000",
-        "camels_02212600",
-        "camels_02427250",
-        # "camels_01440000",
-        "camels_01440400",
-        "camels_02137727",
-
-        # "camels_03346000",
-        "camels_07066000",
-        "camels_07145700",
-        "camels_07057500",
-        "camels_07263295",
-        "camels_07359610",
-        # "camels_05501000",
-        # "camels_05514500",
         
         # Add your gage IDs here
         # Add more gage IDs as needed

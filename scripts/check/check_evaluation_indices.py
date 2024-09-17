@@ -1,3 +1,7 @@
+"""
+查看dPL模型训练效果，输出结果为验证集上的指标变化图表，包括Loss, NSE, RMSE, Corr, KGE, FHV, FLV
+"""
+
 import os
 import json
 import glob
@@ -6,10 +10,10 @@ import re
 import csv
 
 # 定义Streamflow_Prediction目录的路径
-root_dir = './results/data-limited_analysis_3to3_1518_1821'
-figure_dir = './results/data-limited_analysis/3to3_1518_1821'
-csv_file = './results/data-limited_analysis/3to3_1518_1821/evaluation_indices_summary.csv'
-    
+root_dir = './results/streamflow_prediction/streamflow_prediction_camels20'
+figure_dir = './results/evaluation_indices/streamflow_prediction_camels20'
+csv_file = './results/evaluation_indices/streamflow_prediction_camels20/evaluation_indices_summary.csv'
+
 # 确保保存图表的目录存在
 os.makedirs(figure_dir, exist_ok=True)
 
@@ -26,7 +30,7 @@ for location in os.listdir(root_dir):
     location_dir = os.path.join(root_dir, location)
     
     # 使用glob查找匹配的json文件
-    json_files = glob.glob(os.path.join(location_dir, '11_September_2024*.json'))
+    json_files = glob.glob(os.path.join(location_dir, '16_September_2024*.json'))
     
     # 如果找到了匹配的json文件
     if json_files:
@@ -122,10 +126,10 @@ for location in os.listdir(root_dir):
         final_nse = nse_values[-1]
         axs[1].text(final_epoch, final_nse + 0.02, f'Final NSE: {final_nse:.2f}', fontsize=15, color='green', ha='center', fontweight='bold')
 
-        # 下面5个子图：绘制RMSE, Corr, KGE, FLV, FHV图表
+        # 下面5个子图：绘制RMSE, R², KGE, FLV, FHV图表
         metrics = [
             ('RMSE', rmse_values, 'RMSE'),
-            ('Corr', corr_values, 'Corr'),
+            ('R²', corr_values, 'R²'),
             ('KGE', kge_values, 'KGE'),
             ('FHV', fhv_values, 'FHV'),
             ('FLV', flv_values, 'FLV')
