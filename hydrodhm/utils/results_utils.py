@@ -459,7 +459,7 @@ def read_dpl_model_q_and_et(cfg_dir_, cfg_dir_train=None, cfg_runagain=False):
             cfg_dir_train = cfg_train["data_cfgs"]["test_path"]
     cfg_train = get_json_file(cfg_dir_train)
     resulter = Resulter(cfg_train)
-    pred_train, obs_train = resulter.load_result()
+    pred_train, obs_train = resulter.load_result(convert_flow_unit=True)
     resulter.eval_result(pred_train, obs_train)
 
     cfg_test = update_dl_cfg_paths(cfg_dir_)
@@ -472,7 +472,7 @@ def read_dpl_model_q_and_et(cfg_dir_, cfg_dir_train=None, cfg_runagain=False):
             cfg_test["data_cfgs"]["stat_dict_file"] = None
             train_and_evaluate(cfg_test)
     resulter = Resulter(cfg_test)
-    pred_test, obs_test = resulter.load_result()
+    pred_test, obs_test = resulter.load_result(convert_flow_unit=True)
     resulter.eval_result(pred_test, obs_test)
 
     basin_ids = cfg_test["data_cfgs"]["object_ids"]
@@ -617,7 +617,7 @@ if __name__ == "__main__":
     sceua_dir = os.path.join(RESULT_DIR, "XAJ", "changdian_61700_4_4")
     dpl_dir = os.path.join(RESULT_DIR, "dPL", "result", "lrchange3", "changdian_61700")
     dpl_nn_dir = os.path.join(RESULT_DIR, "dPL", "result", "module", "changdian_61700")
-    read_sceua_xaj_streamflow(sceua_dir)
+    # read_sceua_xaj_streamflow(sceua_dir)
     # read_sceua_xaj_streamflow_metric(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
     # read_sceua_xaj_et(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
     # read_sceua_xaj_et_metric(
@@ -626,23 +626,8 @@ if __name__ == "__main__":
     # get_pbm_params_from_hydromodelxaj(
     #     os.path.join(RESULT_DIR, "XAJ", "result_old", "changdian_61700")
     # )
-    # read_dpl_model_q_and_et(
-    #     os.path.join(
-    #         RESULT_DIR,
-    #         "dPL",
-    #         "streamflow_prediction",
-    #         "streamflow_prediction_50epoch",
-    #         "changdian_61561",
-    #     ),
-    #     os.path.join(
-    #         RESULT_DIR,
-    #         "dPL",
-    #         "streamflow_prediction",
-    #         "streamflow_prediction_50epoch",
-    #         "changdian_61561_trainperiod",
-    #     ),
-    #     cfg_runagain=True,
-    # )
+    read_dpl_model_q_and_et(dpl_dir)
+    read_dpl_model_q_and_et(dpl_nn_dir)
     # read_dpl_model_metric(
     #     os.path.join(
     #         RESULT_DIR,
