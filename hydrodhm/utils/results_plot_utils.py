@@ -26,15 +26,333 @@ from torchhydro import SETTING
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent))
 from definitions import DATASET_DIR, RESULT_DIR
 from hydrodhm.utils.results_utils import (
+    ET_MODIS_NAME,
     _save_pbm_params,
     get_json_file,
     get_latest_pbm_param_file,
     get_pbm_params_from_dpl,
     get_pbm_params_from_hydromodelxaj,
     read_dpl_model_q_and_et,
+    read_sceua_xaj_et,
     read_sceua_xaj_streamflow,
     read_tb_log_loss,
 )
+
+
+def plot_xaj_params_heatmap(
+    result_dirs,
+    leg_names,
+    fig_name,
+    param_test_way=[
+        None,
+        MODEL_PARAM_TEST_WAY["final_period"],
+        MODEL_PARAM_TEST_WAY["final_period"],
+    ],
+    fig_dir=None,
+):
+    """Plot CAMELS CC XAJ models' parameters heatmap
+
+    Parameters
+    ----------
+    exp_dirs : _type_
+        the directories of experiments
+    leg_names : _type_
+        _description_
+    fig_name : _type_
+        name of the figure
+    """
+    norm_params_concat = []
+    if fig_dir is None:
+        fig_dir = result_dirs[0]
+    for i in range(len(result_dirs)):
+        if leg_names[i] != "eXAJ":
+            a_result_dir = result_dirs[i]
+            first_params_file = get_latest_pbm_param_file(a_result_dir)
+            if first_params_file is None:
+                _save_pbm_params(a_result_dir)
+                first_params_file = get_latest_pbm_param_file(a_result_dir)
+            params_type = pd.read_csv(first_params_file).columns.values[1:]
+            params_type = np.array(
+                ["$\Theta$" if tmp == "THETA" else tmp for tmp in params_type]
+            )
+            break
+    for i in range(len(result_dirs)):
+        a_result_dir = result_dirs[i]
+        if leg_names[i] == "eXAJ":
+            norm_params_, denorm_params_ = get_pbm_params_from_hydromodelxaj(
+                a_result_dir
+            )
+            norm_params = norm_params_.values.T
+            denorm_params = denorm_params_.values.T
+        elif param_test_way[i] == MODEL_PARAM_TEST_WAY["final_period"]:
+            norm_params, denorm_params = get_pbm_params_from_dpl(a_result_dir)
+        norm_params_concat.append(norm_params[:15])
+    if norm_params_concat[0].shape[-1] > 1:
+        raise ValueError("only support concating for one basin")
+    plt.figure()
+    sns.heatmap(
+        pd.DataFrame(
+            np.array(norm_params_concat).reshape(len(norm_params_concat), -1).T,
+            columns=leg_names,
+            index=params_type,
+        ),
+        cmap="RdBu_r",
+        fmt=".2g",
+        # square=True,
+        annot=True,
+    )
+    plt.savefig(
+        os.path.join(
+            fig_dir,
+            f"pbm_params_concat_values_{fig_name}.png",
+        ),
+        dpi=600,
+        bbox_inches="tight",
+    )
+
+
+def plot_losses_ts(dl_result_dirs, leg_lst, ylabel="Loss", fig_dir=None):
+    if fig_dir is None:
+        fig_dir = dl_result_dirs[0]
+    step_lst = []
+    validloss_lst = []
+    loss_lst = []
+    for i, a_exp in tqdm(enumerate(dl_result_dirs)):
+        df_loss, df_validloss = read_tb_log_loss(a_exp)
+        step_lst.append(df_loss["step"].values)
+        loss_lst.append(df_loss["value"].values)
+        validloss_lst.append(df_validloss["value"].values)
+    plot_ts(
+        step_lst + step_lst,
+        loss_lst + validloss_lst,
+        leg_lst=leg_lst,
+        fig_size=(6, 4),
+        xlabel="Epoch",
+        ylabel=ylabel,
+    )
+    plt.savefig(
+        os.path.join(
+            fig_dir,
+            f"dpl_dplnn_{ylabel}.png",
+        ),
+        dpi=600,
+        bbox_inches="tight",
+    )
+
+
+def plot_xaj_rainfall_runoff(
+    result_dirs,
+    basin_id,
+    basin_name,
+    alpha=0.5,
+    c_lst=None,
+    leg_names=["eXAJ", "dXAJ", "dXAJ$_{\mathrm{nn}}$", "OBS"],
+    fig_dir=None,
+):
+    if fig_dir is None:
+        fig_dir = result_dirs[0]
+    if c_lst is None:
+        c_lst = ["red", "green", "blue", "black"]
+    train_ts = []
+    valid_ts = []
+    train_periods_wo_warmup = []
+    valid_periods_wo_warmup = []
+    for j, a_result_dir in enumerate(result_dirs):
+        if leg_names[j] == "eXAJ":
+            [
+                pred_train,
+                pred_valid,
+                obs_train,
+                obs_valid,
+            ] = read_sceua_xaj_streamflow(
+                a_result_dir,
+            )
+            train_ts.append(pred_train.values.flatten())
+            valid_ts.append(pred_valid.values.flatten())
+        else:
+            (
+                [
+                    pred_train,
+                    pred_valid,
+                    obs_train,
+                    obs_valid,
+                ],
+                [
+                    etsim_train,
+                    etsim_test,
+                    etobs_train,
+                    etobs_test,
+                ],
+            ) = read_dpl_model_q_and_et(
+                a_result_dir,
+            )
+            # TODO: all time-intervals are left-right closed, but we forget to set as this in dpl, so we need to remove the last time point
+            train_ts.append(pred_train.values.flatten()[:-1])
+            valid_ts.append(pred_valid.values.flatten()[:-1])
+    train_ts.append(obs_train.values.flatten()[:-1])
+    valid_ts.append(obs_valid.values.flatten()[:-1])
+    train_periods_wo_warmup.append(obs_train["time"].values[:-1])
+    valid_periods_wo_warmup.append(obs_valid["time"].values[:-1])
+    dash_lines = [False] * len(leg_names)
+    dash_lines[-1] = True
+    selfmadehydrodataset = SelfMadeHydroDataset(DATASET_DIR)
+    prcps_train = selfmadehydrodataset.read_ts_xrdataset(
+        [basin_id],
+        [train_periods_wo_warmup[0][0], train_periods_wo_warmup[0][-1]],
+        ["total_precipitation_hourly"],
+    )
+    prcps_valid = selfmadehydrodataset.read_ts_xrdataset(
+        [basin_id],
+        [valid_periods_wo_warmup[0][0], valid_periods_wo_warmup[0][-1]],
+        ["total_precipitation_hourly"],
+    )
+    # plot train
+    plot_rainfall_runoff(
+        train_periods_wo_warmup * len(leg_names),
+        prcps_train["1D"]["total_precipitation_hourly"].values.flatten(),
+        train_ts,
+        leg_lst=leg_names,
+        # title=site + " " + sites_Chinese[site_idx],
+        title=basin_name,
+        fig_size=(12, 6),
+        xlabel="date",
+        ylabel="streamflow (m$^3$/s)",
+        linewidth=0.75,
+        dash_lines=dash_lines,
+        c_lst=c_lst,
+    )
+    plt.savefig(
+        os.path.join(
+            fig_dir, basin_id + "_" + basin_name + "_rainfall_runoff_train.png"
+        ),
+        dpi=600,
+        bbox_inches="tight",
+    )
+    # plot valid
+    plot_rainfall_runoff(
+        valid_periods_wo_warmup * len(leg_names),
+        prcps_valid["1D"]["total_precipitation_hourly"].values.flatten(),
+        valid_ts,
+        leg_lst=leg_names,
+        # title=site + " " + sites_Chinese[site_idx],
+        title=basin_name,
+        fig_size=(12, 6),
+        xlabel="date",
+        ylabel="streamflow (m$^3$/s)",
+        linewidth=0.75,
+        dash_lines=dash_lines,
+        c_lst=c_lst,
+    )
+    plt.savefig(
+        os.path.join(
+            fig_dir, basin_id + "_" + basin_name + "_rainfall_runoff_valid.png"
+        ),
+        dpi=600,
+        bbox_inches="tight",
+    )
+
+
+def plot_xaj_et_time_series(
+    result_dirs,
+    basin_id,
+    basin_name,
+    leg_names=["eXAJ", "dXAJ", "dXAJ$_{\mathrm{nn}}$", "OBS"],
+    fig_dir=None,
+):
+    """Plot ET time series
+
+    Parameters
+    ----------
+    exps : _type_
+        _description_
+    basin_id : _type_
+        _description_
+    basin_name : _type_
+        _description_
+    """
+    train_ets = []
+    valid_ets = []
+    train_periods_wo_warmup = []
+    valid_periods_wo_warmup = []
+    print(f"Basin {basin_id}:")
+    for j in range(len(result_dirs)):
+        if leg_names[j] == "eXAJ":
+            (
+                pred_et_train,
+                pred_et_valid,
+                obs_et_train,
+                obs_et_valid,
+            ) = read_sceua_xaj_et(
+                result_dirs[j],
+            )
+            train_ets.append(pred_et_train.values.flatten())
+            valid_ets.append(pred_et_valid.values.flatten())
+            train_periods_wo_warmup.append(pred_et_train["time"].values)
+            valid_periods_wo_warmup.append(pred_et_valid["time"].values)
+        else:
+            (
+                [
+                    pred_train,
+                    pred_valid,
+                    obs_train,
+                    obs_valid,
+                ],
+                [
+                    pred_et_train,
+                    pred_et_valid,
+                    etobs_train,
+                    etobs_test,
+                ],
+            ) = read_dpl_model_q_and_et(
+                result_dirs[j],
+            )
+            train_ets.append(pred_et_train.values.flatten()[:-1])
+            valid_ets.append(pred_et_valid.values.flatten()[:-1])
+            train_periods_wo_warmup.append(pred_et_train["time"].values[:-1])
+            valid_periods_wo_warmup.append(pred_et_valid["time"].values[:-1])
+    train_ets.append(obs_et_train.values.flatten())
+    valid_ets.append(obs_et_valid.values.flatten())
+    train_periods_wo_warmup.append(obs_et_train["time"].values)
+    valid_periods_wo_warmup.append(obs_et_valid["time"].values)
+    plot_ts(
+        train_periods_wo_warmup,
+        train_ets,
+        leg_lst=leg_names,
+        c_lst=["r", "g", "b", "k"],
+        alpha=0.5,
+        xlabel="Date",
+        ylabel="ET(mm/day)",
+        dash_lines=[False, False, False, True],
+    )
+    plt.savefig(
+        os.path.join(
+            fig_dir,
+            "fold0_train_dpl_et_" + ET_MODIS_NAME + "_ts_" + basin_id + ".png",
+        ),
+        dpi=600,
+        bbox_inches="tight",
+    )
+    plot_ts(
+        valid_periods_wo_warmup,
+        valid_ets,
+        leg_lst=leg_names,
+        c_lst=["r", "g", "b", "k"],
+        alpha=0.5,
+        xlabel="Date",
+        ylabel="ET(mm/day)",
+        dash_lines=[False, False, False, True],
+    )
+    plt.savefig(
+        os.path.join(
+            fig_dir,
+            "fold0_valid_dpl_et_" + ET_MODIS_NAME + "_ts_" + basin_id + ".png",
+        ),
+        dpi=600,
+        bbox_inches="tight",
+    )
+
+
+# ----------- The following function is not finished yet ------------
 
 
 def plot_stations_in_a_boxregion(
@@ -202,78 +520,6 @@ def plot_dpl_comp_boxplots(
     )
 
 
-def plot_xaj_params_heatmap(
-    result_dirs,
-    leg_names,
-    fig_name,
-    param_test_way=[
-        None,
-        MODEL_PARAM_TEST_WAY["final_period"],
-        MODEL_PARAM_TEST_WAY["final_period"],
-    ],
-    fig_dir=None,
-):
-    """Plot CAMELS CC XAJ models' parameters heatmap
-
-    Parameters
-    ----------
-    exp_dirs : _type_
-        the directories of experiments
-    leg_names : _type_
-        _description_
-    fig_name : _type_
-        name of the figure
-    """
-    norm_params_concat = []
-    if fig_dir is None:
-        fig_dir = result_dirs[0]
-    for i in range(len(result_dirs)):
-        if leg_names[i] != "eXAJ":
-            a_result_dir = result_dirs[i]
-            first_params_file = get_latest_pbm_param_file(a_result_dir)
-            if first_params_file is None:
-                _save_pbm_params(a_result_dir)
-                first_params_file = get_latest_pbm_param_file(a_result_dir)
-            params_type = pd.read_csv(first_params_file).columns.values[1:]
-            params_type = np.array(
-                ["$\Theta$" if tmp == "THETA" else tmp for tmp in params_type]
-            )
-            break
-    for i in range(len(result_dirs)):
-        a_result_dir = result_dirs[i]
-        if leg_names[i] == "eXAJ":
-            norm_params_, denorm_params_ = get_pbm_params_from_hydromodelxaj(
-                a_result_dir
-            )
-            norm_params = norm_params_.values.T
-            denorm_params = denorm_params_.values.T
-        elif param_test_way[i] == MODEL_PARAM_TEST_WAY["final_period"]:
-            norm_params, denorm_params = get_pbm_params_from_dpl(a_result_dir)
-        norm_params_concat.append(norm_params[:15])
-    if norm_params_concat[0].shape[-1] > 1:
-        raise ValueError("only support concating for one basin")
-    plt.figure()
-    sns.heatmap(
-        pd.DataFrame(
-            np.array(norm_params_concat).reshape(len(norm_params_concat), -1).T,
-            columns=leg_names,
-            index=params_type,
-        ),
-        cmap="RdBu_r",
-        fmt=".2g",
-        # square=True,
-        annot=True,
-    )
-    plt.savefig(
-        os.path.join(
-            fig_dir,
-            f"pbm_params_concat_values_{fig_name}.png",
-        ),
-        dpi=600,
-        bbox_inches="tight",
-    )
-
-
 def plot_dpl_comp_boxplots(
     exps,
     inds_df_lst,
@@ -310,65 +556,6 @@ def plot_dpl_comp_boxplots(
         dpi=FIGURE_DPI,
         bbox_inches="tight",
     )
-
-
-def plot_time_series(
-    exps, obss, preds, shown_sites, sites_Chinese, time_range, cases_in_legend
-):
-    """Plot time series for shown_sites with multiple exps' results
-
-    Parameters
-    ----------
-    exps : _type_
-        _description_
-    obss : _type_
-        _description_
-    shown_sites : _type_
-        _description_
-    time_range : _type_
-        _description_
-    """
-    # from mplfonts import use_font
-    # use_font("Noto Serif CJK SC")
-    dates = t_range_days(time_range)
-    cfg_dir_flow = os.path.join(RESULT_DIR, "camels", exps[0])
-    cfg_flow = get_json_file(cfg_dir_flow)
-    test_period = cfg_flow["data_params"]["t_range_test"]
-    warmup_length = cfg_flow["data_params"]["warmup_length"]
-    sites_all = cfg_flow["data_params"]["object_ids"]
-    test_periods = t_range_days(test_period)
-    inter_dates, i1, i2 = np.intersect1d(
-        test_periods[warmup_length:], dates, return_indices=True
-    )
-    # preds and obs
-    # all obs in obss are same
-    obs = obss[0][:, i1]
-    cases_len = len(exps) + 1
-    for site in shown_sites:
-        data_lst = []
-        site_idx = sites_all.index(site)
-        for pred in preds:
-            if pred.shape[1] <= len(i1):
-                # for LSTM and SCE-UA we directly provide data in time_range
-                data_lst.append(pred[site_idx, :])
-            else:
-                data_lst.append(pred[site_idx, i1])
-        data_lst.append(obs[site_idx, :])
-        plot_ts(
-            np.tile(dates, (cases_len, 1)).tolist(),
-            np.array(data_lst).tolist(),
-            leg_lst=cases_in_legend,
-            title=site + " " + sites_Chinese[site_idx],
-            fig_size=(8, 4),
-            xlabel="date",
-            ylabel="m$^3$/s",
-            linewidth=1,
-        )
-        plt.savefig(
-            os.path.join(cfg_dir_flow, "camels_cc_ts_" + site + ".png"),
-            dpi=600,
-            bbox_inches="tight",
-        )
 
 
 def plot_computing_time(exps, leg_names):
@@ -470,154 +657,16 @@ def plot_camels_nse_map(inds_df_lst, exps):
         )
 
 
-def plot_losses_ts(dl_result_dirs, leg_lst, ylabel="Loss", fig_dir=None):
-    if fig_dir is None:
-        fig_dir = dl_result_dirs[0]
-    step_lst = []
-    validloss_lst = []
-    loss_lst = []
-    for i, a_exp in tqdm(enumerate(dl_result_dirs)):
-        df_loss, df_validloss = read_tb_log_loss(a_exp)
-        step_lst.append(df_loss["step"].values)
-        loss_lst.append(df_loss["value"].values)
-        validloss_lst.append(df_validloss["value"].values)
-    plot_ts(
-        step_lst + step_lst,
-        loss_lst + validloss_lst,
-        leg_lst=leg_lst,
-        fig_size=(6, 4),
-        xlabel="Epoch",
-        ylabel=ylabel,
-    )
-    plt.savefig(
-        os.path.join(
-            fig_dir,
-            f"dpl_dplnn_{ylabel}.png",
-        ),
-        dpi=600,
-        bbox_inches="tight",
-    )
-
-
-def plot_xaj_rainfall_runoff(
-    result_dirs,
-    basin_id,
-    basin_name,
-    alpha=0.5,
-    c_lst=None,
-    leg_names=["eXAJ", "dXAJ", "dXAJ$_{\mathrm{nn}}$", "OBS"],
-    fig_dir=None,
-):
-    if fig_dir is None:
-        fig_dir = result_dirs[0]
-    if c_lst is None:
-        c_lst = ["red", "green", "blue", "black"]
-    train_ts = []
-    valid_ts = []
-    train_periods_wo_warmup = []
-    valid_periods_wo_warmup = []
-    for j, a_result_dir in enumerate(result_dirs):
-        if leg_names[j] == "eXAJ":
-            [
-                pred_train,
-                pred_valid,
-                obs_train,
-                obs_valid,
-            ] = read_sceua_xaj_streamflow(
-                a_result_dir,
-            )
-            train_ts.append(pred_train.values.flatten())
-            valid_ts.append(pred_valid.values.flatten())
-        else:
-            (
-                [
-                    pred_train,
-                    pred_valid,
-                    obs_train,
-                    obs_valid,
-                ],
-                [
-                    etsim_train,
-                    etsim_test,
-                    etobs_train,
-                    etobs_test,
-                ],
-            ) = read_dpl_model_q_and_et(
-                a_result_dir,
-            )
-            # TODO: all time-intervals are left-right closed, but we forget to set as this in dpl, so we need to remove the last time point
-            train_ts.append(pred_train.values.flatten()[:-1])
-            valid_ts.append(pred_valid.values.flatten()[:-1])
-    train_ts.append(obs_train.values.flatten()[:-1])
-    valid_ts.append(obs_valid.values.flatten()[:-1])
-    train_periods_wo_warmup.append(obs_train["time"].values[:-1])
-    valid_periods_wo_warmup.append(obs_valid["time"].values[:-1])
-    dash_lines = [False] * len(leg_names)
-    dash_lines[-1] = True
-    selfmadehydrodataset = SelfMadeHydroDataset(DATASET_DIR)
-    prcps_train = selfmadehydrodataset.read_ts_xrdataset(
-        [basin_id],
-        [train_periods_wo_warmup[0][0], train_periods_wo_warmup[0][-1]],
-        ["total_precipitation_hourly"],
-    )
-    prcps_valid = selfmadehydrodataset.read_ts_xrdataset(
-        [basin_id],
-        [valid_periods_wo_warmup[0][0], valid_periods_wo_warmup[0][-1]],
-        ["total_precipitation_hourly"],
-    )
-    # plot train
-    plot_rainfall_runoff(
-        train_periods_wo_warmup * len(leg_names),
-        prcps_train["1D"]["total_precipitation_hourly"].values.flatten(),
-        train_ts,
-        leg_lst=leg_names,
-        # title=site + " " + sites_Chinese[site_idx],
-        title=basin_name,
-        fig_size=(12, 6),
-        xlabel="date",
-        ylabel="streamflow (m$^3$/s)",
-        linewidth=0.75,
-        dash_lines=dash_lines,
-        c_lst=c_lst,
-    )
-    plt.savefig(
-        os.path.join(
-            fig_dir, basin_id + "_" + basin_name + "_rainfall_runoff_train.png"
-        ),
-        dpi=600,
-        bbox_inches="tight",
-    )
-    # plot valid
-    plot_rainfall_runoff(
-        valid_periods_wo_warmup * len(leg_names),
-        prcps_valid["1D"]["total_precipitation_hourly"].values.flatten(),
-        valid_ts,
-        leg_lst=leg_names,
-        # title=site + " " + sites_Chinese[site_idx],
-        title=basin_name,
-        fig_size=(12, 6),
-        xlabel="date",
-        ylabel="streamflow (m$^3$/s)",
-        linewidth=0.75,
-        dash_lines=dash_lines,
-        c_lst=c_lst,
-    )
-    plt.savefig(
-        os.path.join(
-            fig_dir, basin_id + "_" + basin_name + "_rainfall_runoff_valid.png"
-        ),
-        dpi=600,
-        bbox_inches="tight",
-    )
-
-
 if __name__ == "__main__":
     sceua_xaj_dir = os.path.join(RESULT_DIR, "XAJ", "changdian_61700_4_4")
     dpl_dir = os.path.join(RESULT_DIR, "dPL", "result", "lrchange3", "changdian_61700")
     dpl_nn_dir = os.path.join(RESULT_DIR, "dPL", "result", "module", "changdian_61700")
     basin_id = "changdian_61700"
     changdian_61700_name = "sanhuangmiao"
-    plot_xaj_rainfall_runoff(
+    # plot_xaj_rainfall_runoff(
+    #     [sceua_xaj_dir, dpl_dir, dpl_nn_dir], basin_id, changdian_61700_name
+    # )
+    plot_xaj_et_time_series(
         [sceua_xaj_dir, dpl_dir, dpl_nn_dir], basin_id, changdian_61700_name
     )
     # plot_losses_ts(

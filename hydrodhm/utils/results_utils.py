@@ -132,20 +132,20 @@ def update_hydromodel_cfgs(result_dir):
     with open(config_yml_file, "w") as file:
         yaml.dump(config_data, file)
     # read the calibrated parameter file and delete the KERNEL column
-    param_file = os.path.join(
-        result_dir, "sceua_xaj", result_dir.split(os.sep)[-1] + ".csv"
-    )
-    params = pd.read_csv(param_file)
-    if "parKERNEL" in params.columns:
-        params = params.drop(columns=["parKERNEL"])
-        params.to_csv(param_file, index=False)
+    basin_ids = config_data["basin_id"]
+    for basin_id in basin_ids:
+        param_file = os.path.join(result_dir, "sceua_xaj", f"{basin_id}.csv")
+        params = pd.read_csv(param_file)
+        if "parKERNEL" in params.columns:
+            params = params.drop(columns=["parKERNEL"])
+            params.to_csv(param_file, index=False)
     return config_data
 
 
 def read_sceua_xaj_et(result_dir, et_type=ET_MODIS_NAME):
     config_data = update_hydromodel_cfgs(result_dir)
     basin_ids = config_data["basin_id"]
-
+    warmup = config_data["warmup"]
     train_result_file = os.path.join(
         result_dir,
         "sceua_xaj",
@@ -184,10 +184,16 @@ def read_sceua_xaj_et(result_dir, et_type=ET_MODIS_NAME):
         et_type, basin_ids, t_range_train, t_range_test
     )
 
-    et_sim_train = et_sim_train_["etsim"]
-    et_sim_test = et_sim_test_["etsim"]
-    et_obs_train = et_obs_train_["8D"][et_type]
-    et_obs_test = et_obs_test_["8D"][et_type]
+    et_sim_train = et_sim_train_["etsim"].isel(time=slice(warmup, None))
+    et_sim_test = et_sim_test_["etsim"].isel(time=slice(warmup, None))
+    desired_train_time = et_sim_train.time.values
+    desired_test_time = et_sim_test.time.values
+    et_obs_train = et_obs_train_["8D"][et_type].sel(
+        time=slice(desired_train_time[0], desired_train_time[-1])
+    )
+    et_obs_test = et_obs_test_["8D"][et_type].sel(
+        time=slice(desired_test_time[0], desired_test_time[-1])
+    )
     return [et_sim_train, et_sim_test, et_obs_train, et_obs_test]
 
 
@@ -216,37 +222,14 @@ def read_sceua_xaj_et_metric(result_dir, et_type=ET_MODIS_NAME):
 
 
 def _xrarray_cal_et_metric(pred_train_, pred_valid_, obs_train_, obs_valid_):
-    # Convert xarray time to pandas Timestamps for range calculation
-    obs_train_time_min = pd.Timestamp(obs_train_.time.min().item())
-    obs_train_time_max = pd.Timestamp(obs_train_.time.max().item())
-    pred_train_time_min = pd.Timestamp(pred_train_.time.min().item())
-    pred_train_time_max = pd.Timestamp(pred_train_.time.max().item())
-
-    # Create common time index for training data
-    common_time_index_train = pd.date_range(
-        start=max(obs_train_time_min, pred_train_time_min),
-        end=min(obs_train_time_max, pred_train_time_max),
-        freq="D",
+    obs_train_aligned, pred_train_aligned = align_time_and_interval(
+        obs_train_, pred_train_
     )
 
-    # Reindex obs_train_ and pred_train_ to align by time
-    obs_train_aligned = obs_train_.reindex(time=common_time_index_train, method=None)
-    pred_train_aligned = pred_train_.reindex(time=common_time_index_train, method=None)
-
-    # Similarly, align validation data
-    obs_valid_time_min = pd.Timestamp(obs_valid_.time.min().item())
-    obs_valid_time_max = pd.Timestamp(obs_valid_.time.max().item())
-    pred_valid_time_min = pd.Timestamp(pred_valid_.time.min().item())
-    pred_valid_time_max = pd.Timestamp(pred_valid_.time.max().item())
-
-    common_time_index_valid = pd.date_range(
-        start=max(obs_valid_time_min, pred_valid_time_min),
-        end=min(obs_valid_time_max, pred_valid_time_max),
-        freq="D",
+    obs_valid_aligned, pred_valid_aligned = align_time_and_interval(
+        obs_valid_,
+        pred_valid_,
     )
-
-    obs_valid_aligned = obs_valid_.reindex(time=common_time_index_valid, method=None)
-    pred_valid_aligned = pred_valid_.reindex(time=common_time_index_valid, method=None)
 
     # Now compute metrics using aligned data
     inds_df_train = pd.DataFrame(
@@ -265,6 +248,25 @@ def _xrarray_cal_et_metric(pred_train_, pred_valid_, obs_train_, obs_valid_):
     )
 
     return inds_df_train, inds_df_valid
+
+
+def align_time_and_interval(obs_, pred_):
+    obs_time_min = pd.Timestamp(obs_.time.min().item())
+    obs_time_max = pd.Timestamp(obs_.time.max().item())
+    pred_time_min = pd.Timestamp(pred_.time.min().item())
+    pred_time_max = pd.Timestamp(pred_.time.max().item())
+
+    # Create common time index for training data
+    common_time_index = pd.date_range(
+        start=max(obs_time_min, pred_time_min),
+        end=min(obs_time_max, pred_time_max),
+        freq="D",
+    )
+
+    # Reindex obs_train_ and pred_train_ to align by time
+    obs_aligned = obs_.reindex(time=common_time_index, method=None)
+    pred_aligned = pred_.reindex(time=common_time_index, method=None)
+    return obs_aligned, pred_aligned
 
 
 def get_json_file(cfg_dir):
