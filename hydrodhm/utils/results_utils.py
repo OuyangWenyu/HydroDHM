@@ -39,6 +39,10 @@ def read_sceua_xaj_streamflow(result_dir):
     tuple[xr.DataArray, xr.DataArray, xr.DataArray, xr.DataArray]
         qsim_train, qsim_test, qobs_train, qobs_test
     """
+    config_yml_file = os.path.join(result_dir, "config.yaml")
+    with open(config_yml_file, "r") as file:
+        config_data = yaml.safe_load(file)
+    warmup = config_data["warmup"]
     train_result_file = os.path.join(
         result_dir, "sceua_xaj", "train", "xaj_mz_evaluation_results.nc"
     )
@@ -50,10 +54,10 @@ def read_sceua_xaj_streamflow(result_dir):
     )
     data_train = xr.open_dataset(train_result_file)
     data_test = xr.open_dataset(test_result_file)
-    qsim_train = data_train["qsim"]
-    qsim_test = data_test["qsim"]
-    qobs_train = data_train["qobs"]
-    qobs_test = data_test["qobs"]
+    qsim_train = data_train["qsim"].isel(time=slice(warmup, None))
+    qsim_test = data_test["qsim"].isel(time=slice(warmup, None))
+    qobs_train = data_train["qobs"].isel(time=slice(warmup, None))
+    qobs_test = data_test["qobs"].isel(time=slice(warmup, None))
     return [
         qsim_train,
         qsim_test,
@@ -304,7 +308,7 @@ def update_dl_cfg_paths(cfg_dir_):
     return cfg_
 
 
-def cfg4trainperiod(cfg):
+def _cfg4trainperiod(cfg):
     """A new cfg for training period data simulation
 
     Parameters
@@ -440,16 +444,19 @@ def read_dpl_model_q_and_et(cfg_dir_, cfg_dir_train=None, cfg_runagain=False):
         ],
     """
     if cfg_dir_train is None:
-        # we need to run the trained model to get the training period data simulation
-        cfg_train = update_dl_cfg_paths(cfg_dir_)
-        cfg_train = cfg4trainperiod(cfg_train)
-        try:
-            train_and_evaluate(cfg_train)
-        except KeyError:
-            cfg_train["training_cfgs"]["train_mode"] = True
-            cfg_train["data_cfgs"]["stat_dict_file"] = None
-            train_and_evaluate(cfg_train)
-        cfg_dir_train = cfg_train["data_cfgs"]["test_path"]
+        cfg_dir_train = cfg_dir_ + "_trainperiod"
+        if not os.path.exists(os.path.join(cfg_dir_train, "metric_streamflow.csv")):
+            # if the metric file exists, we do not need to run the model again
+            # we need to run the trained model to get the training period data simulation
+            cfg_train = update_dl_cfg_paths(cfg_dir_)
+            cfg_train = _cfg4trainperiod(cfg_train)
+            try:
+                train_and_evaluate(cfg_train)
+            except KeyError:
+                cfg_train["training_cfgs"]["train_mode"] = True
+                cfg_train["data_cfgs"]["stat_dict_file"] = None
+                train_and_evaluate(cfg_train)
+            cfg_dir_train = cfg_train["data_cfgs"]["test_path"]
     cfg_train = get_json_file(cfg_dir_train)
     resulter = Resulter(cfg_train)
     pred_train, obs_train = resulter.load_result()
@@ -607,9 +614,10 @@ def read_tb_log_loss(result_dir):
 
 
 if __name__ == "__main__":
+    sceua_dir = os.path.join(RESULT_DIR, "XAJ", "changdian_61700_4_4")
     dpl_dir = os.path.join(RESULT_DIR, "dPL", "result", "lrchange3", "changdian_61700")
     dpl_nn_dir = os.path.join(RESULT_DIR, "dPL", "result", "module", "changdian_61700")
-    # read_sceua_xaj_streamflow(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
+    read_sceua_xaj_streamflow(sceua_dir)
     # read_sceua_xaj_streamflow_metric(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
     # read_sceua_xaj_et(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
     # read_sceua_xaj_et_metric(

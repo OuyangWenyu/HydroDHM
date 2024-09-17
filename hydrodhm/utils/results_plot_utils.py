@@ -31,6 +31,8 @@ from hydrodhm.utils.results_utils import (
     get_latest_pbm_param_file,
     get_pbm_params_from_dpl,
     get_pbm_params_from_hydromodelxaj,
+    read_dpl_model_q_and_et,
+    read_sceua_xaj_streamflow,
     read_tb_log_loss,
 )
 
@@ -497,40 +499,113 @@ def plot_losses_ts(dl_result_dirs, leg_lst, ylabel="Loss", fig_dir=None):
     )
 
 
-def plot_xaj_lstm_tl_dpl_rainfall_runoff(
-    time_range, data_ts, leg_names, basin_id, save_file, alpha=0.5, c_lst=None
+def plot_xaj_rainfall_runoff(
+    result_dirs,
+    basin_id,
+    basin_name,
+    alpha=0.5,
+    c_lst=None,
+    leg_names=["eXAJ", "dXAJ", "dXAJ$_{\mathrm{nn}}$", "OBS"],
+    fig_dir=None,
 ):
+    if fig_dir is None:
+        fig_dir = result_dirs[0]
     if c_lst is None:
         c_lst = ["red", "green", "blue", "black"]
-    camels_cc = SelfMadeHydroDataset(DATASET_DIR, region="CC")
-    cc_shpfile_dir = os.path.join(
-        definitions.ROOT_DIR, "hydroSPB", "example", "shpfile"
-    )
-    sites = gpd.read_file(
-        os.path.join(cc_shpfile_dir, "chosen_stations.shp"), encoding="gbk"
-    )
-    sites_Chinese = sites[sites["BasinID"] == basin_id]
-    prcps = camels_cc.read_relevant_cols([basin_id], time_range, [PRCP_ERA5LAND_NAME])
-    t_periods = t_range_days(time_range)
+    train_ts = []
+    valid_ts = []
+    train_periods_wo_warmup = []
+    valid_periods_wo_warmup = []
+    for j, a_result_dir in enumerate(result_dirs):
+        if leg_names[j] == "eXAJ":
+            [
+                pred_train,
+                pred_valid,
+                obs_train,
+                obs_valid,
+            ] = read_sceua_xaj_streamflow(
+                a_result_dir,
+            )
+            train_ts.append(pred_train.values.flatten())
+            valid_ts.append(pred_valid.values.flatten())
+        else:
+            (
+                [
+                    pred_train,
+                    pred_valid,
+                    obs_train,
+                    obs_valid,
+                ],
+                [
+                    etsim_train,
+                    etsim_test,
+                    etobs_train,
+                    etobs_test,
+                ],
+            ) = read_dpl_model_q_and_et(
+                a_result_dir,
+            )
+            # TODO: all time-intervals are left-right closed, but we forget to set as this in dpl, so we need to remove the last time point
+            train_ts.append(pred_train.values.flatten()[:-1])
+            valid_ts.append(pred_valid.values.flatten()[:-1])
+    train_ts.append(obs_train.values.flatten()[:-1])
+    valid_ts.append(obs_valid.values.flatten()[:-1])
+    train_periods_wo_warmup.append(obs_train["time"].values[:-1])
+    valid_periods_wo_warmup.append(obs_valid["time"].values[:-1])
     dash_lines = [False] * len(leg_names)
     dash_lines[-1] = True
+    selfmadehydrodataset = SelfMadeHydroDataset(DATASET_DIR)
+    prcps_train = selfmadehydrodataset.read_ts_xrdataset(
+        [basin_id],
+        [train_periods_wo_warmup[0][0], train_periods_wo_warmup[0][-1]],
+        ["total_precipitation_hourly"],
+    )
+    prcps_valid = selfmadehydrodataset.read_ts_xrdataset(
+        [basin_id],
+        [valid_periods_wo_warmup[0][0], valid_periods_wo_warmup[0][-1]],
+        ["total_precipitation_hourly"],
+    )
+    # plot train
     plot_rainfall_runoff(
-        np.tile(t_periods, (len(leg_names), 1)).tolist(),
-        prcps[0, :, 0],
-        np.array(data_ts).tolist(),
+        train_periods_wo_warmup * len(leg_names),
+        prcps_train["1D"]["total_precipitation_hourly"].values.flatten(),
+        train_ts,
         leg_lst=leg_names,
         # title=site + " " + sites_Chinese[site_idx],
-        title=sites_Chinese["StationNam"].values[0],
+        title=basin_name,
         fig_size=(12, 6),
         xlabel="date",
         ylabel="streamflow (m$^3$/s)",
         linewidth=0.75,
         dash_lines=dash_lines,
-        alpha=alpha,
         c_lst=c_lst,
     )
     plt.savefig(
-        save_file,
+        os.path.join(
+            fig_dir, basin_id + "_" + basin_name + "_rainfall_runoff_train.png"
+        ),
+        dpi=600,
+        bbox_inches="tight",
+    )
+    # plot valid
+    plot_rainfall_runoff(
+        valid_periods_wo_warmup * len(leg_names),
+        prcps_valid["1D"]["total_precipitation_hourly"].values.flatten(),
+        valid_ts,
+        leg_lst=leg_names,
+        # title=site + " " + sites_Chinese[site_idx],
+        title=basin_name,
+        fig_size=(12, 6),
+        xlabel="date",
+        ylabel="streamflow (m$^3$/s)",
+        linewidth=0.75,
+        dash_lines=dash_lines,
+        c_lst=c_lst,
+    )
+    plt.savefig(
+        os.path.join(
+            fig_dir, basin_id + "_" + basin_name + "_rainfall_runoff_valid.png"
+        ),
         dpi=600,
         bbox_inches="tight",
     )
@@ -540,23 +615,27 @@ if __name__ == "__main__":
     sceua_xaj_dir = os.path.join(RESULT_DIR, "XAJ", "changdian_61700_4_4")
     dpl_dir = os.path.join(RESULT_DIR, "dPL", "result", "lrchange3", "changdian_61700")
     dpl_nn_dir = os.path.join(RESULT_DIR, "dPL", "result", "module", "changdian_61700")
-    plot_losses_ts(
-        [dpl_dir, dpl_nn_dir],
-        leg_lst=[
-            "dPL_train",
-            "dPL$_{\mathrm{nn}}$_train",
-            "dPL_valid",
-            "dPL$_{\mathrm{nn}}$_valid",
-        ],
+    basin_id = "changdian_61700"
+    changdian_61700_name = "sanhuangmiao"
+    plot_xaj_rainfall_runoff(
+        [sceua_xaj_dir, dpl_dir, dpl_nn_dir], basin_id, changdian_61700_name
     )
-    changdian_61700_name = "changdian_61700_sanhuangmiao"
-    plot_xaj_params_heatmap(
-        [sceua_xaj_dir, dpl_dir, dpl_nn_dir],
-        ["eXAJ", "dXAJ", "dXAJ$_{\mathrm{nn}}$"],
-        changdian_61700_name,
-        param_test_way=[
-            None,
-            MODEL_PARAM_TEST_WAY["final_period"],
-            MODEL_PARAM_TEST_WAY["final_period"],
-        ],
-    )
+    # plot_losses_ts(
+    #     [dpl_dir, dpl_nn_dir],
+    #     leg_lst=[
+    #         "dPL_train",
+    #         "dPL$_{\mathrm{nn}}$_train",
+    #         "dPL_valid",
+    #         "dPL$_{\mathrm{nn}}$_valid",
+    #     ],
+    # )
+    # plot_xaj_params_heatmap(
+    #     [sceua_xaj_dir, dpl_dir, dpl_nn_dir],
+    #     ["eXAJ", "dXAJ", "dXAJ$_{\mathrm{nn}}$"],
+    #     basin_id + "_" + changdian_61700_name,
+    #     param_test_way=[
+    #         None,
+    #         MODEL_PARAM_TEST_WAY["final_period"],
+    #         MODEL_PARAM_TEST_WAY["final_period"],
+    #     ],
+    # )
