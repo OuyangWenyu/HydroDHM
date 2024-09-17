@@ -270,6 +270,8 @@ def plot_xaj_et_time_series(
     basin_name : _type_
         _description_
     """
+    if fig_dir is None:
+        fig_dir = result_dirs[0]
     train_ets = []
     valid_ets = []
     train_periods_wo_warmup = []
@@ -327,7 +329,7 @@ def plot_xaj_et_time_series(
     plt.savefig(
         os.path.join(
             fig_dir,
-            "fold0_train_dpl_et_" + ET_MODIS_NAME + "_ts_" + basin_id + ".png",
+            ET_MODIS_NAME + "_ts_" + basin_id + "_train_period.png",
         ),
         dpi=600,
         bbox_inches="tight",
@@ -345,7 +347,7 @@ def plot_xaj_et_time_series(
     plt.savefig(
         os.path.join(
             fig_dir,
-            "fold0_valid_dpl_et_" + ET_MODIS_NAME + "_ts_" + basin_id + ".png",
+            ET_MODIS_NAME + "_ts_" + basin_id + "_valid_period.png",
         ),
         dpi=600,
         bbox_inches="tight",
