@@ -9,14 +9,17 @@ import xarray as xr
 from pathlib import Path
 
 from hydroutils.hydro_stat import stat_error
-from hydroutils.hydro_file import unserialize_json
 from hydromodel.datasets.data_preprocess import cross_val_split_tsdata
 from hydrodatasource.reader.data_source import SelfMadeHydroDataset
 from torchhydro.configs.config import cmd, update_cfg
 from torchhydro.configs.model_config import MODEL_PARAM_DICT
-from torchhydro.trainers.resulter import Resulter, get_latest_pbm_param_file
+from torchhydro.trainers.resulter import Resulter
 from torchhydro.trainers.trainer import train_and_evaluate
-from torchhydro.trainers.train_utils import read_pth_from_model_loader
+from torchhydro.trainers.train_utils import (
+    read_pth_from_model_loader,
+    get_latest_pbm_param_file,
+    read_torchhydro_log_json_file,
+)
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent))
 from definitions import RESULT_DIR, DATASET_DIR
@@ -269,23 +272,6 @@ def align_time_and_interval(obs_, pred_):
     return obs_aligned, pred_aligned
 
 
-def get_json_file(cfg_dir):
-    json_files_lst = []
-    json_files_ctime = []
-    for file in os.listdir(cfg_dir):
-        if (
-            fnmatch.fnmatch(file, "*.json")
-            and "_stat" not in file  # statistics json file
-            and "_dict" not in file  # data cache json file
-        ):
-            json_files_lst.append(os.path.join(cfg_dir, file))
-            json_files_ctime.append(os.path.getctime(os.path.join(cfg_dir, file)))
-    sort_idx = np.argsort(json_files_ctime)
-    cfg_file = json_files_lst[sort_idx[-1]]
-    cfg_json = unserialize_json(cfg_file)
-    return cfg_json
-
-
 def update_dl_cfg_paths(cfg_dir_):
     """Update the paths in cfgs when results from one computer are used in another computer
 
@@ -294,7 +280,7 @@ def update_dl_cfg_paths(cfg_dir_):
     cfg_dir_ : _type_
         _description_
     """
-    cfg_ = get_json_file(cfg_dir_)
+    cfg_ = read_torchhydro_log_json_file(cfg_dir_)
     cfg_["data_cfgs"]["source_cfgs"]["source_path"] = DATASET_DIR
     cfg_["data_cfgs"]["validation_path"] = cfg_dir_
     cfg_["data_cfgs"]["test_path"] = cfg_dir_
@@ -307,6 +293,7 @@ def update_dl_cfg_paths(cfg_dir_):
         "FLV",
         "FHV",
     ]
+    cfg_["evaluation_cfgs"]["model_loader"] = {"load_way": "best"}
     return cfg_
 
 
@@ -326,9 +313,10 @@ def _cfg4trainperiod(cfg):
     train_period = cfg["data_cfgs"]["t_range_train"]
     valid_period = train_period
     test_period = train_period
-    old_model_loader = cfg["evaluation_cfgs"]["model_loader"]
+    # old_model_loader = cfg["evaluation_cfgs"]["model_loader"]
     old_pth_dir = cfg["data_cfgs"]["test_path"]
-    weight_path = read_pth_from_model_loader(old_model_loader, old_pth_dir)
+    _model_loader = {"load_way": "best"}
+    weight_path = read_pth_from_model_loader(_model_loader, old_pth_dir)
     new_args = cmd(
         model_type="MTL",
         ctx=[0],
@@ -387,9 +375,11 @@ def cfgrunagain(cfg):
     _type_
         _description_
     """
-    old_model_loader = cfg["evaluation_cfgs"]["model_loader"]
+    # old_model_loader = cfg["evaluation_cfgs"]["model_loader"]
+    # we load the best model to run the model again
+    _model_loader = {"load_way": "best"}
     old_pth_dir = cfg["data_cfgs"]["test_path"]
-    weight_path = read_pth_from_model_loader(old_model_loader, old_pth_dir)
+    weight_path = read_pth_from_model_loader(_model_loader, old_pth_dir)
     new_args = cmd(
         model_type="MTL",
         ctx=[0],
@@ -405,10 +395,10 @@ def cfgrunagain(cfg):
         # NOTE: although we set total_evaporation_hourly as output, it is not used in the training process
         var_out=["streamflow", "total_evaporation_hourly"],
         n_output=2,
-        # TODO: if chose "mean", metric results' format is different, this should be refactored
         fill_nan=["no", "no"],
         train_mode=0,
         weight_path=weight_path,
+        model_loader={"load_way": "pth", "pth_path": weight_path},
         continue_train=0,
         metrics=["Bias", "RMSE", "Corr", "NSE", "KGE", "FLV", "FHV"],
     )
@@ -459,7 +449,7 @@ def read_dpl_model_q_and_et(cfg_dir_, cfg_dir_train=None, cfg_runagain=False):
                 cfg_train["data_cfgs"]["stat_dict_file"] = None
                 train_and_evaluate(cfg_train)
             cfg_dir_train = cfg_train["data_cfgs"]["test_path"]
-    cfg_train = get_json_file(cfg_dir_train)
+    cfg_train = read_torchhydro_log_json_file(cfg_dir_train)
     resulter = Resulter(cfg_train)
     pred_train, obs_train = resulter.load_result(convert_flow_unit=True)
     resulter.eval_result(pred_train, obs_train)
@@ -628,8 +618,8 @@ if __name__ == "__main__":
     # get_pbm_params_from_hydromodelxaj(
     #     os.path.join(RESULT_DIR, "XAJ", "result_old", "changdian_61700")
     # )
-    read_dpl_model_q_and_et(dpl_dir)
-    read_dpl_model_q_and_et(dpl_nn_dir)
+    read_dpl_model_q_and_et(dpl_dir, cfg_runagain=False)
+    read_dpl_model_q_and_et(dpl_nn_dir, cfg_runagain=False)
     # read_dpl_model_metric(
     #     os.path.join(
     #         RESULT_DIR,

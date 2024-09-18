@@ -22,14 +22,16 @@ from hydroutils.hydro_plot import (
 from hydrodatasource.reader.data_source import SelfMadeHydroDataset
 from torchhydro.configs.model_config import MODEL_PARAM_TEST_WAY
 from torchhydro import SETTING
+from torchhydro.trainers.train_utils import (
+    get_latest_pbm_param_file,
+    read_torchhydro_log_json_file,
+)
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent))
 from definitions import DATASET_DIR, RESULT_DIR
 from hydrodhm.utils.results_utils import (
     ET_MODIS_NAME,
     _save_pbm_params,
-    get_json_file,
-    get_latest_pbm_param_file,
     get_pbm_params_from_dpl,
     get_pbm_params_from_hydromodelxaj,
     read_dpl_model_q_and_et,
@@ -579,7 +581,7 @@ def plot_computing_time(exps, leg_names):
             # SCE-UA's record is different with others
         else:
             cfg_dir_flow = os.path.join(RESULT_DIR, "camels", exps[i])
-            cfg_flow = get_json_file(cfg_dir_flow)
+            cfg_flow = read_torchhydro_log_json_file(cfg_dir_flow)
             sites_num = len(cfg_flow["data_params"]["object_ids"])
             run_record = cfg_flow["run"]
             times = []
@@ -634,7 +636,7 @@ def plot_camels_nse_map(inds_df_lst, exps):
         camels.camels_sites["gauge_id"].values, ["gauge_lat", "gauge_lon"]
     )
     cfg_dir_flow = os.path.join(RESULT_DIR, "camels", exps[0])
-    cfg_flow = get_json_file(cfg_dir_flow)
+    cfg_flow = read_torchhydro_log_json_file(cfg_dir_flow)
     sites = cfg_flow["data_params"]["object_ids"]
     all_sites = camels.camels_sites["gauge_id"].values
     sites_chosen, idx1, idx2 = np.intersect1d(all_sites, sites, return_indices=True)
