@@ -44,6 +44,14 @@ from hydrodhm.utils.results_utils import (
 plt.rcParams["font.family"] = "serif"
 plt.rcParams["font.serif"] = ["Times New Roman"] + plt.rcParams["font.serif"]
 
+ID_NAME_DICT = {
+    "changdian_61561": "Duoyingping",
+    "changdian_61700": "Sanhuangmiao",
+    "changdian_61716": "Dengyingyan",
+    "changdian_62618": "Fujiangqiao",
+    "changdian_91000": "Ganzi",
+}
+
 
 def plot_xaj_params_heatmap(
     result_dirs,
@@ -364,8 +372,12 @@ def plot_metrics_1model_trained_with_diffperiods(
     all_basin_result_dirs,
     basin_ids,
     show_ind="NSE",
+    cases=["3-year-train", "2-year-train", "1-year-train"],
     cfg_runagain=False,
     fig_dir=None,
+    train_or_valid="valid",
+    var_name="streamflow",
+    legend=True,
 ):
     """_summary_
 
@@ -380,34 +392,71 @@ def plot_metrics_1model_trained_with_diffperiods(
         the indicator to show, by default "NSE"
     cfg_runagain
         whether to run again, by default False, but for the first time, it should be True
+    cases : list, optional
+        the cases of train periods, by default ["3-year-train", "2-year-train", "1-year-train"]
+    fig_dir : str, optional
+        the directory to save the figure, by default None
+    train_or_valid : str, optional
+        whether to show the train or valid results, by default "valid"
+    var_name : str, optional
+        the variable name, by default "streamflow"
     """
     if fig_dir is None:
         fig_dir = all_basin_result_dirs[0][0]
-    for i in range(1, len(all_basin_result_dirs)):
+    inds_df_dict = {}
+    for i in range(len(all_basin_result_dirs)):
+        _inds_df_dict = {}
         for j in range(len(all_basin_result_dirs[i])):
             inds_df_train_q, inds_df_valid_q, inds_df_train_et, inds_df_valid_et = (
                 read_dpl_model_metric(
                     all_basin_result_dirs[i][j], cfg_runagain=cfg_runagain
                 )
             )
-            inds_df_lst = [inds_df_train_q, inds_df_valid_q]
-            inds_df_lst.append(inds_df_valid_q)
-    concat_inds = [
-        df[show_ind].values if type(df) is pd.DataFrame else df[show_ind]
-        for df in inds_df_lst
-    ]
-    # https://www.statology.org/change-font-size-matplotlib/
-    plt.rc("axes", labelsize=16)
-    plt.rc("ytick", labelsize=12)
-    FIGURE_DPI = 600
-    plot_ts(
-        concat_inds,
-        leg_lst=basin_ids,
-        fig_size=(8, 4),
-        xlabel="Training periods with different lengths",
-        ylabel=show_ind,
-        linewidth=1,
+            if train_or_valid == "valid" and var_name == "streamflow":
+                _inds_df_dict[cases[j]] = inds_df_valid_q
+            elif train_or_valid == "valid" and var_name == "et":
+                _inds_df_dict[cases[j]] = inds_df_valid_et
+            elif train_or_valid == "train" and var_name == "streamflow":
+                _inds_df_dict[cases[j]] = inds_df_train_q
+            elif train_or_valid == "train" and var_name == "et":
+                _inds_df_dict[cases[j]] = inds_df_train_et
+            else:
+                raise ValueError("train_or_valid or var_name is wrong")
+        inds_df_dict[basin_ids[i]] = _inds_df_dict
+    df = pd.concat(
+        {
+            basin: pd.DataFrame(
+                {train: stats[show_ind] for train, stats in data.items()}, index=[basin]
+            )
+            for basin, data in inds_df_dict.items()
+        }
     )
+    df.index = df.index.droplevel(0)
+    # https://www.statology.org/change-font-size-matplotlib/
+    plt.rc("axes", titlesize=18)  # Font size for the chart title
+    plt.rc("axes", labelsize=16)  # Font size for the axis labels
+    plt.rc("xtick", labelsize=16)  # Font size for the x-axis ticks
+    plt.rc("ytick", labelsize=16)  # Font size for the y-axis ticks
+    plt.rc("legend", fontsize=16)  # Font size for the legend
+    plt.rc("legend", title_fontsize=16)  # Font size for the legend title
+
+    plt.figure(figsize=(8, 6))
+
+    # Iterate over each basin_id and plot their lines
+    for basin_id in df.index:
+        basin_name = ID_NAME_DICT.get(basin_id, basin_id)
+        plt.plot(df.columns, df.loc[basin_id], marker="o", label=basin_name)
+
+    if legend:
+        plt.legend(loc="best")
+
+    # Set axis labels and title (no need to specify fontsize here)
+    plt.xlabel("Data Length")
+    plt.ylabel(f"{show_ind}")
+    # plt.title("Performance over different train periods")
+
+    plt.grid(True)
+    FIGURE_DPI = 600
     plt.savefig(
         os.path.join(fig_dir, "metric_of_1model_trained_with_diffperiods.png"),
         dpi=FIGURE_DPI,
@@ -415,7 +464,9 @@ def plot_metrics_1model_trained_with_diffperiods(
     )
 
 
-def _generate_dpl_result_dirs(basin_id, model="dpl"):
+def _generate_dpl_result_dirs(
+    basin_id, model="dpl", cases=["3-year-train", "2-year-train", "1-year-train"]
+):
     """A literal specification of the result directories of dPL
 
     Parameters
@@ -434,21 +485,17 @@ def _generate_dpl_result_dirs(basin_id, model="dpl"):
         post_fix = ""
     elif model == "dpl_nn":
         post_fix = "_module"
+    if len(cases) != 3:
+        raise ValueError(
+            "cases must be a list with 3 elements, we support 2-4 to 4-4 now only"
+        )
     return [
         os.path.join(
             RESULT_DIR,
             "dPL",
             "result",
-            "data-limited_analysis",
-            "2to4_1618_1721" + post_fix,
-            basin_id,
-        ),
-        os.path.join(
-            RESULT_DIR,
-            "dPL",
-            "result",
-            "data-limited_analysis",
-            "3to4_1417_1721" + post_fix,
+            "streamflow_prediction",
+            "lrchange3" if model == "dpl" else "module",
             basin_id,
         ),
         os.path.join(
@@ -463,8 +510,8 @@ def _generate_dpl_result_dirs(basin_id, model="dpl"):
             RESULT_DIR,
             "dPL",
             "result",
-            "streamflow_prediction",
-            "lrchange3" if model == "dpl" else "module",
+            "data-limited_analysis",
+            "2to4_1618_1721" + post_fix,
             basin_id,
         ),
     ]
@@ -752,13 +799,16 @@ if __name__ == "__main__":
         "changdian_62618",
         "changdian_91000",
     ]
+    cases = ["3-year", "2-year", "1-year"]
     sanxiabasins_result_dirs = [
-        _generate_dpl_result_dirs(basin_id) for basin_id in basin_ids
+        _generate_dpl_result_dirs(basin_id, cases=cases) for basin_id in basin_ids
     ]
     plot_metrics_1model_trained_with_diffperiods(
         sanxiabasins_result_dirs,
         basin_ids,
-        cfg_runagain=True,
+        # when first time, cfg_runagain=True, then cfg_runagain=False
+        cfg_runagain=False,
+        cases=cases,
     )
     # plot_xaj_rainfall_runoff(
     #     [sceua_xaj_dir, dpl_dir, dpl_nn_dir], basin_id, changdian_61700_name
