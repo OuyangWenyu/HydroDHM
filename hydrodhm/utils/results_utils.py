@@ -25,8 +25,9 @@ sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent))
 from definitions import RESULT_DIR, DATASET_DIR
 from hydrodhm.run_xaj.evaluate_xaj import _evaluate_1fold
 
-ET_MODIS_NAME = "ET_modis16a2006"
-# ET_MODIS_NAME = "ET_modis16a2gf061"
+# ET_NAME = "ET_modis16a2006"
+# ET_NAME = "ET_modis16a2gf061"
+ET_NAME = "total_evaporation_hourly"
 
 
 def read_sceua_xaj_streamflow(result_dir):
@@ -145,7 +146,7 @@ def update_hydromodel_cfgs(result_dir):
     return config_data
 
 
-def read_sceua_xaj_et(result_dir, et_type=ET_MODIS_NAME):
+def read_sceua_xaj_et(result_dir, et_type=ET_NAME):
     config_data = update_hydromodel_cfgs(result_dir)
     basin_ids = config_data["basin_id"]
     warmup = config_data["warmup"]
@@ -191,17 +192,24 @@ def read_sceua_xaj_et(result_dir, et_type=ET_MODIS_NAME):
     et_sim_test = et_sim_test_["etsim"].isel(time=slice(warmup, None))
     desired_train_time = et_sim_train.time.values
     desired_test_time = et_sim_test.time.values
-    et_obs_train = et_obs_train_["8D"][et_type].sel(
+    if et_type == "total_evaporation_hourly":
+        time_period_ = "1D"
+    else:
+        time_period_ = "8D"
+    et_obs_train = et_obs_train_[time_period_][et_type].sel(
         time=slice(desired_train_time[0], desired_train_time[-1])
     )
-    et_obs_test = et_obs_test_["8D"][et_type].sel(
+    et_obs_test = et_obs_test_[time_period_][et_type].sel(
         time=slice(desired_test_time[0], desired_test_time[-1])
     )
     return [et_sim_train, et_sim_test, et_obs_train, et_obs_test]
 
 
 def _read_et_obs(et_type, basin_ids, t_range_train, t_range_test):
-    selfmadehydrodataset = SelfMadeHydroDataset(DATASET_DIR, time_unit=["8D"])
+    if et_type == "total_evaporation_hourly":
+        selfmadehydrodataset = SelfMadeHydroDataset(DATASET_DIR, time_unit=["1D"])
+    else:
+        selfmadehydrodataset = SelfMadeHydroDataset(DATASET_DIR, time_unit=["8D"])
     et_obs_train_ = selfmadehydrodataset.read_ts_xrdataset(
         basin_ids, t_range_train, [et_type]
     )
@@ -211,7 +219,7 @@ def _read_et_obs(et_type, basin_ids, t_range_train, t_range_test):
     return et_obs_train_, et_obs_test_
 
 
-def read_sceua_xaj_et_metric(result_dir, et_type=ET_MODIS_NAME):
+def read_sceua_xaj_et_metric(result_dir, et_type=ET_NAME):
     (
         pred_train_,
         pred_valid_,
@@ -235,18 +243,22 @@ def _xrarray_cal_et_metric(pred_train_, pred_valid_, obs_train_, obs_valid_):
     )
 
     # Now compute metrics using aligned data
+    if ET_NAME == "total_evaporation_hourly":
+        fill_nan_ = "no"
+    else:
+        fill_nan_ = "mean"
     inds_df_train = pd.DataFrame(
         stat_error(
             obs_train_aligned.transpose("basin", "time").values,
             pred_train_aligned.transpose("basin", "time").values,
-            fill_nan="mean",
+            fill_nan=fill_nan_,
         )
     )
     inds_df_valid = pd.DataFrame(
         stat_error(
             obs_valid_aligned.transpose("basin", "time").values,
             pred_valid_aligned.transpose("basin", "time").values,
-            fill_nan="mean",
+            fill_nan=fill_nan_,
         )
     )
 
@@ -435,19 +447,17 @@ def read_dpl_model_q_and_et(cfg_dir_, cfg_dir_train=None, cfg_runagain=False):
             etobs_test,
         ],
     """
-    if cfg_dir_train is None:
+    if cfg_dir_train is None or (
+        cfg_dir_train is not None and not os.path.exists(cfg_dir_train)
+    ):
         cfg_dir_train = cfg_dir_ + "_trainperiod"
-        if not os.path.exists(os.path.join(cfg_dir_train, "metric_streamflow.csv")):
+        if (
+            not os.path.exists(os.path.join(cfg_dir_train, "metric_streamflow.csv"))
+            or cfg_runagain
+        ):
             # if the metric file exists, we do not need to run the model again
             # we need to run the trained model to get the training period data simulation
-            cfg_train = update_dl_cfg_paths(cfg_dir_)
-            cfg_train = _cfg4trainperiod(cfg_train)
-            try:
-                train_and_evaluate(cfg_train)
-            except KeyError:
-                cfg_train["training_cfgs"]["train_mode"] = True
-                cfg_train["data_cfgs"]["stat_dict_file"] = None
-                train_and_evaluate(cfg_train)
+            cfg_train = _run_cfg4trainperiod(cfg_dir_)
             cfg_dir_train = cfg_train["data_cfgs"]["test_path"]
     cfg_train = read_torchhydro_log_json_file(cfg_dir_train)
     resulter = Resulter(cfg_train)
@@ -456,13 +466,7 @@ def read_dpl_model_q_and_et(cfg_dir_, cfg_dir_train=None, cfg_runagain=False):
 
     cfg_test = update_dl_cfg_paths(cfg_dir_)
     if cfg_runagain:
-        cfg_test = cfgrunagain(cfg_test)
-        try:
-            train_and_evaluate(cfg_test)
-        except KeyError:
-            cfg_test["training_cfgs"]["train_mode"] = True
-            cfg_test["data_cfgs"]["stat_dict_file"] = None
-            train_and_evaluate(cfg_test)
+        cfg_test = _runagain_cfg(cfg_test)
     resulter = Resulter(cfg_test)
     pred_test, obs_test = resulter.load_result(convert_flow_unit=True)
     resulter.eval_result(pred_test, obs_test)
@@ -471,7 +475,7 @@ def read_dpl_model_q_and_et(cfg_dir_, cfg_dir_train=None, cfg_runagain=False):
     t_range_train = [obs_train.time.values[0], obs_train.time.values[-1]]
     t_range_test = [obs_test.time.values[0], obs_test.time.values[-1]]
     et_obs_train_, et_obs_test_ = _read_et_obs(
-        ET_MODIS_NAME, basin_ids, t_range_train, t_range_test
+        ET_NAME, basin_ids, t_range_train, t_range_test
     )
     qsim_train = pred_train["streamflow"]
     qsim_test = pred_test["streamflow"]
@@ -479,8 +483,12 @@ def read_dpl_model_q_and_et(cfg_dir_, cfg_dir_train=None, cfg_runagain=False):
     qobs_test = obs_test["streamflow"]
     etsim_train = pred_train["total_evaporation_hourly"]
     etsim_test = pred_test["total_evaporation_hourly"]
-    etobs_train = et_obs_train_["8D"][ET_MODIS_NAME]
-    etobs_test = et_obs_test_["8D"][ET_MODIS_NAME]
+    if ET_NAME == "total_evaporation_hourly":
+        time_period_ = "1D"
+    else:
+        time_period_ = "8D"
+    etobs_train = et_obs_train_[time_period_][ET_NAME]
+    etobs_test = et_obs_test_[time_period_][ET_NAME]
     return (
         [
             qsim_train,
@@ -497,17 +505,45 @@ def read_dpl_model_q_and_et(cfg_dir_, cfg_dir_train=None, cfg_runagain=False):
     )
 
 
-def read_dpl_model_metric(cfg_dir_test, cfg_dir_train):
+def _run_cfg4trainperiod(cfg_dir_):
+    cfg_train = update_dl_cfg_paths(cfg_dir_)
+    cfg_train = _cfg4trainperiod(cfg_train)
+    try:
+        train_and_evaluate(cfg_train)
+    except KeyError:
+        cfg_train["training_cfgs"]["train_mode"] = True
+        cfg_train["data_cfgs"]["stat_dict_file"] = None
+        train_and_evaluate(cfg_train)
+    return cfg_train
+
+
+def _runagain_cfg(cfg_test):
+    cfg_test = cfgrunagain(cfg_test)
+    try:
+        train_and_evaluate(cfg_test)
+    except KeyError:
+        cfg_test["training_cfgs"]["train_mode"] = True
+        cfg_test["data_cfgs"]["stat_dict_file"] = None
+        train_and_evaluate(cfg_test)
+    return cfg_test
+
+
+def read_dpl_model_metric(cfg_dir_test, cfg_dir_train=None, cfg_runagain=False):
     """read the metrics of DL models for one basin in k-fold cross validation
 
     Parameters
     ----------
-    epoch : int
-        the epoch of the DL model
-    cv_fold : int, optional
-        the number of folds in cross validation, by default 2
+    cfg_dir_test : str
+        the directory of the trained model
+    cfg_dir_train : str, optional
+        the directory of the DL model for its training period data simulation
+        if not provided, the training period data simulation will be the value specified in the cfg_dir_test
+    cfg_runagain : bool, optional
+        whether to run the DL model in cfg_dir_test for cfg_dir_test again, by default False
     """
-    qs, ets = read_dpl_model_q_and_et(cfg_dir_test, cfg_dir_train)
+    qs, ets = read_dpl_model_q_and_et(cfg_dir_test, cfg_dir_train, cfg_runagain)
+    if cfg_dir_train is None:
+        cfg_dir_train = cfg_dir_test + "_trainperiod"
     train_metrics_file = os.path.join(
         cfg_dir_train,
         "metric_streamflow.csv",
@@ -606,20 +642,30 @@ def read_tb_log_loss(result_dir):
 
 
 if __name__ == "__main__":
-    sceua_dir = os.path.join(RESULT_DIR, "XAJ", "changdian_61700_4_4")
-    dpl_dir = os.path.join(RESULT_DIR, "dPL", "result", "lrchange3", "changdian_61700")
-    dpl_nn_dir = os.path.join(RESULT_DIR, "dPL", "result", "module", "changdian_61700")
+    sceua_dir = os.path.join(RESULT_DIR, "XAJ", "result", "changdian_61561_4_4")
+    dpl_dir = os.path.join(
+        RESULT_DIR,
+        "dPL",
+        "result",
+        "streamflow_prediction",
+        "lrchange3",
+        "changdian_61561",
+    )
+    dpl_nn_dir = os.path.join(
+        RESULT_DIR,
+        "dPL",
+        "result",
+        "streamflow_prediction",
+        "module",
+        "changdian_61561",
+    )
     # read_sceua_xaj_streamflow(sceua_dir)
-    # read_sceua_xaj_streamflow_metric(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
-    # read_sceua_xaj_et(os.path.join(RESULT_DIR, "XAJ", "changdian_61561"))
-    # read_sceua_xaj_et_metric(
-    #     os.path.join(RESULT_DIR, "XAJ", "result_old", "changdian_61700")
-    # )
-    # get_pbm_params_from_hydromodelxaj(
-    #     os.path.join(RESULT_DIR, "XAJ", "result_old", "changdian_61700")
-    # )
-    read_dpl_model_q_and_et(dpl_dir, cfg_runagain=False)
-    read_dpl_model_q_and_et(dpl_nn_dir, cfg_runagain=False)
+    # read_sceua_xaj_streamflow_metric(sceua_dir)
+    # read_sceua_xaj_et(sceua_dir)
+    # read_sceua_xaj_et_metric(sceua_dir)
+    # get_pbm_params_from_hydromodelxaj(sceua_dir)
+    read_dpl_model_q_and_et(dpl_dir, cfg_runagain=True)
+    read_dpl_model_q_and_et(dpl_nn_dir, cfg_runagain=True)
     # read_dpl_model_metric(
     #     os.path.join(
     #         RESULT_DIR,
@@ -636,4 +682,4 @@ if __name__ == "__main__":
     #         "changdian_61561_trainperiod",
     #     ),
     # )
-    get_pbm_params_from_dpl(dpl_dir)
+    # get_pbm_params_from_dpl(dpl_dir)

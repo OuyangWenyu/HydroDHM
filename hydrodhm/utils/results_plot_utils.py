@@ -30,7 +30,7 @@ from torchhydro.trainers.train_utils import (
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent))
 from definitions import DATASET_DIR, RESULT_DIR
 from hydrodhm.utils.results_utils import (
-    ET_MODIS_NAME,
+    ET_NAME,
     _save_pbm_params,
     get_pbm_params_from_dpl,
     get_pbm_params_from_hydromodelxaj,
@@ -38,7 +38,11 @@ from hydrodhm.utils.results_utils import (
     read_sceua_xaj_et,
     read_sceua_xaj_streamflow,
     read_tb_log_loss,
+    read_dpl_model_metric,
 )
+
+plt.rcParams["font.family"] = "serif"
+plt.rcParams["font.serif"] = ["Times New Roman"] + plt.rcParams["font.serif"]
 
 
 def plot_xaj_params_heatmap(
@@ -331,7 +335,7 @@ def plot_xaj_et_time_series(
     plt.savefig(
         os.path.join(
             fig_dir,
-            ET_MODIS_NAME + "_ts_" + basin_id + "_train_period.png",
+            ET_NAME + "_ts_" + basin_id + "_train_period.png",
         ),
         dpi=600,
         bbox_inches="tight",
@@ -349,11 +353,121 @@ def plot_xaj_et_time_series(
     plt.savefig(
         os.path.join(
             fig_dir,
-            ET_MODIS_NAME + "_ts_" + basin_id + "_valid_period.png",
+            ET_NAME + "_ts_" + basin_id + "_valid_period.png",
         ),
         dpi=600,
         bbox_inches="tight",
     )
+
+
+def plot_metrics_1model_trained_with_diffperiods(
+    all_basin_result_dirs,
+    basin_ids,
+    show_ind="NSE",
+    cfg_runagain=False,
+    fig_dir=None,
+):
+    """_summary_
+
+    Parameters
+    ----------
+    all_basin_result_dirs : list
+        the exps are organized as follows:
+            one basin is a list, and has several experiments, from 2-4 to 4-4
+    basin_ids : list
+        basin ids
+    show_ind : str, optional
+        the indicator to show, by default "NSE"
+    cfg_runagain
+        whether to run again, by default False, but for the first time, it should be True
+    """
+    if fig_dir is None:
+        fig_dir = all_basin_result_dirs[0][0]
+    for i in range(1, len(all_basin_result_dirs)):
+        for j in range(len(all_basin_result_dirs[i])):
+            inds_df_train_q, inds_df_valid_q, inds_df_train_et, inds_df_valid_et = (
+                read_dpl_model_metric(
+                    all_basin_result_dirs[i][j], cfg_runagain=cfg_runagain
+                )
+            )
+            inds_df_lst = [inds_df_train_q, inds_df_valid_q]
+            inds_df_lst.append(inds_df_valid_q)
+    concat_inds = [
+        df[show_ind].values if type(df) is pd.DataFrame else df[show_ind]
+        for df in inds_df_lst
+    ]
+    # https://www.statology.org/change-font-size-matplotlib/
+    plt.rc("axes", labelsize=16)
+    plt.rc("ytick", labelsize=12)
+    FIGURE_DPI = 600
+    plot_ts(
+        concat_inds,
+        leg_lst=basin_ids,
+        fig_size=(8, 4),
+        xlabel="Training periods with different lengths",
+        ylabel=show_ind,
+        linewidth=1,
+    )
+    plt.savefig(
+        os.path.join(fig_dir, "metric_of_1model_trained_with_diffperiods.png"),
+        dpi=FIGURE_DPI,
+        bbox_inches="tight",
+    )
+
+
+def _generate_dpl_result_dirs(basin_id, model="dpl"):
+    """A literal specification of the result directories of dPL
+
+    Parameters
+    ----------
+    basin_id : _type_
+        _description_
+    model : str, optional
+        _description_, by default "dpl"
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+    if model == "dpl":
+        post_fix = ""
+    elif model == "dpl_nn":
+        post_fix = "_module"
+    return [
+        os.path.join(
+            RESULT_DIR,
+            "dPL",
+            "result",
+            "data-limited_analysis",
+            "2to4_1618_1721" + post_fix,
+            basin_id,
+        ),
+        os.path.join(
+            RESULT_DIR,
+            "dPL",
+            "result",
+            "data-limited_analysis",
+            "3to4_1417_1721" + post_fix,
+            basin_id,
+        ),
+        os.path.join(
+            RESULT_DIR,
+            "dPL",
+            "result",
+            "data-limited_analysis",
+            "3to4_1518_1721" + post_fix,
+            basin_id,
+        ),
+        os.path.join(
+            RESULT_DIR,
+            "dPL",
+            "result",
+            "streamflow_prediction",
+            "lrchange3" if model == "dpl" else "module",
+            basin_id,
+        ),
+    ]
 
 
 # ----------- The following function is not finished yet ------------
@@ -524,46 +638,10 @@ def plot_dpl_comp_boxplots(
     )
 
 
-def plot_dpl_comp_boxplots(
-    exps,
-    inds_df_lst,
-    leg_names,
-    colors,
-    fig_size,
-    fig_name,
-    subplots_adjust_wspace,
-    show_inds=["Bias", "RMSE", "Corr", "NSE"],
-):
-    concat_inds = [
-        [df[ind].values if type(df) is pd.DataFrame else df[ind] for df in inds_df_lst]
-        for ind in show_inds
-    ]
-    # plt.rcParams["font.family"] = "serif"
-    # plt.rcParams["font.serif"] = ["Times New Roman"] + plt.rcParams["font.serif"]
-    # https://www.statology.org/change-font-size-matplotlib/
-    plt.rc("axes", labelsize=16)
-    plt.rc("ytick", labelsize=12)
-    FIGURE_DPI = 600
-    plot_boxes_matplotlib(
-        concat_inds,
-        label1=show_inds,
-        label2=leg_names,
-        colorlst=colors,
-        figsize=fig_size,
-        subplots_adjust_wspace=subplots_adjust_wspace,
-        show_median=False,
-        median_line_color="white",
-    )
-    cfg_dir = os.path.join(RESULT_DIR, "camels", exps[-1])
-    plt.savefig(
-        os.path.join(cfg_dir, fig_name),
-        dpi=FIGURE_DPI,
-        bbox_inches="tight",
-    )
-
-
 def plot_computing_time(exps, leg_names):
     """plot computing time for exps
+    But time is highly impacted by other factors such as the GPU and CPU usage from others in our server computer,
+    so we don't use it now.
 
     Parameters
     ----------
@@ -667,12 +745,27 @@ if __name__ == "__main__":
     dpl_nn_dir = os.path.join(RESULT_DIR, "dPL", "result", "module", "changdian_61700")
     basin_id = "changdian_61700"
     changdian_61700_name = "sanhuangmiao"
+    basin_ids = [
+        "changdian_61561",
+        "changdian_61700",
+        "changdian_61716",
+        "changdian_62618",
+        "changdian_91000",
+    ]
+    sanxiabasins_result_dirs = [
+        _generate_dpl_result_dirs(basin_id) for basin_id in basin_ids
+    ]
+    plot_metrics_1model_trained_with_diffperiods(
+        sanxiabasins_result_dirs,
+        basin_ids,
+        cfg_runagain=True,
+    )
     # plot_xaj_rainfall_runoff(
     #     [sceua_xaj_dir, dpl_dir, dpl_nn_dir], basin_id, changdian_61700_name
     # )
-    plot_xaj_et_time_series(
-        [sceua_xaj_dir, dpl_dir, dpl_nn_dir], basin_id, changdian_61700_name
-    )
+    # plot_xaj_et_time_series(
+    #     [sceua_xaj_dir, dpl_dir, dpl_nn_dir], basin_id, changdian_61700_name
+    # )
     # plot_losses_ts(
     #     [dpl_dir, dpl_nn_dir],
     #     leg_lst=[
