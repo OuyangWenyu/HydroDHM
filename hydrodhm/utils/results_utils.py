@@ -459,7 +459,7 @@ def read_dpl_model_q_and_et(cfg_dir_, cfg_dir_train=None, cfg_runagain=False):
             # we need to run the trained model to get the training period data simulation
             cfg_train = _run_cfg4trainperiod(cfg_dir_)
             cfg_dir_train = cfg_train["data_cfgs"]["test_path"]
-    cfg_train = read_torchhydro_log_json_file(cfg_dir_train)
+    cfg_train = update_dl_cfg_paths(cfg_dir_train)
     resulter = Resulter(cfg_train)
     pred_train, obs_train = resulter.load_result(convert_flow_unit=True)
     resulter.eval_result(pred_train, obs_train)

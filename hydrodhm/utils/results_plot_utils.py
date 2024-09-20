@@ -458,7 +458,10 @@ def plot_metrics_1model_trained_with_diffperiods(
     plt.grid(True)
     FIGURE_DPI = 600
     plt.savefig(
-        os.path.join(fig_dir, "metric_of_1model_trained_with_diffperiods.png"),
+        os.path.join(
+            fig_dir,
+            f"metric_of_1model_trained_with_diffperiods_for_{train_or_valid}.png",
+        ),
         dpi=FIGURE_DPI,
         bbox_inches="tight",
     )
@@ -803,12 +806,39 @@ if __name__ == "__main__":
     sanxiabasins_result_dirs = [
         _generate_dpl_result_dirs(basin_id, cases=cases) for basin_id in basin_ids
     ]
+    # plot_metrics_1model_trained_with_diffperiods(
+    #     sanxiabasins_result_dirs,
+    #     basin_ids,
+    #     # when first time, cfg_runagain=True, then cfg_runagain=False
+    #     cfg_runagain=False,
+    #     cases=cases,
+    # )
     plot_metrics_1model_trained_with_diffperiods(
         sanxiabasins_result_dirs,
         basin_ids,
         # when first time, cfg_runagain=True, then cfg_runagain=False
         cfg_runagain=False,
         cases=cases,
+        train_or_valid="train",
+    )
+    sanxiabasins_nnmodule_result_dirs = [
+        _generate_dpl_result_dirs(basin_id, cases=cases, model="dpl_nn")
+        for basin_id in basin_ids
+    ]
+    # plot_metrics_1model_trained_with_diffperiods(
+    #     sanxiabasins_nnmodule_result_dirs,
+    #     basin_ids,
+    #     # when first time, cfg_runagain=True, then cfg_runagain=False
+    #     cfg_runagain=False,
+    #     cases=cases,
+    # )
+    plot_metrics_1model_trained_with_diffperiods(
+        sanxiabasins_nnmodule_result_dirs,
+        basin_ids,
+        # when first time, cfg_runagain=True, then cfg_runagain=False
+        cfg_runagain=False,
+        cases=cases,
+        train_or_valid="train",
     )
     # plot_xaj_rainfall_runoff(
     #     [sceua_xaj_dir, dpl_dir, dpl_nn_dir], basin_id, changdian_61700_name
