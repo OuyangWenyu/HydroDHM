@@ -6,8 +6,8 @@ from concurrent.futures import ProcessPoolExecutor
 
 
 def dpl_selfmadehydrodataset_args(gage_id):
-    project_name = os.path.join("streamflow_prediction_camels15y", gage_id)
-    train_period = ["2004-10-01", "2019-10-01"]
+    project_name = os.path.join("streamflow_prediction_camels10y_module", gage_id)
+    train_period = ["2009-10-01", "2019-10-01"]
     valid_period = ["2018-10-01", "2023-10-01"]
     # valid_period = None
     test_period = ["2018-10-01", "2023-10-01"]
@@ -20,9 +20,9 @@ def dpl_selfmadehydrodataset_args(gage_id):
         },
         model_type="MTL",
         ctx=[2],
-        model_name="DplLstmXaj",
+        # model_name="DplLstmXaj",
         # model_name="DplAttrXaj",
-        # model_name="DplNnModuleXaj", # 替换模块
+        model_name="DplNnModuleXaj", # 替换模块
         model_hyperparam={
             "n_input_features": 6,
             # "n_input_features": 19,
@@ -34,8 +34,8 @@ def dpl_selfmadehydrodataset_args(gage_id):
             "param_test_way": "final",
             "source_book": "HF",
             "source_type": "sources",
-            # "et_output": 1, # 添加参数
-            # "param_var_index": [], # 添加参数
+            "et_output": 1, # 添加参数
+            "param_var_index": [], # 添加参数
         },
         # loss_func="RMSESum",
         loss_func="MultiOutLoss", # 替换损失函数
@@ -207,11 +207,11 @@ if __name__ == "__main__":
         # "camels_07261000",
 
         # "camels_11532500",
-        # "camels_12025000",
-        # "camels_12035000",
-        # "camels_12145500",
+        "camels_12025000",
+        # # "camels_12035000",
+        "camels_12145500",
         # "camels_14301000",
-        # "camels_14306500",
+        "camels_14306500",
         # "camels_14325000",
 
 
@@ -219,14 +219,14 @@ if __name__ == "__main__":
         # "camels_01440400",
         # "camels_01532000",
         # "camels_01552000",
-        "camels_02070000",
+        # "camels_02070000",
         # "camels_02137727",
         # "camels_02140991",
         "camels_02177000",
         # "camels_02212600",
         # "camels_02246000",
         # "camels_02427250",
-        "camels_03500000",
+        # "camels_03500000",
 
 
         "camels_03346000",

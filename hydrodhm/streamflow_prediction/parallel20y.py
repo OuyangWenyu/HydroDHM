@@ -6,8 +6,8 @@ from concurrent.futures import ProcessPoolExecutor
 
 
 def dpl_selfmadehydrodataset_args(gage_id):
-    project_name = os.path.join("streamflow_prediction_camels15y", gage_id)
-    train_period = ["2004-10-01", "2019-10-01"]
+    project_name = os.path.join("streamflow_prediction_camels20y", gage_id)
+    train_period = ["1999-10-01", "2019-10-01"]
     valid_period = ["2018-10-01", "2023-10-01"]
     # valid_period = None
     test_period = ["2018-10-01", "2023-10-01"]
@@ -19,7 +19,7 @@ def dpl_selfmadehydrodataset_args(gage_id):
             "other_settings": {"time_unit": ["1D"]},
         },
         model_type="MTL",
-        ctx=[2],
+        ctx=[1],
         model_name="DplLstmXaj",
         # model_name="DplAttrXaj",
         # model_name="DplNnModuleXaj", # 替换模块
@@ -42,7 +42,7 @@ def dpl_selfmadehydrodataset_args(gage_id):
         loss_param={
             "loss_funcs": "RMSESum",
             "data_gap": [0, 0],
-            "device": [2], # =ctx
+            "device": [1],
             "item_weight": [1, 0],
             "limit_part": [1],
         },  # 添加参数
@@ -121,23 +121,23 @@ def dpl_selfmadehydrodataset_args(gage_id):
         #     3: 0.02,
         #     4: 0.02,
         # },# 指定每个epoch的学习率
-        # lr_scheduler = {
-        #     epoch: 0.5 if 1 <= epoch <= 4 else 
-        #             0.2 if 5 <= epoch <= 19 else
-        #             0.1 if 20 <= epoch <= 49 else 
-        #             0.05 if 50 <= epoch <= 79 else 
-        #             0.02 if 80 <= epoch <= 94 else
-        #             0.01
-        #     for epoch in range(1, 101)
-        # },
         lr_scheduler = {
-            epoch: 0.5 if 1 <= epoch <= 9 else 
-                    0.2 if 10 <= epoch <= 29 else
-                    0.1 if 30 <= epoch <= 69 else 
-                    0.05 if 70 <= epoch <= 89 else 
-                    0.02
+            epoch: 0.5 if 1 <= epoch <= 4 else 
+                    0.2 if 5 <= epoch <= 19 else
+                    0.1 if 20 <= epoch <= 49 else 
+                    0.05 if 50 <= epoch <= 79 else 
+                    0.02 if 80 <= epoch <= 94 else
+                    0.01
             for epoch in range(1, 101)
         },
+        # lr_scheduler = {
+        #     epoch: 0.5 if 1 <= epoch <= 9 else 
+        #             0.2 if 10 <= epoch <= 29 else
+        #             0.1 if 30 <= epoch <= 69 else 
+        #             0.05 if 70 <= epoch <= 89 else 
+        #             0.02
+        #     for epoch in range(1, 101)
+        # },
         # lr_scheduler = {
         #     epoch: 0.1 if 1 <= epoch <= 9 else 
         #             0.01 if 10 <= epoch <= 49 else 
@@ -147,9 +147,6 @@ def dpl_selfmadehydrodataset_args(gage_id):
         # },  # 指定每个阶段epoch的学习率
         which_first_tensor="sequence",
         metrics=["NSE", "RMSE", "Corr", "KGE", "FHV", "FLV"],
-        # train_mode=0,
-        # weight_path="C:\\Users\\wenyu\\code\\torchhydro\\results\\test_camels\\expdpl61561201\\10_September_202402_32PM_model.pth",
-        # continue_train=0,
     )
 
 
@@ -206,12 +203,12 @@ if __name__ == "__main__":
         # "camels_03300400",
         # "camels_07261000",
 
-        # "camels_11532500",
-        # "camels_12025000",
+        "camels_11532500",
+        "camels_12025000",
         # "camels_12035000",
-        # "camels_12145500",
+        "camels_12145500",
         # "camels_14301000",
-        # "camels_14306500",
+        "camels_14306500",
         # "camels_14325000",
 
 
@@ -219,17 +216,17 @@ if __name__ == "__main__":
         # "camels_01440400",
         # "camels_01532000",
         # "camels_01552000",
-        "camels_02070000",
+        # "camels_02070000",
         # "camels_02137727",
         # "camels_02140991",
-        "camels_02177000",
+        # "camels_02177000",
         # "camels_02212600",
         # "camels_02246000",
         # "camels_02427250",
         "camels_03500000",
 
 
-        "camels_03346000",
+        # "camels_03346000",
         # "camels_05501000",
         # "camels_05514500",
         # "camels_07057500",

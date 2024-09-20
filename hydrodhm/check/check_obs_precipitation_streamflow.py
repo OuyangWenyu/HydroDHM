@@ -15,82 +15,82 @@ datasource = SelfMadeHydroDataset(
 )
 
 # 指定输出文件夹路径
-output_folder = 'results/obs_precipitaton_streamflow/camels'
+output_folder = 'results/obs_precipitaton_streamflow/changdian'
 # 如果文件夹不存在，创建文件夹
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
 # 获取所有的 basin 列表
 sites_ids = [
-        # "changdian_61561",
-        # "changdian_61700",
-        # "changdian_61716",
-        # "changdian_62618",
-        # "changdian_91000",
+        "changdian_61561",
+        "changdian_61700",
+        "changdian_61716",
+        "changdian_62618",
+        "changdian_91000",
 
-        # "changdian_60650",
-        # "changdian_60668",
-        # "changdian_61239",
-        # "changdian_61277",
-        # "changdian_62018",
-        # "changdian_62315",
-        # "changdian_63002",
-        # "changdian_63007",
-        # "changdian_63458",
-        # "changdian_63486",
-        # "changdian_63490",
-        # "changdian_90813",
-        # "changdian_91700",
-        # "changdian_92114",
-        # "changdian_92116",
-        # "changdian_92118",
-        # "changdian_92119",
-        # "changdian_92146",
-        # "changdian_92353",
-        # "changdian_92354",
-        # "changdian_94470",
-        # "changdian_94560",
-        # "changdian_94850",
-        # "changdian_95350",
-
-
-        "camels_01539000",
-        "camels_02231000",
-        "camels_03161000",
-        "camels_03300400",
-        "camels_07261000",
-
-        "camels_11532500",
-        "camels_12025000",
-        "camels_12035000",
-        "camels_12145500",
-        "camels_14301000",
-        "camels_14306500",
-        "camels_14325000",
+        "changdian_60650",
+        "changdian_60668",
+        "changdian_61239",
+        "changdian_61277",
+        "changdian_62018",
+        "changdian_62315",
+        "changdian_63002",
+        "changdian_63007",
+        "changdian_63458",
+        "changdian_63486",
+        "changdian_63490",
+        "changdian_90813",
+        "changdian_91700",
+        "changdian_92114",
+        "changdian_92116",
+        "changdian_92118",
+        "changdian_92119",
+        "changdian_92146",
+        "changdian_92353",
+        "changdian_92354",
+        "changdian_94470",
+        "changdian_94560",
+        "changdian_94850",
+        "changdian_95350",
 
 
-        "camels_01440000",
-        "camels_01440400",
-        "camels_01532000",
-        "camels_01552000",
-        "camels_02070000",
-        "camels_02137727",
-        "camels_02140991",
-        "camels_02177000",
-        "camels_02212600",
-        "camels_02246000",
-        "camels_02427250",
-        "camels_03500000",
+        # "camels_01539000",
+        # "camels_02231000",
+        # "camels_03161000",
+        # "camels_03300400",
+        # "camels_07261000",
+
+        # "camels_11532500",
+        # "camels_12025000",
+        # "camels_12035000",
+        # "camels_12145500",
+        # "camels_14301000",
+        # "camels_14306500",
+        # "camels_14325000",
 
 
-        "camels_03346000",
-        "camels_05501000",
-        "camels_05514500",
-        "camels_07057500",
-        "camels_07066000",
-        "camels_07145700",
-        "camels_07263295",
-        "camels_07359610",
+        # "camels_01440000",
+        # "camels_01440400",
+        # "camels_01532000",
+        # "camels_01552000",
+        # "camels_02070000",
+        # "camels_02137727",
+        # "camels_02140991",
+        # "camels_02177000",
+        # "camels_02212600",
+        # "camels_02246000",
+        # "camels_02427250",
+        # "camels_03500000",
+
+
+        # "camels_03346000",
+        # "camels_05501000",
+        # "camels_05514500",
+        # "camels_07057500",
+        # "camels_07066000",
+        # "camels_07145700",
+        # "camels_07263295",
+        # "camels_07359610",
         
 
         # "anhui_62909400",
@@ -107,7 +107,7 @@ sites_ids = [
         # "songliao_21401050",
         # "songliao_21401300",
     ]
-t_range = ["1999-10-01", "2023-09-30"]
+t_range = ["2014-10-01", "2021-09-30"]
 
 # 读取所有流域的时间序列数据
 dataset = datasource.read_ts_xrdataset(

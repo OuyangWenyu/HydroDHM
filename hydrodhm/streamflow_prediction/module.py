@@ -6,8 +6,8 @@ from concurrent.futures import ProcessPoolExecutor
 
 
 def dpl_selfmadehydrodataset_args(gage_id):
-    project_name = os.path.join("streamflow_prediction_camels05y_module", gage_id)
-    train_period = ["2014-10-01", "2019-10-01"]
+    project_name = os.path.join("streamflow_prediction_camels20y_module", gage_id)
+    train_period = ["1999-10-01", "2019-10-01"]
     valid_period = ["2018-10-01", "2023-10-01"]
     # valid_period = None
     test_period = ["2018-10-01", "2023-10-01"]
@@ -19,7 +19,7 @@ def dpl_selfmadehydrodataset_args(gage_id):
             "other_settings": {"time_unit": ["1D"]},
         },
         model_type="MTL",
-        ctx=[1],
+        ctx=[2],
         # model_name="DplLstmXaj",
         # model_name="DplAttrXaj",
         model_name="DplNnModuleXaj", # 替换模块
@@ -42,7 +42,7 @@ def dpl_selfmadehydrodataset_args(gage_id):
         loss_param={
             "loss_funcs": "RMSESum",
             "data_gap": [0, 0],
-            "device": [1], # =ctx
+            "device": [2], # =ctx
             "item_weight": [1, 0],
             "limit_part": [1],
         },  # 添加参数
@@ -206,12 +206,12 @@ if __name__ == "__main__":
         # "camels_03300400",
         # "camels_07261000",
 
-        "camels_11532500",
+        # "camels_11532500",
         "camels_12025000",
         # # "camels_12035000",
-        "camels_12145500",
+        # "camels_12145500",
         # "camels_14301000",
-        "camels_14306500",
+        # "camels_14306500",
         # "camels_14325000",
 
 
@@ -222,11 +222,11 @@ if __name__ == "__main__":
         "camels_02070000",
         # "camels_02137727",
         # "camels_02140991",
-        "camels_02177000",
+        # "camels_02177000",
         # "camels_02212600",
         # "camels_02246000",
         # "camels_02427250",
-        "camels_03500000",
+        # "camels_03500000",
 
 
         "camels_03346000",
