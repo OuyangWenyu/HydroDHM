@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-09-20 11:40:16
-LastEditTime: 2024-09-20 21:00:37
+LastEditTime: 2024-09-20 21:09:54
 LastEditors: Wenyu Ouyang
 Description: Plot the heatmaps of parameters for XAJ models
 FilePath: \HydroDHM\hydrodhm\check\plot_params_heatmaps.py
@@ -87,5 +87,5 @@ def plot_a_changdian_basin_reverse_params_heatmap(basin_id):
 
 for _basin_id in CHANGDIAN_IDS:
     plot_a_changdian_basin_reverse_params_heatmap(_basin_id)
-# for _basin_id in CHANGDIAN_IDS:
-#     plot_a_changdian_basin_params_heatmap(_basin_id)
+for _basin_id in CHANGDIAN_IDS:
+    plot_a_changdian_basin_params_heatmap(_basin_id)
