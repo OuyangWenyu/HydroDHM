@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-08-14 09:03:43
-LastEditTime: 2024-09-20 20:10:20
+LastEditTime: 2024-09-20 20:44:21
 LastEditors: Wenyu Ouyang
 Description: some global variables used in this project
 FilePath: \HydroDHM\definitions.py
@@ -28,6 +28,7 @@ try:
     CAMELS_IDS = definitions_private.CAMELS_IDS
     CHANGDIAN_IDS = definitions_private.CHANGDIAN_IDS
     CHANGDIAN_SCEUA_RESULT_DIRS = definitions_private.CHANGDIAN_SCEUA_RESULT_DIRS
+    CHANGDIAN_ID_NAME_DICT = definitions_private.CHANGDIAN_ID_NAME_DICT
 except ImportError:
     PROJECT_DIR = os.getcwd()
     RESULT_DIR = (
@@ -86,3 +87,11 @@ except ImportError:
         "changdian_62618_4_4",
         "changdian_91000_4_4",
     ]
+
+    CHANGDIAN_ID_NAME_DICT = {
+        "changdian_61561": "Duoyingping",
+        "changdian_61700": "Sanhuangmiao",
+        "changdian_61716": "Dengyingyan",
+        "changdian_62618": "Fujiangqiao",
+        "changdian_91000": "Ganzi",
+    }

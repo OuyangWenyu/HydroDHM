@@ -28,7 +28,7 @@ from torchhydro.trainers.train_utils import (
 )
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent))
-from definitions import DATASET_DIR, RESULT_DIR
+from definitions import DATASET_DIR, RESULT_DIR, CHANGDIAN_ID_NAME_DICT
 from hydrodhm.utils.results_utils import (
     ET_NAME,
     _save_pbm_params,
@@ -43,14 +43,6 @@ from hydrodhm.utils.results_utils import (
 
 plt.rcParams["font.family"] = "serif"
 plt.rcParams["font.serif"] = ["Times New Roman"] + plt.rcParams["font.serif"]
-
-ID_NAME_DICT = {
-    "changdian_61561": "Duoyingping",
-    "changdian_61700": "Sanhuangmiao",
-    "changdian_61716": "Dengyingyan",
-    "changdian_62618": "Fujiangqiao",
-    "changdian_91000": "Ganzi",
-}
 
 
 def plot_xaj_params_heatmap(
@@ -444,7 +436,7 @@ def plot_metrics_1model_trained_with_diffperiods(
 
     # Iterate over each basin_id and plot their lines
     for basin_id in df.index:
-        basin_name = ID_NAME_DICT.get(basin_id, basin_id)
+        basin_name = CHANGDIAN_ID_NAME_DICT.get(basin_id, basin_id)
         plt.plot(df.columns, df.loc[basin_id], marker="o", label=basin_name)
 
     if legend:
