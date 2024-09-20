@@ -219,7 +219,24 @@ def _read_et_obs(et_type, basin_ids, t_range_train, t_range_test):
     return et_obs_train_, et_obs_test_
 
 
-def read_sceua_xaj_et_metric(result_dir, et_type=ET_NAME):
+def read_sceua_xaj_et_metric(result_dir, et_type=ET_NAME, is_save=False):
+    """read SCEUA-XAJ metrics from one hydromodel project directory"""
+    train_metrics_file = os.path.join(
+        result_dir,
+        "sceua_xaj",
+        "train",
+        "basins_metrics_et.csv",
+    )
+    test_metrics_file = os.path.join(
+        result_dir,
+        "sceua_xaj",
+        "test",
+        "basins_metrics_et.csv",
+    )
+    if os.path.exists(train_metrics_file) and os.path.exists(test_metrics_file):
+        inds_df_train = pd.read_csv(train_metrics_file, index_col=0)
+        inds_df_valid = pd.read_csv(test_metrics_file, index_col=0)
+        return inds_df_train, inds_df_valid
     (
         pred_train_,
         pred_valid_,
@@ -229,6 +246,9 @@ def read_sceua_xaj_et_metric(result_dir, et_type=ET_NAME):
     inds_df_train, inds_df_valid = _xrarray_cal_et_metric(
         pred_train_, pred_valid_, obs_train_, obs_valid_
     )
+    if is_save:
+        inds_df_train.to_csv(train_metrics_file)
+        inds_df_valid.to_csv(test_metrics_file)
     return inds_df_train, inds_df_valid
 
 

@@ -1,9 +1,9 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-09-20 09:41:54
-LastEditTime: 2024-09-20 16:06:24
+LastEditTime: 2024-09-20 17:11:48
 LastEditors: Wenyu Ouyang
-Description: 
+Description: Calculate the results and metrics of SCEUA and dPL/dPL-NN XAJ models
 FilePath: \HydroDHM\hydrodhm\check\calculate_results_metrics.py
 Copyright (c) 2023-2024 Wenyu Ouyang. All rights reserved.
 """
@@ -22,8 +22,7 @@ from hydrodhm.utils.results_utils import (
 )
 
 
-def calculate_sceua_metric():
-    sceua_dir = os.path.join(RESULT_DIR, "XAJ", "result")
+def calculate_sceua_metric(sceua_dir):
     sceua_result_dirs = [
         "changdian_61561_4_4",
         "changdian_61700_4_4",
@@ -34,10 +33,14 @@ def calculate_sceua_metric():
     sceua_result_dirs_re = [_dir + "_re" for _dir in sceua_result_dirs]
     for _dir in sceua_result_dirs:
         a_sceua_dir = os.path.join(sceua_dir, _dir)
-        read_sceua_xaj_et_metric(a_sceua_dir)
+        inds_df_train, inds_df_valid = read_sceua_xaj_et_metric(
+            a_sceua_dir, is_save=True
+        )
     for _dir_ in sceua_result_dirs_re:
         a_sceua_dir_ = os.path.join(sceua_dir, _dir_)
-        read_sceua_xaj_et_metric(a_sceua_dir_)
+        inds_df_train, inds_df_valid = read_sceua_xaj_et_metric(
+            a_sceua_dir_, is_save=True
+        )
 
 
 def calculate_sanxia_dpl_metric(sanxia_dpl_parent_dir):
@@ -75,13 +78,25 @@ def calculate_camels_dpl_metric(camels_dpl_parent_dir):
         )
 
 
-lrchange3_reverse = os.path.join(
-    RESULT_DIR, "dPL", "result", "streamflow_prediction", "lrchange3_reverse"
-)
-module_reverse = os.path.join(
-    RESULT_DIR, "dPL", "result", "streamflow_prediction", "module_reverse"
-)
-camels_parent_dir = [
+sceua_dir1 = os.path.join(RESULT_DIR, "XAJ", "result")
+calculate_sceua_metric(sceua_dir1)
+sanxia_dpl_dir1 = os.path.join(RESULT_DIR, "dPL", "result", "streamflow_prediction")
+sanxia_dpl_dir2 = os.path.join(RESULT_DIR, "dPL", "result", "data-limited_analysis")
+sanxia_dpl_parent_dir = [
+    os.path.join(sanxia_dpl_dir1, "lrchange3"),
+    os.path.join(sanxia_dpl_dir1, "lrchange3_reverse"),
+    os.path.join(sanxia_dpl_dir1, "module"),
+    os.path.join(sanxia_dpl_dir1, "module_reverse"),
+    os.path.join(sanxia_dpl_dir2, "2to4_1618_1721"),
+    os.path.join(sanxia_dpl_dir2, "2to4_1618_1721_module"),
+    os.path.join(sanxia_dpl_dir2, "3to4_1417_1721"),
+    os.path.join(sanxia_dpl_dir2, "3to4_1417_1721_module"),
+    os.path.join(sanxia_dpl_dir2, "3to4_1518_1721"),
+    os.path.join(sanxia_dpl_dir2, "3to4_1518_1721_module"),
+]
+for i in range(len(sanxia_dpl_parent_dir)):
+    calculate_sanxia_dpl_metric(sanxia_dpl_parent_dir[i])
+camels_dpl_parent_dir = [
     "camels05y",
     "camels05y_module",
     "camels10y",
@@ -91,9 +106,13 @@ camels_parent_dir = [
     "camels20y",
     "camels20y_module",
 ]
-for i in range(len(camels_parent_dir)):
+for i in range(len(camels_dpl_parent_dir)):
     calculate_camels_dpl_metric(
         os.path.join(
-            RESULT_DIR, "dPL", "result", "data-limited_analysis", camels_parent_dir[i]
+            RESULT_DIR,
+            "dPL",
+            "result",
+            "data-limited_analysis",
+            camels_dpl_parent_dir[i],
         )
     )
