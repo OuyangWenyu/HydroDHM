@@ -335,7 +335,7 @@ def plot_xaj_et_time_series(
     plt.savefig(
         os.path.join(
             fig_dir,
-            ET_NAME + "_ts_" + basin_id + "_train_period.png",
+            basin_id + "_" + basin_name + "_" + ET_NAME + "_ts_train_period.png",
         ),
         dpi=600,
         bbox_inches="tight",
@@ -353,7 +353,7 @@ def plot_xaj_et_time_series(
     plt.savefig(
         os.path.join(
             fig_dir,
-            ET_NAME + "_ts_" + basin_id + "_valid_period.png",
+            basin_id + "_" + basin_name + "_" + ET_NAME + "_ts_valid_period.png",
         ),
         dpi=600,
         bbox_inches="tight",
