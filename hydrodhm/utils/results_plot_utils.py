@@ -318,10 +318,10 @@ def plot_xaj_et_time_series(
             valid_ets.append(pred_et_valid.values.flatten()[:-1])
             train_periods_wo_warmup.append(pred_et_train["time"].values[:-1])
             valid_periods_wo_warmup.append(pred_et_valid["time"].values[:-1])
-    train_ets.append(obs_et_train.values.flatten())
-    valid_ets.append(obs_et_valid.values.flatten())
-    train_periods_wo_warmup.append(obs_et_train["time"].values)
-    valid_periods_wo_warmup.append(obs_et_valid["time"].values)
+    train_ets.append(etobs_train.values.flatten()[:-1])
+    valid_ets.append(etobs_test.values.flatten()[:-1])
+    train_periods_wo_warmup.append(etobs_train["time"].values[:-1])
+    valid_periods_wo_warmup.append(etobs_test["time"].values[:-1])
     plot_ts(
         train_periods_wo_warmup,
         train_ets,
