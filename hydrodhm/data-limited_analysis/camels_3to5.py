@@ -6,11 +6,11 @@ from concurrent.futures import ProcessPoolExecutor
 
 
 def dpl_selfmadehydrodataset_args(gage_id):
-    project_name = os.path.join("data-limited_analysis_2to4_1618_1721_module", gage_id)
-    train_period = ["2016-10-01", "2018-10-01"]
-    valid_period = ["2017-10-01", "2021-10-01"]
+    project_name = os.path.join("data-limited_analysis_camels03y", gage_id)
+    train_period = ["2015-10-01", "2018-10-01"]
+    valid_period = ["2018-10-01", "2023-10-01"]
     # valid_period = None
-    test_period = ["2017-10-01", "2021-10-01"]
+    test_period = ["2018-10-01", "2023-10-01"]
     return cmd(
         sub=project_name,
         source_cfgs={
@@ -166,11 +166,14 @@ def run_all_gages(gage_ids):
 if __name__ == "__main__":
     gage_ids = [
 
-        "changdian_61561",
-        "changdian_61700",
-        "changdian_61716",
-        "changdian_62618",
-        "changdian_91000",
+        # "camels_02070000",
+        # "camels_02177000",
+        # "camels_03346000",
+        # "camels_03500000",
+        "camels_11532500",
+        "camels_12025000",
+        "camels_12145500",
+        "camels_14306500",
 
         # Add your gage IDs here
         # Add more gage IDs as needed

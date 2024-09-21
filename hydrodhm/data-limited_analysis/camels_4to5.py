@@ -6,11 +6,11 @@ from concurrent.futures import ProcessPoolExecutor
 
 
 def dpl_selfmadehydrodataset_args(gage_id):
-    project_name = os.path.join("data-limited_analysis_2to4_1618_1721_module", gage_id)
-    train_period = ["2016-10-01", "2018-10-01"]
-    valid_period = ["2017-10-01", "2021-10-01"]
+    project_name = os.path.join("data-limited_analysis_camels03y", gage_id)
+    train_period = ["2014-10-01", "2018-10-01"]
+    valid_period = ["2018-10-01", "2023-10-01"]
     # valid_period = None
-    test_period = ["2017-10-01", "2021-10-01"]
+    test_period = ["2018-10-01", "2023-10-01"]
     return cmd(
         sub=project_name,
         source_cfgs={
@@ -19,7 +19,7 @@ def dpl_selfmadehydrodataset_args(gage_id):
             "other_settings": {"time_unit": ["1D"]},
         },
         model_type="MTL",
-        ctx=[1],
+        ctx=[2],
         model_name="DplLstmXaj",
         # model_name="DplAttrXaj",
         # model_name="DplNnModuleXaj", # 替换模块
@@ -42,7 +42,7 @@ def dpl_selfmadehydrodataset_args(gage_id):
         loss_param={
             "loss_funcs": "RMSESum",
             "data_gap": [0, 0],
-            "device": [1], #=ctx
+            "device": [2], #=ctx
             "item_weight": [1, 0],
             "limit_part": [1],
         },  # 添加参数
@@ -166,11 +166,14 @@ def run_all_gages(gage_ids):
 if __name__ == "__main__":
     gage_ids = [
 
-        "changdian_61561",
-        "changdian_61700",
-        "changdian_61716",
-        "changdian_62618",
-        "changdian_91000",
+        "camels_02070000",
+        "camels_02177000",
+        "camels_03346000",
+        "camels_03500000",
+        "camels_11532500",
+        "camels_12025000",
+        "camels_12145500",
+        "camels_14306500",
 
         # Add your gage IDs here
         # Add more gage IDs as needed

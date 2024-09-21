@@ -20,9 +20,9 @@ def dpl_selfmadehydrodataset_args(gage_id):
         },
         model_type="MTL",
         ctx=[2],
-        # model_name="DplLstmXaj",
+        model_name="DplLstmXaj",
         # model_name="DplAttrXaj",
-        model_name="DplNnModuleXaj", # 替换模块
+        # model_name="DplNnModuleXaj", # 替换模块
         model_hyperparam={
             "n_input_features": 6,
             # "n_input_features": 19,
@@ -34,8 +34,8 @@ def dpl_selfmadehydrodataset_args(gage_id):
             "param_test_way": "final",
             "source_book": "HF",
             "source_type": "sources",
-            "et_output": 1, # 添加参数
-            "param_var_index": [], # 添加参数
+            # "et_output": 1, # 添加参数
+            # "param_var_index": [], # 添加参数
         },
         # loss_func="RMSESum",
         loss_func="MultiOutLoss", # 替换损失函数
