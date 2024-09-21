@@ -364,7 +364,7 @@ def plot_metrics_1model_trained_with_diffperiods(
     all_basin_result_dirs,
     basin_ids,
     show_ind="NSE",
-    cases=["3-year-train", "2-year-train", "1-year-train"],
+    cases=["4-year-train", "3-year-train", "2-year-train"],
     cfg_runagain=False,
     fig_dir=None,
     train_or_valid="valid",
@@ -457,59 +457,6 @@ def plot_metrics_1model_trained_with_diffperiods(
         dpi=FIGURE_DPI,
         bbox_inches="tight",
     )
-
-
-def _generate_dpl_result_dirs(
-    basin_id, model="dpl", cases=["3-year-train", "2-year-train", "1-year-train"]
-):
-    """A literal specification of the result directories of dPL
-
-    Parameters
-    ----------
-    basin_id : _type_
-        _description_
-    model : str, optional
-        _description_, by default "dpl"
-
-    Returns
-    -------
-    _type_
-        _description_
-    """
-    if model == "dpl":
-        post_fix = ""
-    elif model == "dpl_nn":
-        post_fix = "_module"
-    if len(cases) != 3:
-        raise ValueError(
-            "cases must be a list with 3 elements, we support 2-4 to 4-4 now only"
-        )
-    return [
-        os.path.join(
-            RESULT_DIR,
-            "dPL",
-            "result",
-            "streamflow_prediction",
-            "lrchange3" if model == "dpl" else "module",
-            basin_id,
-        ),
-        os.path.join(
-            RESULT_DIR,
-            "dPL",
-            "result",
-            "data-limited_analysis",
-            "3to4_1518_1721" + post_fix,
-            basin_id,
-        ),
-        os.path.join(
-            RESULT_DIR,
-            "dPL",
-            "result",
-            "data-limited_analysis",
-            "2to4_1618_1721" + post_fix,
-            basin_id,
-        ),
-    ]
 
 
 # ----------- The following function is not finished yet ------------
@@ -782,59 +729,28 @@ def plot_camels_nse_map(inds_df_lst, exps):
 
 
 if __name__ == "__main__":
-    sceua_xaj_dir = os.path.join(RESULT_DIR, "XAJ", "changdian_61700_4_4")
-    dpl_dir = os.path.join(RESULT_DIR, "dPL", "result", "lrchange3", "changdian_61700")
-    dpl_nn_dir = os.path.join(RESULT_DIR, "dPL", "result", "module", "changdian_61700")
-    basin_id = "changdian_61700"
-    changdian_61700_name = "sanhuangmiao"
-    basin_ids = [
-        "changdian_61561",
+    sceua_xaj_dir = os.path.join(RESULT_DIR, "XAJ", "result", "changdian_61700_4_4")
+    dpl_dir = os.path.join(
+        RESULT_DIR,
+        "dPL",
+        "result",
+        "streamflow_prediction",
+        "lrchange3",
         "changdian_61700",
-        "changdian_61716",
-        "changdian_62618",
-        "changdian_91000",
-    ]
-    cases = ["3-year", "2-year", "1-year"]
-    sanxiabasins_result_dirs = [
-        _generate_dpl_result_dirs(basin_id, cases=cases) for basin_id in basin_ids
-    ]
-    # plot_metrics_1model_trained_with_diffperiods(
-    #     sanxiabasins_result_dirs,
-    #     basin_ids,
-    #     # when first time, cfg_runagain=True, then cfg_runagain=False
-    #     cfg_runagain=False,
-    #     cases=cases,
-    # )
-    plot_metrics_1model_trained_with_diffperiods(
-        sanxiabasins_result_dirs,
-        basin_ids,
-        # when first time, cfg_runagain=True, then cfg_runagain=False
-        cfg_runagain=False,
-        cases=cases,
-        train_or_valid="train",
     )
-    sanxiabasins_nnmodule_result_dirs = [
-        _generate_dpl_result_dirs(basin_id, cases=cases, model="dpl_nn")
-        for basin_id in basin_ids
-    ]
-    # plot_metrics_1model_trained_with_diffperiods(
-    #     sanxiabasins_nnmodule_result_dirs,
-    #     basin_ids,
-    #     # when first time, cfg_runagain=True, then cfg_runagain=False
-    #     cfg_runagain=False,
-    #     cases=cases,
-    # )
-    plot_metrics_1model_trained_with_diffperiods(
-        sanxiabasins_nnmodule_result_dirs,
-        basin_ids,
-        # when first time, cfg_runagain=True, then cfg_runagain=False
-        cfg_runagain=False,
-        cases=cases,
-        train_or_valid="train",
+    dpl_nn_dir = os.path.join(
+        RESULT_DIR,
+        "dPL",
+        "result",
+        "streamflow_prediction",
+        "module",
+        "changdian_61700",
     )
-    # plot_xaj_rainfall_runoff(
-    #     [sceua_xaj_dir, dpl_dir, dpl_nn_dir], basin_id, changdian_61700_name
-    # )
+    basin_id = "changdian_61700"
+    changdian_61700_name = "Sanhuangmiao"
+    plot_xaj_rainfall_runoff(
+        [sceua_xaj_dir, dpl_dir, dpl_nn_dir], basin_id, changdian_61700_name
+    )
     # plot_xaj_et_time_series(
     #     [sceua_xaj_dir, dpl_dir, dpl_nn_dir], basin_id, changdian_61700_name
     # )

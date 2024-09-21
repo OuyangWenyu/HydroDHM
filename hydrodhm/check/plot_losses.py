@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-09-20 21:08:24
-LastEditTime: 2024-09-20 21:29:01
+LastEditTime: 2024-09-21 09:36:29
 LastEditors: Wenyu Ouyang
 Description: Plot the time series of losses for a basin
 FilePath: \HydroDHM\hydrodhm\check\plot_losses.py
@@ -39,12 +39,11 @@ def plot_losses_for_changdianbasin(basin_id):
     plot_losses_ts(
         [changdian_basin_dpl_dir, changdian_basin_dplnn_dir],
         leg_lst=[
-            "dPL_train",
-            "dPL$_{\mathrm{nn}}$_train",
-            "dPL_valid",
-            "dPL$_{\mathrm{nn}}$_valid",
+            "dPL_calib.",
+            "dPL$_{\mathrm{nn}}$_calib.",
+            "dPL_val.",
+            "dPL$_{\mathrm{nn}}$_val.",
         ],
-        ylabel=f"Loss_{basin_id}",
     )
 
 
@@ -68,12 +67,11 @@ def plot_losses_for_reverse_changdianbasin(basin_id):
     plot_losses_ts(
         [changdian_basin_dpl_dir, changdian_basin_dplnn_dir],
         leg_lst=[
-            "dPL_train",
-            "dPL$_{\mathrm{nn}}$_train",
-            "dPL_valid",
-            "dPL$_{\mathrm{nn}}$_valid",
+            "dPL_calib.",
+            "dPL$_{\mathrm{nn}}$_calib.",
+            "dPL_val.",
+            "dPL$_{\mathrm{nn}}$_val.",
         ],
-        ylabel=f"Loss_{basin_id}_reverse",
     )
 
 
