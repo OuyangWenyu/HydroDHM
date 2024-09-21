@@ -3,7 +3,7 @@
  * @Date: 2023-10-12 15:44:30
  * @LastEditTime: 2024-09-21 14:39:10
  * @LastEditors: Wenyu Ouyang
- * @Description: README FOR HYDROTL
+ * @Description: README FOR HYDRODHM
  * @FilePath: \HydroDHM\README.md
  * Copyright (c) 2023-2024 Wenyu Ouyang. All rights reserved.
 -->
