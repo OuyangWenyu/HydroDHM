@@ -10,9 +10,7 @@ from hydrodhm.utils.results_plot_utils import (
 )
 
 
-def _generate_changdian_datalimited_result_dirs(
-    basin_id, model="dpl", cases=["4-year", "3-year", "2-year"]
-):
+def _generate_changdian_datalimited_result_dirs(basin_id, model="dpl", cases=None):
     """A literal specification of the result directories of dPL
 
     Parameters
@@ -27,6 +25,8 @@ def _generate_changdian_datalimited_result_dirs(
     _type_
         _description_
     """
+    if cases is None:
+        cases = ["4-year", "3-year", "2-year"]
     if model == "dpl":
         post_fix = ""
     elif model == "dpl_nn":
@@ -49,7 +49,7 @@ def _generate_changdian_datalimited_result_dirs(
             "dPL",
             "result",
             "data-limited_analysis",
-            "3to4_1518_1721" + post_fix,
+            f"3to4_1518_1721{post_fix}",
             basin_id,
         ),
         os.path.join(
@@ -57,7 +57,7 @@ def _generate_changdian_datalimited_result_dirs(
             "dPL",
             "result",
             "data-limited_analysis",
-            "2to4_1618_1721" + post_fix,
+            f"2to4_1618_1721{post_fix}",
             basin_id,
         ),
     ]
@@ -106,9 +106,7 @@ def plot_metrics_for_changdian_basins():
     )
 
 
-def _generate_camels_datalimited_result_dirs(
-    basin_id, model="dpl", cases=["20-year", "15-year", "10-year", "5-year"]
-):
+def _generate_camels_datalimited_result_dirs(basin_id, model="dpl", cases=None):
     """A literal specification of the result directories of dPL
 
     Parameters
@@ -123,86 +121,63 @@ def _generate_camels_datalimited_result_dirs(
     _type_
         _description_
     """
+    if cases is None:
+        cases = [
+            "20y",
+            "15y",
+            "10y",
+            "5y",
+            "4y",
+            "3y",
+            "2y",
+        ]
     if model == "dpl":
         post_fix = ""
     elif model == "dpl_nn":
         post_fix = "_module"
-    if len(cases) != 4:
-        raise ValueError(
-            "cases must be a list with 4 elements, we support 5-20 to 5-5 now only"
-        )
     return [
         os.path.join(
             RESULT_DIR,
             "dPL",
             "result",
             "data-limited_analysis",
-            "camels20y" + post_fix,
+            f"camels{case}{post_fix}",
             basin_id,
-        ),
-        os.path.join(
-            RESULT_DIR,
-            "dPL",
-            "result",
-            "data-limited_analysis",
-            "camels15y" + post_fix,
-            basin_id,
-        ),
-        os.path.join(
-            RESULT_DIR,
-            "dPL",
-            "result",
-            "data-limited_analysis",
-            "camels10y" + post_fix,
-            basin_id,
-        ),
-        os.path.join(
-            RESULT_DIR,
-            "dPL",
-            "result",
-            "data-limited_analysis",
-            "camels05y" + post_fix,
-            basin_id,
-        ),
+        )
+        for case in cases
     ]
 
 
 def plot_metrics_for_camels_basins():
-    cases = ["20-year", "15-year", "10-year", "5-year"]
     camels_result_dirs = [
-        _generate_camels_datalimited_result_dirs(basin_id, cases=cases)
-        for basin_id in CAMELS_IDS
+        _generate_camels_datalimited_result_dirs(basin_id) for basin_id in CAMELS_IDS
     ]
     plot_metrics_1model_trained_with_diffperiods(
         camels_result_dirs,
         CAMELS_IDS,
         cfg_runagain=False,
-        cases=cases,
     )
     plot_metrics_1model_trained_with_diffperiods(
         camels_result_dirs,
         CAMELS_IDS,
         cfg_runagain=False,
-        cases=cases,
         train_or_valid="train",
         legend=False,
     )
     camels_nnmodule_result_dirs = [
-        _generate_camels_datalimited_result_dirs(basin_id, cases=cases, model="dpl_nn")
+        _generate_camels_datalimited_result_dirs(basin_id, model="dpl_nn")
         for basin_id in CAMELS_IDS
     ]
     plot_metrics_1model_trained_with_diffperiods(
         camels_nnmodule_result_dirs,
         CAMELS_IDS,
         cfg_runagain=False,
-        cases=cases,
         legend=False,
     )
     plot_metrics_1model_trained_with_diffperiods(
         camels_nnmodule_result_dirs,
         CAMELS_IDS,
         cfg_runagain=False,
-        cases=cases,
         train_or_valid="train",
         legend=False,
     )

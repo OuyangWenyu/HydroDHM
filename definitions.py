@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-08-14 09:03:43
-LastEditTime: 2024-09-20 20:44:21
+LastEditTime: 2024-09-23 20:51:59
 LastEditors: Wenyu Ouyang
 Description: some global variables used in this project
 FilePath: \HydroDHM\definitions.py
@@ -39,6 +39,12 @@ except ImportError:
     CAMELS_DPL_PARENT_DIR = [
         os.path.join(RESULT_DIR, "dPL", "result", "data-limited_analysis", tmp_)
         for tmp_ in [
+            "camels02y",
+            "camels02y_module",
+            "camels03y",
+            "camels03y_module",
+            "camels04y",
+            "camels04y_module",
             "camels05y",
             "camels05y_module",
             "camels10y",

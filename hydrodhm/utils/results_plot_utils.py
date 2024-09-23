@@ -152,17 +152,17 @@ def plot_xaj_rainfall_runoff(
     basin_name,
     alpha=0.5,
     c_lst=None,
-    leg_names=["eXAJ", "dXAJ", "dXAJ$_{\mathrm{nn}}$", "OBS"],
+    leg_names=None,
     fig_dir=None,
 ):
+    if leg_names is None:
+        leg_names = ["eXAJ", "dXAJ", "dXAJ$_{\mathrm{nn}}$", "OBS"]
     if fig_dir is None:
         fig_dir = result_dirs[0]
     if c_lst is None:
         c_lst = ["red", "green", "blue", "black"]
     train_ts = []
     valid_ts = []
-    train_periods_wo_warmup = []
-    valid_periods_wo_warmup = []
     for j, a_result_dir in enumerate(result_dirs):
         if leg_names[j] == "eXAJ":
             [
@@ -197,8 +197,8 @@ def plot_xaj_rainfall_runoff(
             valid_ts.append(pred_valid.values.flatten()[:-1])
     train_ts.append(obs_train.values.flatten()[:-1])
     valid_ts.append(obs_valid.values.flatten()[:-1])
-    train_periods_wo_warmup.append(obs_train["time"].values[:-1])
-    valid_periods_wo_warmup.append(obs_valid["time"].values[:-1])
+    train_periods_wo_warmup = [obs_train["time"].values[:-1]]
+    valid_periods_wo_warmup = [obs_valid["time"].values[:-1]]
     dash_lines = [False] * len(leg_names)
     dash_lines[-1] = True
     selfmadehydrodataset = SelfMadeHydroDataset(DATASET_DIR)
@@ -259,11 +259,7 @@ def plot_xaj_rainfall_runoff(
 
 
 def plot_xaj_et_time_series(
-    result_dirs,
-    basin_id,
-    basin_name,
-    leg_names=["eXAJ", "dXAJ", "dXAJ$_{\mathrm{nn}}$", "OBS"],
-    fig_dir=None,
+    result_dirs, basin_id, basin_name, leg_names=None, fig_dir=None
 ):
     """Plot ET time series
 
@@ -276,6 +272,8 @@ def plot_xaj_et_time_series(
     basin_name : _type_
         _description_
     """
+    if leg_names is None:
+        leg_names = ["eXAJ", "dXAJ", "dXAJ$_{\mathrm{nn}}$", "OBS"]
     if fig_dir is None:
         fig_dir = result_dirs[0]
     train_ets = []
@@ -364,7 +362,7 @@ def plot_metrics_1model_trained_with_diffperiods(
     all_basin_result_dirs,
     basin_ids,
     show_ind="NSE",
-    cases=["4-year-train", "3-year-train", "2-year-train"],
+    cases=None,
     cfg_runagain=False,
     fig_dir=None,
     train_or_valid="valid",
@@ -393,6 +391,8 @@ def plot_metrics_1model_trained_with_diffperiods(
     var_name : str, optional
         the variable name, by default "streamflow"
     """
+    if cases is None:
+        cases = ["20y", "15y", "10y", "5y", "4y", "3y", "2y"]
     if fig_dir is None:
         fig_dir = all_basin_result_dirs[0][0]
     inds_df_dict = {}
@@ -464,12 +464,12 @@ def plot_metrics_1model_trained_with_diffperiods(
 
 def plot_stations_in_a_boxregion(
     data_map,
-    pertile_range=[0, 100],
+    pertile_range=None,
     fig_size=(10, 6),
     cmap_str="jet",
     vmin=None,
     vmax=None,
-    shown_extent=[102.2, 109.2, 26.5, 32.5],
+    shown_extent=None,
     background_river_shp=os.path.join(
         SETTING["local_data_path"]["basins-interim"], "shapes", "HydroRIVERS_v10.shp"
     ),
@@ -491,6 +491,10 @@ def plot_stations_in_a_boxregion(
     vmax : _type_, optional
         _description_, by default None
     """
+    if pertile_range is None:
+        pertile_range = [0, 100]
+    if shown_extent is None:
+        shown_extent = [102.2, 109.2, 26.5, 32.5]
     cc_shpfile_dir = os.path.join(
         SETTING["local_data_path"]["basins-interim"], "shapes"
     )
@@ -597,8 +601,10 @@ def plot_dpl_comp_boxplots(
     fig_size,
     fig_name,
     subplots_adjust_wspace,
-    show_inds=["Bias", "RMSE", "Corr", "NSE"],
+    show_inds=None,
 ):
+    if show_inds is None:
+        show_inds = ["Bias", "RMSE", "Corr", "NSE"]
     concat_inds = [
         [df[ind].values if type(df) is pd.DataFrame else df[ind] for df in inds_df_lst]
         for ind in show_inds
