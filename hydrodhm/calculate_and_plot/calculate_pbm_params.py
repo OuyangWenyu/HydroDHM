@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-09-20 19:59:39
-LastEditTime: 2024-09-20 20:27:03
+LastEditTime: 2024-09-24 19:57:47
 LastEditors: Wenyu Ouyang
 Description: Calculate the parameters of dPL PBM models
-FilePath: \HydroDHM\hydrodhm\check\calculate_pbm_params.py
+FilePath: \HydroDHM\hydrodhm\calculate_and_plot\calculate_pbm_params.py
 Copyright (c) 2023-2024 Wenyu Ouyang. All rights reserved.
 """
 
@@ -28,6 +28,6 @@ for i in range(len(CHANGDIAN_DPL_PARENT_DIR)):
             os.path.join(CHANGDIAN_DPL_PARENT_DIR[i], CHANGDIAN_IDS[j])
         )
 
-for i in range(len(CAMELS_DPL_PARENT_DIR)):
-    for j in range(len(CAMELS_IDS)):
-        get_pbm_params_from_dpl(os.path.join(CAMELS_DPL_PARENT_DIR[i], CAMELS_IDS[j]))
+# for i in range(len(CAMELS_DPL_PARENT_DIR)):
+#     for j in range(len(CAMELS_IDS)):
+#         get_pbm_params_from_dpl(os.path.join(CAMELS_DPL_PARENT_DIR[i], CAMELS_IDS[j]))

@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-08-14 09:03:43
-LastEditTime: 2024-09-24 19:36:01
+LastEditTime: 2024-09-24 20:14:39
 LastEditors: Wenyu Ouyang
 Description: some global variables used in this project
 FilePath: \HydroDHM\definitions.py
@@ -27,6 +27,8 @@ try:
     CHANGDIAN_IDS = definitions_private.CHANGDIAN_IDS
     CHANGDIAN_SCEUA_RESULT_DIRS = definitions_private.CHANGDIAN_SCEUA_RESULT_DIRS
     CHANGDIAN_ID_NAME_DICT = definitions_private.CHANGDIAN_ID_NAME_DICT
+    SANXIA_DPL_DIR1 = definitions_private.SANXIA_DPL_DIR1
+    SANXIA_DPL_DIR2 = definitions_private.SANXIA_DPL_DIR2
 except ImportError:
     PROJECT_DIR = os.getcwd()
     RESULT_DIR = (
@@ -53,19 +55,19 @@ except ImportError:
             "camels20y_module",
         ]
     ]
-    sanxia_dpl_dir1 = os.path.join(RESULT_DIR, "dPL", "result", "streamflow_prediction")
-    sanxia_dpl_dir2 = os.path.join(RESULT_DIR, "dPL", "result", "data-limited_analysis")
+    SANXIA_DPL_DIR1 = os.path.join(RESULT_DIR, "dPL", "result", "streamflow_prediction")
+    SANXIA_DPL_DIR2 = os.path.join(RESULT_DIR, "dPL", "result", "data-limited_analysis")
     CHANGDIAN_DPL_PARENT_DIR = [
-        os.path.join(sanxia_dpl_dir1, "lrchange3"),
-        os.path.join(sanxia_dpl_dir1, "lrchange3_reverse"),
-        os.path.join(sanxia_dpl_dir1, "module"),
-        os.path.join(sanxia_dpl_dir1, "module_reverse"),
-        os.path.join(sanxia_dpl_dir2, "2to4_1618_1721"),
-        os.path.join(sanxia_dpl_dir2, "2to4_1618_1721_module"),
-        os.path.join(sanxia_dpl_dir2, "3to4_1417_1721"),
-        os.path.join(sanxia_dpl_dir2, "3to4_1417_1721_module"),
-        os.path.join(sanxia_dpl_dir2, "3to4_1518_1721"),
-        os.path.join(sanxia_dpl_dir2, "3to4_1518_1721_module"),
+        os.path.join(SANXIA_DPL_DIR1, "lrchange3"),
+        os.path.join(SANXIA_DPL_DIR1, "lrchange3_reverse"),
+        os.path.join(SANXIA_DPL_DIR1, "module"),
+        os.path.join(SANXIA_DPL_DIR1, "module_reverse"),
+        os.path.join(SANXIA_DPL_DIR2, "2to4_1618_1721"),
+        os.path.join(SANXIA_DPL_DIR2, "2to4_1618_1721_module"),
+        os.path.join(SANXIA_DPL_DIR2, "3to4_1417_1721"),
+        os.path.join(SANXIA_DPL_DIR2, "3to4_1417_1721_module"),
+        os.path.join(SANXIA_DPL_DIR2, "3to4_1518_1721"),
+        os.path.join(SANXIA_DPL_DIR2, "3to4_1518_1721_module"),
     ]
     CAMELS_IDS = [
         "camels_02070000",
