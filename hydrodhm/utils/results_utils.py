@@ -26,8 +26,8 @@ from definitions import RESULT_DIR, DATASET_DIR
 from hydrodhm.run_xaj.evaluate_xaj import _evaluate_1fold
 
 # ET_NAME = "ET_modis16a2006"
-# ET_NAME = "ET_modis16a2gf061"
-ET_NAME = "total_evaporation_hourly"
+ET_NAME = "ET_modis16a2gf061"
+# ET_NAME = "total_evaporation_hourly"
 
 
 def read_sceua_xaj_streamflow(result_dir):
@@ -219,7 +219,9 @@ def _read_et_obs(et_type, basin_ids, t_range_train, t_range_test):
     return et_obs_train_, et_obs_test_
 
 
-def read_sceua_xaj_et_metric(result_dir, et_type=ET_NAME, is_save=False):
+def read_sceua_xaj_et_metric(
+    result_dir, et_type=ET_NAME, is_save=False, runagain=False
+):
     """read SCEUA-XAJ metrics from one hydromodel project directory"""
     train_metrics_file = os.path.join(
         result_dir,
@@ -233,7 +235,11 @@ def read_sceua_xaj_et_metric(result_dir, et_type=ET_NAME, is_save=False):
         "test",
         "basins_metrics_et.csv",
     )
-    if os.path.exists(train_metrics_file) and os.path.exists(test_metrics_file):
+    if (
+        os.path.exists(train_metrics_file)
+        and os.path.exists(test_metrics_file)
+        and (not runagain)
+    ):
         inds_df_train = pd.read_csv(train_metrics_file, index_col=0)
         inds_df_valid = pd.read_csv(test_metrics_file, index_col=0)
         return inds_df_train, inds_df_valid

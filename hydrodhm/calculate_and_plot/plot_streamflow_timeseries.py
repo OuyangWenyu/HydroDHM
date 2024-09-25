@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-09-20 21:35:03
-LastEditTime: 2024-09-21 11:21:39
+LastEditTime: 2024-09-25 14:48:33
 LastEditors: Wenyu Ouyang
 Description: Plot the streamflow time series
-FilePath: \HydroDHM\hydrodhm\check\plot_streamflow_timeseries.py
+FilePath: \HydroDHM\hydrodhm\calculate_and_plot\plot_streamflow_timeseries.py
 Copyright (c) 2023-2024 Wenyu Ouyang. All rights reserved.
 """
 
@@ -14,7 +14,12 @@ from pathlib import Path
 
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent))
-from definitions import CHANGDIAN_ID_NAME_DICT, CHANGDIAN_IDS, RESULT_DIR
+from definitions import (
+    CHANGDIAN_ID_NAME_DICT,
+    CHANGDIAN_IDS,
+    RESULT_DIR,
+    SANXIA_DPL_DIR1,
+)
 from hydrodhm.utils.results_plot_utils import plot_xaj_rainfall_runoff
 
 
@@ -32,19 +37,13 @@ def plot_a_changdian_basin_rainfall_runoff(
         )
         show_lst.append(changdian_basin_sceua_dir)
     changdian_basin_dpl_dir = os.path.join(
-        RESULT_DIR,
-        "dPL",
-        "result",
-        "streamflow_prediction",
+        SANXIA_DPL_DIR1,
         "lrchange3" if not reverse else "lrchange3_reverse",
         basin_id,
     )
     show_lst.append(changdian_basin_dpl_dir)
     changdian_basin_dplnn_dir = os.path.join(
-        RESULT_DIR,
-        "dPL",
-        "result",
-        "streamflow_prediction",
+        SANXIA_DPL_DIR1,
         "module" if not reverse else "module_reverse",
         basin_id,
     )

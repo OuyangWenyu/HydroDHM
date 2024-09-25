@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-09-20 09:41:54
-LastEditTime: 2024-09-24 19:41:42
+LastEditTime: 2024-09-25 16:06:03
 LastEditors: Wenyu Ouyang
 Description: Calculate the results and metrics of SCEUA and dPL/dPL-NN XAJ models
 FilePath: \HydroDHM\hydrodhm\calculate_and_plot\calculate_results_metrics.py
@@ -29,17 +29,17 @@ from hydrodhm.utils.results_utils import (
 )
 
 
-def calculate_sceua_metric(sceua_dir):
+def calculate_sceua_metric(sceua_dir, runagain=False):
     sceua_result_dirs_re = [f"{_dir}_re" for _dir in CHANGDIAN_SCEUA_RESULT_DIRS]
     for _dir in CHANGDIAN_SCEUA_RESULT_DIRS:
         a_sceua_dir = os.path.join(sceua_dir, _dir)
         inds_df_train, inds_df_valid = read_sceua_xaj_et_metric(
-            a_sceua_dir, is_save=True
+            a_sceua_dir, is_save=True, runagain=runagain
         )
     for _dir_ in sceua_result_dirs_re:
         a_sceua_dir_ = os.path.join(sceua_dir, _dir_)
         inds_df_train, inds_df_valid = read_sceua_xaj_et_metric(
-            a_sceua_dir_, is_save=True
+            a_sceua_dir_, is_save=True, runagain=runagain
         )
 
 
@@ -65,7 +65,7 @@ def calculate_camels_dpl_metric(camels_dpl_parent_dir):
 
 
 sceua_dir1 = os.path.join(RESULT_DIR, "XAJ", "result")
-# calculate_sceua_metric(sceua_dir1)
+calculate_sceua_metric(sceua_dir1, runagain=True)
 for i in range(len(CHANGDIAN_DPL_PARENT_DIR)):
     calculate_sanxia_dpl_metric(CHANGDIAN_DPL_PARENT_DIR[i])
 # for i in range(len(CAMELS_DPL_PARENT_DIR)):
