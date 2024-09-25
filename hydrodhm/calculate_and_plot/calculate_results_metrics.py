@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-09-20 09:41:54
-LastEditTime: 2024-09-25 16:06:03
+LastEditTime: 2024-09-25 16:30:02
 LastEditors: Wenyu Ouyang
 Description: Calculate the results and metrics of SCEUA and dPL/dPL-NN XAJ models
 FilePath: \HydroDHM\hydrodhm\calculate_and_plot\calculate_results_metrics.py
@@ -12,10 +12,11 @@ import os
 import sys
 from pathlib import Path
 
+from definitions import SANXIA_SCEUA_DIR1
+
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent))
 from definitions import (
-    RESULT_DIR,
     CAMELS_DPL_PARENT_DIR,
     CHANGDIAN_DPL_PARENT_DIR,
     CAMELS_IDS,
@@ -64,8 +65,7 @@ def calculate_camels_dpl_metric(camels_dpl_parent_dir):
         )
 
 
-sceua_dir1 = os.path.join(RESULT_DIR, "XAJ", "result")
-calculate_sceua_metric(sceua_dir1, runagain=True)
+calculate_sceua_metric(SANXIA_SCEUA_DIR1, runagain=True)
 for i in range(len(CHANGDIAN_DPL_PARENT_DIR)):
     calculate_sanxia_dpl_metric(CHANGDIAN_DPL_PARENT_DIR[i])
 # for i in range(len(CAMELS_DPL_PARENT_DIR)):

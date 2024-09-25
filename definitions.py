@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-08-14 09:03:43
-LastEditTime: 2024-09-24 20:14:39
+LastEditTime: 2024-09-25 16:37:27
 LastEditors: Wenyu Ouyang
 Description: some global variables used in this project
 FilePath: \HydroDHM\definitions.py
@@ -29,6 +29,7 @@ try:
     CHANGDIAN_ID_NAME_DICT = definitions_private.CHANGDIAN_ID_NAME_DICT
     SANXIA_DPL_DIR1 = definitions_private.SANXIA_DPL_DIR1
     SANXIA_DPL_DIR2 = definitions_private.SANXIA_DPL_DIR2
+    SANXIA_SCEUA_DIR1 = definitions_private.SANXIA_SCEUA_DIR1
 except ImportError:
     PROJECT_DIR = os.getcwd()
     RESULT_DIR = (
@@ -86,6 +87,7 @@ except ImportError:
         "changdian_62618",
         "changdian_91000",
     ]
+    SANXIA_SCEUA_DIR1 = os.path.join(RESULT_DIR, "XAJ", "result")
     CHANGDIAN_SCEUA_RESULT_DIRS = [
         "changdian_61561_4_4",
         "changdian_61700_4_4",

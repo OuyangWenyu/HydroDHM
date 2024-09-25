@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-09-24 18:57:11
-LastEditTime: 2024-09-24 19:30:10
+LastEditTime: 2024-09-25 17:17:49
 LastEditors: Wenyu Ouyang
 Description: 
 FilePath: \HydroDHM\hydrodhm\calculate_and_plot\calculate_cv_metric.py
@@ -14,11 +14,21 @@ from pathlib import Path
 
 import pandas as pd
 
+
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent))
-from definitions import CHANGDIAN_DPL_PARENT_DIR, CHANGDIAN_IDS
+from definitions import (
+    CHANGDIAN_DPL_PARENT_DIR,
+    CHANGDIAN_IDS,
+    CHANGDIAN_SCEUA_RESULT_DIRS,
+    SANXIA_SCEUA_DIR1,
+)
+from hydrodhm.utils.results_utils import (
+    read_sceua_xaj_et_metric,
+    read_sceua_xaj_streamflow_metric,
+)
 
 
-def calculate_mean_metrics(
+def calculate_dpl_mean_metrics(
     dir_, dir_reverse, basin_id, metric_names, trainperiod=False
 ):
     """
@@ -52,7 +62,7 @@ def calculate_mean_metrics(
     return metrics_streamflow, metrics_et
 
 
-def one_dpl_model_all_basins_train_valid_ensemble_mean(model="dpl"):
+def one_model_all_basins_train_valid_ensemble_mean(model="dpl"):
     """
     Calculate the mean of the metrics of the streamflow prediction for all basins.
     """
@@ -66,20 +76,37 @@ def one_dpl_model_all_basins_train_valid_ensemble_mean(model="dpl"):
     elif model == "dpl_nn":
         dir0 = CHANGDIAN_DPL_PARENT_DIR[2]
         dir1 = CHANGDIAN_DPL_PARENT_DIR[3]
+    elif model == "sceua":
+        dir0 = SANXIA_SCEUA_DIR1
     for basin_id in CHANGDIAN_IDS:
-        metrics_streamflow, metrics_et = calculate_mean_metrics(
-            dir0,
-            dir1,
-            basin_id,
-            ["RMSE", "Corr", "NSE", "KGE", "FHV", "FLV"],
-        )
-        metrics_streamflow_trainperiod, metrics_et_trainperiod = calculate_mean_metrics(
-            dir0,
-            dir1,
-            basin_id,
-            ["RMSE", "Corr", "NSE", "KGE", "FHV", "FLV"],
-            trainperiod=True,
-        )
+        if model == "sceua":
+            metrics_streamflow, metrics_et = calculate_sceua_mean_metrics(
+                basin_id,
+                ["RMSE", "Corr", "NSE", "KGE", "FHV", "FLV"],
+            )
+            metrics_streamflow_trainperiod, metrics_et_trainperiod = (
+                calculate_sceua_mean_metrics(
+                    basin_id,
+                    ["RMSE", "Corr", "NSE", "KGE", "FHV", "FLV"],
+                    trainperiod=True,
+                )
+            )
+        else:
+            metrics_streamflow, metrics_et = calculate_dpl_mean_metrics(
+                dir0,
+                dir1,
+                basin_id,
+                ["RMSE", "Corr", "NSE", "KGE", "FHV", "FLV"],
+            )
+            metrics_streamflow_trainperiod, metrics_et_trainperiod = (
+                calculate_dpl_mean_metrics(
+                    dir0,
+                    dir1,
+                    basin_id,
+                    ["RMSE", "Corr", "NSE", "KGE", "FHV", "FLV"],
+                    trainperiod=True,
+                )
+            )
         ids_streamflow_metrics[basin_id] = metrics_streamflow
         ids_et_metrics[basin_id] = metrics_et
         ids_streamflow_metrics_trainperiod[basin_id] = metrics_streamflow_trainperiod
@@ -100,5 +127,49 @@ def one_dpl_model_all_basins_train_valid_ensemble_mean(model="dpl"):
     print(df_et_metrics_trainperiod)
 
 
-one_dpl_model_all_basins_train_valid_ensemble_mean(model="dpl")
-one_dpl_model_all_basins_train_valid_ensemble_mean(model="dpl_nn")
+def calculate_sceua_mean_metrics(basin_id, metric_names, trainperiod=False):
+    """
+    Calculate the mean of the metrics of the streamflow prediction for all basins.
+    """
+    sceua_dir = SANXIA_SCEUA_DIR1
+    ids_streamflow_metrics = {}
+    ids_et_metrics = {}
+    a_sceua_dir = os.path.join(sceua_dir, basin_id + "_4_4")
+    inds_df_train_et, inds_df_valid_et = read_sceua_xaj_et_metric(a_sceua_dir)
+    a_sceua_dir_re = os.path.join(sceua_dir, f"{basin_id}_4_4_re")
+    inds_df_train_re_et, inds_df_valid_re_et = read_sceua_xaj_et_metric(a_sceua_dir_re)
+    inds_df_train_streamflow, inds_df_valid_streamflow = (
+        read_sceua_xaj_streamflow_metric(a_sceua_dir)
+    )
+    inds_df_train_re_streamflow, inds_df_valid_re_streamflow = (
+        read_sceua_xaj_streamflow_metric(a_sceua_dir_re)
+    )
+    for metric_name in metric_names:
+        if trainperiod:
+            ids_et_metrics[metric_name] = (
+                (inds_df_train_et[metric_name] + inds_df_train_re_et[metric_name]) / 2
+            ).values[0]
+            ids_streamflow_metrics[metric_name] = (
+                (
+                    inds_df_train_streamflow[metric_name]
+                    + inds_df_train_re_streamflow[metric_name]
+                )
+                / 2
+            ).values[0]
+        else:
+            ids_et_metrics[metric_name] = (
+                (inds_df_valid_et[metric_name] + inds_df_valid_re_et[metric_name]) / 2
+            ).values[0]
+            ids_streamflow_metrics[metric_name] = (
+                (
+                    inds_df_valid_streamflow[metric_name]
+                    + inds_df_valid_re_streamflow[metric_name]
+                )
+                / 2
+            ).values[0]
+    return ids_streamflow_metrics, ids_et_metrics
+
+
+one_model_all_basins_train_valid_ensemble_mean(model="sceua")
+one_model_all_basins_train_valid_ensemble_mean(model="dpl")
+one_model_all_basins_train_valid_ensemble_mean(model="dpl_nn")

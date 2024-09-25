@@ -26,8 +26,8 @@ from definitions import RESULT_DIR, DATASET_DIR
 from hydrodhm.run_xaj.evaluate_xaj import _evaluate_1fold
 
 # ET_NAME = "ET_modis16a2006"
-ET_NAME = "ET_modis16a2gf061"
-# ET_NAME = "total_evaporation_hourly"
+# ET_NAME = "ET_modis16a2gf061"
+ET_NAME = "total_evaporation_hourly"
 
 
 def read_sceua_xaj_streamflow(result_dir):
@@ -192,10 +192,7 @@ def read_sceua_xaj_et(result_dir, et_type=ET_NAME):
     et_sim_test = et_sim_test_["etsim"].isel(time=slice(warmup, None))
     desired_train_time = et_sim_train.time.values
     desired_test_time = et_sim_test.time.values
-    if et_type == "total_evaporation_hourly":
-        time_period_ = "1D"
-    else:
-        time_period_ = "8D"
+    time_period_ = "1D" if et_type == "total_evaporation_hourly" else "8D"
     et_obs_train = et_obs_train_[time_period_][et_type].sel(
         time=slice(desired_train_time[0], desired_train_time[-1])
     )
@@ -269,10 +266,7 @@ def _xrarray_cal_et_metric(pred_train_, pred_valid_, obs_train_, obs_valid_):
     )
 
     # Now compute metrics using aligned data
-    if ET_NAME == "total_evaporation_hourly":
-        fill_nan_ = "no"
-    else:
-        fill_nan_ = "mean"
+    fill_nan_ = "no" if ET_NAME == "total_evaporation_hourly" else "mean"
     inds_df_train = pd.DataFrame(
         stat_error(
             obs_train_aligned.transpose("basin", "time").values,
