@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent))
-from definitions import CAMELS_IDS, CHANGDIAN_IDS, RESULT_DIR
+from definitions import CAMELS_IDS, CHANGDIAN_IDS, RESULT_DIR, SANXIA_DPL_DIR1
 from hydrodhm.utils.results_plot_utils import (
     plot_metrics_1model_trained_with_diffperiods,
 )
@@ -37,10 +37,7 @@ def _generate_changdian_datalimited_result_dirs(basin_id, model="dpl", cases=Non
         )
     return [
         os.path.join(
-            RESULT_DIR,
-            "dPL",
-            "result",
-            "streamflow_prediction",
+            SANXIA_DPL_DIR1,
             "lrchange3" if model == "dpl" else "module",
             basin_id,
         ),
@@ -126,10 +123,10 @@ def _generate_camels_datalimited_result_dirs(basin_id, model="dpl", cases=None):
             "20y",
             "15y",
             "10y",
-            "5y",
-            "4y",
-            "3y",
-            "2y",
+            "05y",
+            "04y",
+            "03y",
+            "02y",
         ]
     if model == "dpl":
         post_fix = ""
@@ -183,5 +180,5 @@ def plot_metrics_for_camels_basins():
     )
 
 
-plot_metrics_for_camels_basins()
 plot_metrics_for_changdian_basins()
+plot_metrics_for_camels_basins()

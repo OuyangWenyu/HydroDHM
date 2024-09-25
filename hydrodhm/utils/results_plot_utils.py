@@ -392,7 +392,7 @@ def plot_metrics_1model_trained_with_diffperiods(
         the variable name, by default "streamflow"
     """
     if cases is None:
-        cases = ["20y", "15y", "10y", "5y", "4y", "3y", "2y"]
+        cases = ["20y", "15y", "10y", "05y", "04y", "03y", "02y"]
     if fig_dir is None:
         fig_dir = all_basin_result_dirs[0][0]
     inds_df_dict = {}
