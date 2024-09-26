@@ -1,10 +1,10 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-11-19 17:27:05
-LastEditTime: 2024-09-12 08:28:54
+LastEditTime: 2024-09-26 17:16:49
 LastEditors: Wenyu Ouyang
 Description: the script to calibrate a model for CAMELS basin
-FilePath: /HydroDHM/scripts/xaj/calibrate_xaj.py
+FilePath: \HydroDHM\hydrodhm\run_xaj\calibrate_xaj.py
 Copyright (c) 2021-2022 Wenyu Ouyang. All rights reserved.
 """
 
@@ -138,7 +138,7 @@ if __name__ == "__main__":
         "--exp",
         dest="exp",
         help="An exp is corresponding to one data setting",
-        default="expselfmadehydrodataset001",
+        default="expchangdian_61561",
         type=str,
     )
     parser.add_argument(
@@ -167,21 +167,21 @@ if __name__ == "__main__":
         "--calibrate_period",
         dest="calibrate_period",
         help="The training period",
-        default=["2014-10-01", "2019-09-30"],
+        default=["2014-10-01", "2018-09-30"],
         nargs="+",
     )
     parser.add_argument(
         "--test_period",
         dest="test_period",
         help="The testing period",
-        default=["2019-10-01", "2021-09-30"],
+        default=["2017-10-01", "2021-09-30"],
         nargs="+",
     )
     parser.add_argument(
         "--basin_id",
         dest="basin_id",
         help="The basins' ids",
-        default=["changdian_61561", "changdian_62618"],
+        default=["changdian_61561"],
         nargs="+",
     )
     parser.add_argument(
@@ -225,8 +225,8 @@ if __name__ == "__main__":
             "name": "SCE_UA",
             "random_seed": 1234,
             # these params are just for test
-            "rep": 10,
-            "ngs": 10,
+            "rep": 100000,
+            "ngs": 100,
             "kstop": 50,
             "peps": 0.1,
             "pcento": 0.1,
