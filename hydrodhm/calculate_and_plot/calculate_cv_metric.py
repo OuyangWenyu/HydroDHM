@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-09-24 18:57:11
-LastEditTime: 2024-09-25 17:17:49
+LastEditTime: 2024-09-28 16:59:25
 LastEditors: Wenyu Ouyang
 Description: 
 FilePath: \HydroDHM\hydrodhm\calculate_and_plot\calculate_cv_metric.py
@@ -171,5 +171,5 @@ def calculate_sceua_mean_metrics(basin_id, metric_names, trainperiod=False):
 
 
 one_model_all_basins_train_valid_ensemble_mean(model="sceua")
-one_model_all_basins_train_valid_ensemble_mean(model="dpl")
-one_model_all_basins_train_valid_ensemble_mean(model="dpl_nn")
+# one_model_all_basins_train_valid_ensemble_mean(model="dpl")
+# one_model_all_basins_train_valid_ensemble_mean(model="dpl_nn")

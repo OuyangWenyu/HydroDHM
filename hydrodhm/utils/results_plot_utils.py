@@ -28,7 +28,7 @@ from torchhydro.trainers.train_utils import (
 )
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent.parent))
-from definitions import DATASET_DIR, RESULT_DIR, CHANGDIAN_ID_NAME_DICT
+from definitions import DATASET_DIR, RESULT_DIR, CHANGDIAN_ID_NAME_DICT, SANXIA_DPL_DIR1
 from hydrodhm.utils.results_utils import (
     ET_NAME,
     _save_pbm_params,
@@ -154,6 +154,7 @@ def plot_xaj_rainfall_runoff(
     c_lst=None,
     leg_names=None,
     fig_dir=None,
+    prcp_interval=20,
 ):
     if leg_names is None:
         leg_names = ["eXAJ", "dXAJ", "dXAJ$_{\mathrm{nn}}$", "OBS"]
@@ -226,6 +227,7 @@ def plot_xaj_rainfall_runoff(
         linewidth=0.75,
         dash_lines=dash_lines,
         c_lst=c_lst,
+        prcp_interval=prcp_interval,
     )
     plt.savefig(
         os.path.join(
@@ -248,6 +250,7 @@ def plot_xaj_rainfall_runoff(
         linewidth=0.75,
         dash_lines=dash_lines,
         c_lst=c_lst,
+        prcp_interval=prcp_interval,
     )
     plt.savefig(
         os.path.join(
@@ -737,18 +740,12 @@ def plot_camels_nse_map(inds_df_lst, exps):
 if __name__ == "__main__":
     sceua_xaj_dir = os.path.join(RESULT_DIR, "XAJ", "result", "changdian_61700_4_4")
     dpl_dir = os.path.join(
-        RESULT_DIR,
-        "dPL",
-        "result",
-        "streamflow_prediction",
+        SANXIA_DPL_DIR1,
         "lrchange3",
         "changdian_61700",
     )
     dpl_nn_dir = os.path.join(
-        RESULT_DIR,
-        "dPL",
-        "result",
-        "streamflow_prediction",
+        SANXIA_DPL_DIR1,
         "module",
         "changdian_61700",
     )

@@ -1,3 +1,13 @@
+"""
+Author: Wenyu Ouyang
+Date: 2024-09-12 08:36:16
+LastEditTime: 2024-09-28 13:58:35
+LastEditors: Wenyu Ouyang
+Description: 
+FilePath: \HydroDHM\hydrodhm\run_xaj\evaluate_xaj.py
+Copyright (c) 2023-2024 Wenyu Ouyang. All rights reserved.
+"""
+
 import argparse
 import os
 from pathlib import Path
@@ -61,18 +71,8 @@ def _evaluate(cali_dir, param_dir, train_data, test_data):
     test_eval = Evaluator(cali_dir, param_dir, eval_test_dir)
     qsim_train, qobs_train, etsim_train = train_eval.predict(train_data)
     qsim_test, qobs_test, etsim_test = test_eval.predict(test_data)
-    train_eval.save_results(
-        train_data,
-        qsim_train,
-        qobs_train,
-        etsim_train
-    )
-    test_eval.save_results(
-        test_data,
-        qsim_test,
-        qobs_test,
-        etsim_test
-    )
+    train_eval.save_results(train_data, qsim_train, qobs_train, etsim_train)
+    test_eval.save_results(test_data, qsim_test, qobs_test, etsim_test)
 
 
 if __name__ == "__main__":
@@ -83,14 +83,14 @@ if __name__ == "__main__":
         "--result_dir",
         dest="result_dir",
         help="The root directory of results",
-        default="C:\\Users\\wenyu\\OneDrive\\Research\\paper5-dplpartofdissertation\\Results\\XAJ",
+        default="C:\\Users\\wenyu\\OneDrive\\Research\\paper5-dplpartofdissertation\\Results\\XAJ300000rep1000ngs",
         type=str,
     )
     parser.add_argument(
         "--exp",
         dest="exp",
         help="An exp is corresponding to a data plan from calibrate_xaj.py",
-        default="changdian_62618",
+        default="changdian_62618_4_4_re",
         # default="exp21113800test001",
         # default="expselfmadehydrodataset001",
         type=str,

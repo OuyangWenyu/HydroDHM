@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2022-11-19 17:27:05
-LastEditTime: 2024-09-26 17:16:49
+LastEditTime: 2024-09-27 09:51:08
 LastEditors: Wenyu Ouyang
 Description: the script to calibrate a model for CAMELS basin
 FilePath: \HydroDHM\hydrodhm\run_xaj\calibrate_xaj.py
@@ -208,8 +208,8 @@ if __name__ == "__main__":
         "--param_range_file",
         dest="param_range_file",
         help="The file of the parameter range",
-        # default=None,
-        default="C:\\Users\\wenyu\\OneDrive\\Research\\paper5-dplpartofdissertation\\Results\\XAJ\\changdian_61561\\param_range.yaml",
+        default=None,
+        # default="C:\\Users\\wenyu\\OneDrive\\Research\\paper5-dplpartofdissertation\\Results\\XAJ\\changdian_61561\\param_range.yaml",
         type=str,
     )
     parser.add_argument(

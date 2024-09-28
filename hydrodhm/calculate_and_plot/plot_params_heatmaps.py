@@ -1,7 +1,7 @@
 """
 Author: Wenyu Ouyang
 Date: 2024-09-20 11:40:16
-LastEditTime: 2024-09-25 11:10:44
+LastEditTime: 2024-09-28 15:37:59
 LastEditors: Wenyu Ouyang
 Description: Plot the heatmaps of parameters for XAJ models
 FilePath: \HydroDHM\hydrodhm\calculate_and_plot\plot_params_heatmaps.py
@@ -20,6 +20,7 @@ from definitions import (
     RESULT_DIR,
     CHANGDIAN_IDS,
     SANXIA_DPL_DIR1,
+    SANXIA_SCEUA_DIR1,
 )
 from hydrodhm.utils.results_plot_utils import plot_xaj_params_heatmap
 
@@ -27,7 +28,7 @@ from hydrodhm.utils.results_plot_utils import plot_xaj_params_heatmap
 def plot_a_changdian_basin_params_heatmap(basin_id, is_reverse=False):
     changdian_basin_name = CHANGDIAN_ID_NAME_DICT[basin_id]
     changdian_basin_sceua_dir = os.path.join(
-        RESULT_DIR, "XAJ", "result", f"{basin_id}_4_4"
+        SANXIA_SCEUA_DIR1, f"{basin_id}_4_4_re" if is_reverse else f"{basin_id}_4_4"
     )
     changdian_basin_dpl_dir = os.path.join(
         SANXIA_DPL_DIR1,
