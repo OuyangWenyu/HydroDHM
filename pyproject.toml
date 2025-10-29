@@ -1,0 +1,50 @@
+[project]
+name = "HydroDHM"
+version = "0.1.0"
+description = "A Differentiable Hydrological Model in Data-Scarce Basins"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "ipykernel",
+    "xarray",
+    "netcdf4",
+    "geopandas",
+    "matplotlib",
+    "scikit-learn",
+    "scipy==1.13.*",
+    "torch",
+    "tensorboard",
+    "torchvision",
+    "tqdm",
+    "pytest",
+    "black",
+    "flake8",
+    "tbparse",
+    "setuptools",
+    "wheel",
+    "twine",
+    "bump2version",
+    "hydroutils @ git+ssh://git@gitcode.com/dlut-water/hydroutils.git@dev",
+    "hydrodataset @ git+ssh://git@gitcode.com/dlut-water/hydrodataset.git@dev",
+    "hydromodel @ git+ssh://git@gitcode.com/dlut-water/hydromodel.git@dev",
+]
+
+[tool.uv]
+# For PyTorch with CUDA support, use the PyTorch index
+# uv will automatically use this when installing torch packages
+index-url = "https://download.pytorch.org/whl/cu118"
+extra-index-url = ["https://pypi.org/simple"]
+
+[tool.uv.sources]
+# Specify PyTorch packages to come from the PyTorch index
+torch = { index = "pytorch-cuda" }
+torchvision = { index = "pytorch-cuda" }
+
+[[tool.uv.index]]
+name = "pytorch-cuda"
+url = "https://download.pytorch.org/whl/cu118"
+explicit = true
+
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools-scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"

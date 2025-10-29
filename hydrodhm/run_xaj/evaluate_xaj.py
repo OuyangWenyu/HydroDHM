@@ -22,7 +22,7 @@ def evaluate(args):
     result_dir = args.result_dir
     exp = args.exp
     cali_dir = Path(os.path.join(result_dir, exp))
-    cali_config = read_yaml_config(os.path.join(cali_dir, "config.yaml"))
+    cali_config = read_yaml_config(os.path.join(cali_dir, "calibration_config.yaml"))
     kfold = cali_config["cv_fold"]
     basins = cali_config["basin_id"]
     warmup = cali_config["warmup"]
@@ -83,14 +83,14 @@ if __name__ == "__main__":
         "--result_dir",
         dest="result_dir",
         help="The root directory of results",
-        default="C:\\Users\\wenyu\\OneDrive\\Research\\paper5-dplpartofdissertation\\Results\\XAJ300000rep1000ngs",
+        default="D:\\project\\songliao\\HydroDHM\\hydrodhm\\run_xaj\\results",
         type=str,
     )
     parser.add_argument(
         "--exp",
         dest="exp",
         help="An exp is corresponding to a data plan from calibrate_xaj.py",
-        default="changdian_62618_4_4_re",
+        default="expchangdian_61561",
         # default="exp21113800test001",
         # default="expselfmadehydrodataset001",
         type=str,
