@@ -83,9 +83,9 @@ uv sync
 
 ## 数据准备
 
-### 下载 CAMELS 数据集
+### 使用 CAMELS 数据集
 
-本项目使用 `hydrodataset` 包来下载和管理水文数据集。
+本项目使用 `hydrodataset` 包来访问水文数据集。该包使用 [AquaFetch](https://github.com/hyex-research/AquaFetch) 后端自动下载和缓存数据。
 
 #### 1. 安装 hydrodataset
 
@@ -95,46 +95,134 @@ uv sync
 uv pip install hydrodataset
 ```
 
-#### 2. 下载 CAMELS-US 数据集
+#### 2. 配置数据路径
 
-使用 Python 下载数据集：
+确保您的 `hydro_setting.yml`（在主目录中）已配置数据路径：
 
-```python
-from hydrodataset import Camels
-
-# 初始化 CAMELS 数据集下载器
-camels = Camels(data_path="path/to/your/data/directory")
-
-# 下载数据集（这可能需要一段时间）
-camels.download_data()
+```yaml
+local_data_path:
+  datasets-origin: 'D:\\data'  # 更新为您的路径
+  cache: 'D:\\data\\.cache'
 ```
 
-或使用命令行接口：
+#### 3. 下载 CAMELS 数据
+
+**方式 A: 使用下载脚本（推荐新手使用）**
+
+我们在 `hydrodhm/data_tools/` 中提供了一个便捷的下载脚本，方便数据集管理：
 
 ```bash
-python -c "from hydrodataset import Camels; Camels(data_path='D:/data/camels_us').download_data()"
+cd hydrodhm/data_tools
+
+# 列出所有可用的 CAMELS 数据集
+python download_camels.py --list
+
+# 下载 CAMELS-US（使用 hydro_setting.yml 中的路径）
+python download_camels.py camels_us
+
+# 或指定自定义路径
+python download_camels.py camels_us --data-path D:/data/camels
+
+# 下载其他数据集
+python download_camels.py camels_gb
+python download_camels.py camels_aus
 ```
 
-**推荐的数据目录结构：**
-```
-D:/data/
-└── CAMELS_US/
-    ├── basin_timeseries_v1p2_metForcing_obsFlow/
-    ├── camels_attributes_v2.0/
-    └── ...
-```
+脚本功能：
+- 通过 hydrodataset 的 AquaFetch 后端自动下载数据
+- 转换为标准化的 NetCDF 格式
+- 通过显示流域数量验证下载
+- 提供下一步操作的有用指导
 
-#### 3. 验证下载
+详细说明请参见 `hydrodhm/data_tools/DOWNLOAD_GUIDE.md`。
 
-检查数据是否正确下载：
+**方式 B: 直接使用 Python**
+
+`hydrodataset` 包会自动处理数据下载。只需初始化数据集类，数据将在首次访问时自动下载和缓存：
 
 ```python
-from hydrodataset import Camels
+from hydrodataset.camels_us import CamelsUs
+from hydrodataset import SETTING
 
-camels = Camels(data_path="D:/data/CAMELS_US")
-basin_ids = camels.read_object_ids()  # 获取流域 ID 列表
+# 从 hydro_setting.yml 获取数据路径
+data_path = SETTING["local_data_path"]["datasets-origin"]
+
+# 初始化数据集 - 如果不存在会自动下载
+# 这将通过 AquaFetch 获取原始数据并缓存为 .nc 文件
+ds = CamelsUs(data_path)
+
+# 访问流域 ID
+basin_ids = ds.read_object_ids()
 print(f"找到 {len(basin_ids)} 个流域")
+
+# 读取时间序列数据（流量、降水等）
+ts_data = ds.read_ts_xrdataset(
+    gage_id_lst=basin_ids[:2],
+    t_range=["1990-01-01", "1995-12-31"],
+    var_lst=["streamflow", "precipitation"]
+)
+
+# 读取静态属性
+attr_data = ds.read_attr_xrdataset(
+    gage_id_lst=basin_ids[:2],
+    var_lst=["area", "p_mean"]
+)
 ```
+
+**工作原理：**
+1. **首次访问**：首次初始化数据集类时，`hydrodataset` 使用 AquaFetch 下载原始数据
+2. **自动缓存**：数据被处理为标准化的 NetCDF (`.nc`) 格式并缓存在您配置的数据目录中
+3. **快速后续访问**：所有未来的数据请求直接从快速的 `.nc` 缓存文件读取
+
+**重要提示：**
+- 首次下载可能需要 30 分钟到几个小时，取决于数据集大小
+- CAMELS-US 数据集约 10-20 GB
+- 请确保有足够的磁盘空间
+- 建议初次下载时使用稳定的网络连接
+- 缓存的 `.nc` 文件存储在 `{data_path}/{dataset_name}/` 目录中
+
+#### 4. 可用的 CAMELS 数据集
+
+`hydrodataset` 包支持多个 CAMELS 数据集：
+
+- `camels_us` - 美国 (671 个流域)
+- `camels_aus` - 澳大利亚 (222 个流域)
+- `camels_gb` - 英国 (671 个流域)
+- `camels_br` - 巴西 (897 个流域)
+- `camels_ch` - 瑞士 (331 个流域)
+- `camels_cl` - 智利 (516 个流域)
+- `camels_de` - 德国 (1555 个流域)
+- `camels_dk` - 丹麦 (304 个流域)
+- `camels_fr` - 法国 (662 个流域)
+- `camels_nz` - 新西兰 (343 个流域)
+- `camels_se` - 瑞典 (54 个流域)
+
+要使用不同的数据集，只需导入并初始化相应的类：
+
+```python
+from hydrodataset.camels_gb import CamelsGb
+from hydrodataset.camels_aus import CamelsAus
+
+# 使用 CAMELS-GB
+gb_ds = CamelsGb(data_path)
+
+# 使用 CAMELS-AUS
+aus_ds = CamelsAus(data_path)
+```
+
+**标准化变量名：**
+
+所有 CAMELS 数据集都使用标准化的变量名以保持一致性：
+- `streamflow` - 观测流量
+- `precipitation` - 降水数据
+- `temperature_max` / `temperature_min` - 温度数据
+- `area` - 流域面积
+- `p_mean` - 年平均降水量
+- 还有更多...
+
+这使您可以在不同的 CAMELS 数据集中使用相同的代码，无需修改。
+
+有关更多详细信息，请参阅 [hydrodataset 文档](https://OuyangWenyu.github.io/hydrodataset)。
 
 ### 使用自己的数据
 
@@ -190,22 +278,22 @@ nano ~/hydro_setting.yml
 # 本地数据路径（必需）
 local_data_path:
   # 所有数据的根目录
-  root: 'D:\data'
+  root: 'D:\\data'
 
   # 原始数据集目录
-  datasets-origin: 'D:\data'
+  datasets-origin: 'D:\\data'
 
   # 中间/处理后的数据集目录
-  datasets-interim: 'D:\data'
+  datasets-interim: 'D:\\data'
 
   # 原始流域数据目录
-  basins-origin: 'D:\data'
+  basins-origin: 'D:\\data'
 
   # 中间/处理后的流域数据目录
-  basins-interim: 'D:\data'
+  basins-interim: 'D:\\data'
 
   # 缓存目录
-  cache: 'C:\Users\YourUsername\.cache'
+  cache: 'C:\\Users\YourUsername\\.cache'
 
 # MinIO 配置（可选 - 如果不使用请留空）
 minio:
@@ -234,7 +322,7 @@ postgres:
 - 您也可以直接指定数据集路径，如 `camels_us` 或 `selfmadehydrodataset` 来覆盖默认结构
 
 **路径格式注意事项：**
-- Windows: 使用单引号和单反斜杠：`'D:\path\to\data'` 或正斜杠：`'D:/path/to/data'`
+- Windows: 使用单引号和双反斜杠：`'D:\\path\\to\\data'` 或正斜杠：`'D:/path/to/data'`
 - Linux/macOS: 使用单引号：`'/home/user/data'`
 
 #### 4. 验证配置
@@ -293,7 +381,7 @@ training:
   loss: "RMSE"
   SCE_UA:
     random_seed: 1234
-    rep: 1000      # 生产环境运行时增加
+    rep: 1000      
     ngs: 1000
     kstop: 50
     peps: 0.1
@@ -344,11 +432,21 @@ python calibrate_xaj_unified.py --config my_calibration_config.yaml --experiment
 
 ```
 D:/results/hydro/XAJ/camels_xaj_test/
-├── calibration_config.yaml      # 使用的配置
-├── calibrated_params.json       # 找到的最佳参数
-├── calibration_history.csv      # 优化历史
-└── plots/                       # 可视化（如果启用）
+├── calibration_config.yaml      # 使用的配置（如果使用 --save-config）
+├── param_range.yaml             # 参数范围（如果使用 --save-config）
+└── <basin_id>_sceua.csv        # 每个流域的 SCE-UA 优化历史
 ```
+
+**注意：** 使用 `--save-config` 标志保存配置文件：
+```bash
+python calibrate_xaj_unified.py --config my_calibration_config.yaml --save-config
+```
+
+**关键输出文件：**
+- `<basin_id>_sceua.csv`: 包含所有迭代和参数值的完整优化历史
+  - `like1` 值最小的行包含最佳参数
+- `calibration_config.yaml`: 用于重现性和评估的完整配置
+- `param_range.yaml`: 参数范围（评估时需要用于反归一化参数）
 
 ### 使用传统脚本
 
@@ -452,7 +550,6 @@ results/expchangdian_61561/
 │   ├── basins_norm_params.csv        # 归一化参数 [0,1]
 │   ├── basins_denorm_params.csv      # 物理参数值
 │   ├── xaj_mz_evaluation_results.nc  # 模拟结果（NetCDF）
-│   └── evaluation_info.yaml          # 评估元数据
 ├── evaluation_train/                 # 训练期评估结果
 │   └── ...
 └── evaluation_custom_2020-01-01_2021-12-31/  # 自定义时期结果
@@ -463,7 +560,6 @@ results/expchangdian_61561/
 - `basins_metrics.csv`: 每个流域的性能指标（NSE、KGE、RMSE、PBIAS 等）
 - `basins_denorm_params.csv`: 物理单位的率定参数
 - `xaj_mz_evaluation_results.nc`: 包含时间序列数据的完整模拟结果
-- `evaluation_info.yaml`: 关于评估运行的元数据
 
 #### 5. 理解指标
 
@@ -488,6 +584,131 @@ python evaluate_xaj.py --exp expchangdian_61561 --result-dir results
 
 **注意：** 传统脚本需要旧的配置格式，与统一脚本相比功能有限。
 
+## 可视化
+
+评估完成后，您可以使用统一可视化脚本生成发表级质量的图表。
+
+### 使用统一可视化脚本
+
+`visualize_unified.py` 脚本从评估结果创建全面的可视化：
+
+#### 1. 基本用法（生成所有图表）
+
+```bash
+cd hydrodhm/run_xaj
+python visualize_unified.py --eval-dir results/your_exp_name/evaluation_test
+```
+
+这将在 `figures/` 子目录中生成所有可用的图表类型。
+
+#### 2. 生成特定图表类型
+
+**仅时间序列图：**
+```bash
+python visualize_unified.py --eval-dir results/your_exp_name/evaluation_test \
+    --plot-types timeseries
+```
+
+**多种特定类型：**
+```bash
+python visualize_unified.py --eval-dir results/your_exp_name/evaluation_test \
+    --plot-types timeseries scatter fdc
+```
+
+**可用的图表类型：**
+- `timeseries` - 带降水的时间序列图（双轴图）
+- `scatter` - 观测值 vs 模拟值散点图，带密度着色
+- `fdc` - 流量历时曲线（对数刻度）
+- `monthly` - 月均值对比，带误差棒
+- `metrics` - 多流域指标对比（仅用于多流域）
+- `all` - 生成所有图表类型（默认）
+
+#### 3. 可视化特定流域
+
+对于多流域率定，选择特定流域绘图：
+
+```bash
+python visualize_unified.py --eval-dir results/your_exp_name/evaluation_test \
+    --basins 01013500 01022500
+```
+
+#### 4. 自定义输出目录
+
+将图表保存到不同位置：
+
+```bash
+python visualize_unified.py --eval-dir results/your_exp_name/evaluation_test \
+    --output-dir D:/my_figures
+```
+
+#### 5. 生成的图表
+
+脚本生成适合发表的高质量图表（300 DPI）：
+
+```
+results/your_exp_name/evaluation_test/figures/
+├── timeseries_01013500.png      # 带降水的时间序列图
+├── scatter_01013500.png          # 带1:1线的散点图
+├── fdc_01013500.png             # 流量历时曲线
+├── monthly_01013500.png         # 月均值图
+└── metrics_comparison.png       # 多流域对比（如适用）
+```
+
+**生成图表的特点：**
+- **300 DPI 分辨率** - 可直接用于发表
+- **自动计算指标** - 每张图上显示 NSE、KGE、RMSE、PBIAS
+- **专业格式** - 一致的配色方案和字体
+- **周期检测** - 自动标注"训练期"或"测试期"
+
+#### 6. 完整工作流程示例
+
+从率定到可视化的完整流程：
+
+```bash
+# 1. 率定模型
+python calibrate_xaj_unified.py --config my_config.yaml --save-config
+
+# 2. 在测试期评估
+python evaluate_xaj_unified.py --exp my_experiment --eval-period test
+
+# 3. 生成所有可视化
+python visualize_unified.py --eval-dir results/my_experiment/evaluation_test
+
+# 4. 查看图表
+ls results/my_experiment/evaluation_test/figures/
+```
+
+#### 7. 解读结果
+
+**时间序列图：**
+- 上图：降水柱状图（倒置坐标轴）
+- 下图：观测值（蓝色实线） vs 模拟值（红色虚线）径流
+- 指标框：快速性能评估
+
+**散点图：**
+- 热图显示点密度（对数刻度）
+- 黑色虚线：1:1 完美拟合
+- 点在线上方：模型高估
+- 点在线下方：模型低估
+
+**流量历时曲线：**
+- Y 轴对数刻度
+- 显示整个时期的流量分布
+- 良好匹配表示正确的流态表现
+
+**月均值对比：**
+- 柱状图带误差棒（标准差）
+- 识别季节性偏差
+- 对水资源规划有用
+
+### 可视化技巧
+
+1. **用于论文/演示文稿**：使用默认设置（300 DPI，所有图表类型）
+2. **用于快速检查**：仅生成 `timeseries` 和 `scatter` 图
+3. **用于多流域研究**：包含 `metrics` 对比图
+4. **保存配置文件**：率定时始终使用 `--save-config` 以确保可重复性
+
+
 ## 项目结构
 
 ```
@@ -499,7 +720,8 @@ HydroDHM/
 │   │   ├── config_example.yaml           # 示例配置
 │   │   ├── evaluate_xaj.py               # 传统评估脚本
 │   │   ├── evaluate_xaj_unified.py       # 新统一评估脚本
-│   │   └── visualize.py                  # 可视化工具
+│   │   ├── visualize.py                  # 传统可视化工具
+│   │   └── visualize_unified.py          # 新统一可视化工具
 │   ├── streamflow_prediction/    # 神经网络模型
 │   ├── data-limited_analysis/    # 数据有限流域实验
 │   └── calculate_and_plot/       # 结果分析和可视化

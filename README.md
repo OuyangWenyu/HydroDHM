@@ -79,9 +79,9 @@ This will install all required dependencies including PyTorch with CUDA 11.8 sup
 
 ## Data Preparation
 
-### Downloading CAMELS Dataset
+### Using CAMELS Dataset
 
-This project uses the `hydrodataset` package to download and manage hydrological datasets.
+This project uses the `hydrodataset` package to access hydrological datasets. The package automatically downloads and caches data using the [AquaFetch](https://github.com/hyex-research/AquaFetch) backend.
 
 #### 1. Install hydrodataset
 
@@ -91,46 +91,134 @@ The package should already be installed as part of the dependencies. If not:
 uv pip install hydrodataset
 ```
 
-#### 2. Download CAMELS-US Dataset
+#### 2. Configure Data Path
 
-Use Python to download the dataset:
+Make sure your `hydro_setting.yml` (in your home directory) has the data path configured:
 
-```python
-from hydrodataset import Camels
-
-# Initialize CAMELS dataset downloader
-camels = Camels(data_path="path/to/your/data/directory")
-
-# Download the dataset (this may take a while)
-camels.download_data()
+```yaml
+local_data_path:
+  datasets-origin: 'D:\\data'  # Update with your path
+  cache: 'D:\\data\\.cache'
 ```
 
-Or use the command-line interface:
+#### 3. Download CAMELS Data
+
+**Option A: Using Download Script (Recommended for beginners)**
+
+We provide a convenient download script in `hydrodhm/data_tools/` for easy dataset management:
 
 ```bash
-python -c "from hydrodataset import Camels; Camels(data_path='D:/data/camels_us').download_data()"
+cd hydrodhm/data_tools
+
+# List all available CAMELS datasets
+python download_camels.py --list
+
+# Download CAMELS-US (uses path from hydro_setting.yml)
+python download_camels.py camels_us
+
+# Or specify a custom path
+python download_camels.py camels_us --data-path D:/data/camels
+
+# Download other datasets
+python download_camels.py camels_gb
+python download_camels.py camels_aus
 ```
 
-**Recommended data directory structure:**
-```
-D:/data/
-└── CAMELS_US/
-    ├── basin_timeseries_v1p2_metForcing_obsFlow/
-    ├── camels_attributes_v2.0/
-    └── ...
-```
+The script will:
+- Automatically download data via hydrodataset's AquaFetch backend
+- Convert to standardized NetCDF format
+- Verify the download by showing basin counts
+- Provide helpful guidance on next steps
 
-#### 3. Verify Download
+See `hydrodhm/data_tools/DOWNLOAD_GUIDE.md` for detailed instructions.
 
-Check that the data has been downloaded correctly:
+**Option B: Using Python Directly**
+
+The `hydrodataset` package handles data downloading automatically. Simply initialize the dataset class and the data will be downloaded and cached on first access:
 
 ```python
-from hydrodataset import Camels
+from hydrodataset.camels_us import CamelsUs
+from hydrodataset import SETTING
 
-camels = Camels(data_path="D:/data/CAMELS_US")
-basin_ids = camels.read_object_ids()  # Get list of basin IDs
+# Get the data path from your hydro_setting.yml
+data_path = SETTING["local_data_path"]["datasets-origin"]
+
+# Initialize dataset - downloads automatically if not present
+# This will fetch raw data via AquaFetch and cache it as .nc files
+ds = CamelsUs(data_path)
+
+# Access basin IDs
+basin_ids = ds.read_object_ids()
 print(f"Found {len(basin_ids)} basins")
+
+# Read time-series data (streamflow, precipitation, etc.)
+ts_data = ds.read_ts_xrdataset(
+    gage_id_lst=basin_ids[:2],
+    t_range=["1990-01-01", "1995-12-31"],
+    var_lst=["streamflow", "precipitation"]
+)
+
+# Read static attributes
+attr_data = ds.read_attr_xrdataset(
+    gage_id_lst=basin_ids[:2],
+    var_lst=["area", "p_mean"]
+)
 ```
+
+**How it works:**
+1. **First Access**: When you initialize a dataset class for the first time, `hydrodataset` uses AquaFetch to download the raw data
+2. **Automatic Caching**: The data is processed into standardized NetCDF (`.nc`) format and cached in your configured data directory
+3. **Fast Subsequent Access**: All future data requests read directly from the fast `.nc` cache files
+
+**Important notes:**
+- First-time download may take 30 minutes to several hours depending on the dataset
+- CAMELS-US dataset is approximately 10-20 GB
+- Make sure you have sufficient disk space
+- A stable internet connection is recommended for initial download
+- Cached `.nc` files are stored in `{data_path}/{dataset_name}/` directories
+
+#### 4. Available CAMELS Datasets
+
+The `hydrodataset` package supports multiple CAMELS datasets:
+
+- `camels_us` - United States (671 basins)
+- `camels_aus` - Australia (222 basins)
+- `camels_gb` - Great Britain (671 basins)
+- `camels_br` - Brazil (897 basins)
+- `camels_ch` - Switzerland (331 basins)
+- `camels_cl` - Chile (516 basins)
+- `camels_de` - Germany (1555 basins)
+- `camels_dk` - Denmark (304 basins)
+- `camels_fr` - France (662 basins)
+- `camels_nz` - New Zealand (343 basins)
+- `camels_se` - Sweden (54 basins)
+
+To use a different dataset, simply import and initialize the appropriate class:
+
+```python
+from hydrodataset.camels_gb import CamelsGb
+from hydrodataset.camels_aus import CamelsAus
+
+# Use CAMELS-GB
+gb_ds = CamelsGb(data_path)
+
+# Use CAMELS-AUS
+aus_ds = CamelsAus(data_path)
+```
+
+**Standardized Variable Names:**
+
+All CAMELS datasets use standardized variable names for consistency:
+- `streamflow` - Observed streamflow
+- `precipitation` - Precipitation data
+- `temperature_max` / `temperature_min` - Temperature data
+- `area` - Basin area
+- `p_mean` - Mean annual precipitation
+- And more...
+
+This allows you to use the same code across different CAMELS datasets without modification.
+
+For more details, see the [hydrodataset documentation](https://OuyangWenyu.github.io/hydrodataset).
 
 ### Using Your Own Data
 
@@ -186,22 +274,22 @@ Edit the `hydro_setting.yml` file with your data paths. The file follows this st
 # Local data paths (Required)
 local_data_path:
   # Root directory for all data
-  root: 'D:\data'
+  root: 'D:\\data'
 
   # Original datasets directory
-  datasets-origin: 'D:\data'
+  datasets-origin: 'D:\\data'
 
   # Interim/processed datasets directory
-  datasets-interim: 'D:\data'
+  datasets-interim: 'D:\\data'
 
   # Original basin data directory
-  basins-origin: 'D:\data'
+  basins-origin: 'D:\\data'
 
   # Interim/processed basin data directory
-  basins-interim: 'D:\data'
+  basins-interim: 'D:\\data'
 
   # Cache directory
-  cache: 'C:\Users\YourUsername\.cache'
+  cache: 'C:\\Users\YourUsername\\.cache'
 
 # MinIO configuration (Optional - leave empty if not using)
 minio:
@@ -340,11 +428,21 @@ Results are saved in the directory specified by `output_dir/experiment_name`:
 
 ```
 D:/results/hydro/XAJ/camels_xaj_test/
-├── calibration_config.yaml      # Configuration used
-├── calibrated_params.json       # Best parameters found
-├── calibration_history.csv      # Optimization history
-└── plots/                       # Visualization (if enabled)
+├── calibration_config.yaml      # Configuration used (if --save-config)
+├── param_range.yaml             # Parameter ranges (if --save-config)
+└── <basin_id>_sceua.csv        # SCE-UA optimization history for each basin
 ```
+
+**Note:** Use the `--save-config` flag to save configuration files:
+```bash
+python calibrate_xaj_unified.py --config my_calibration_config.yaml --save-config
+```
+
+**Key output files:**
+- `<basin_id>_sceua.csv`: Complete optimization history with all iterations and parameter values
+  - The row with the minimum `like1` value contains the best parameters
+- `calibration_config.yaml`: Full configuration for reproducibility and evaluation
+- `param_range.yaml`: Parameter ranges (needed for evaluation to denormalize parameters)
 
 ### Using the Legacy Script
 
@@ -448,7 +546,6 @@ results/expchangdian_61561/
 │   ├── basins_norm_params.csv        # Normalized parameters [0,1]
 │   ├── basins_denorm_params.csv      # Physical parameter values
 │   ├── xaj_mz_evaluation_results.nc  # Simulation results (NetCDF)
-│   └── evaluation_info.yaml          # Evaluation metadata
 ├── evaluation_train/                 # Training period evaluation results
 │   └── ...
 └── evaluation_custom_2020-01-01_2021-12-31/  # Custom period results
@@ -484,6 +581,130 @@ python evaluate_xaj.py --exp expchangdian_61561 --result-dir results
 
 **Note:** The legacy script requires the old configuration format and has limited features compared to the unified script.
 
+## Visualization
+
+After evaluation is complete, you can generate publication-quality figures using the unified visualization script.
+
+### Using the Unified Visualization Script
+
+The `visualize_unified.py` script creates comprehensive visualizations from evaluation results:
+
+#### 1. Basic Usage (Generate All Plots)
+
+```bash
+cd hydrodhm/run_xaj
+python visualize_unified.py --eval-dir results/your_exp_name/evaluation_test
+```
+
+This will generate all available plot types in the `figures/` subdirectory.
+
+#### 2. Generate Specific Plot Types
+
+**Time series only:**
+```bash
+python visualize_unified.py --eval-dir results/your_exp_name/evaluation_test \
+    --plot-types timeseries
+```
+
+**Multiple specific types:**
+```bash
+python visualize_unified.py --eval-dir results/your_exp_name/evaluation_test \
+    --plot-types timeseries scatter fdc
+```
+
+**Available plot types:**
+- `timeseries` - Time series with precipitation (dual-axis plot)
+- `scatter` - Observed vs simulated scatter plot with density coloring
+- `fdc` - Flow duration curve (log scale)
+- `monthly` - Monthly average comparison with error bars
+- `metrics` - Multi-basin metrics comparison (only for multiple basins)
+- `all` - Generate all plot types (default)
+
+#### 3. Visualize Specific Basins
+
+For multi-basin calibrations, select specific basins to plot:
+
+```bash
+python visualize_unified.py --eval-dir results/your_exp_name/evaluation_test \
+    --basins 01013500 01022500
+```
+
+#### 4. Custom Output Directory
+
+Save plots to a different location:
+
+```bash
+python visualize_unified.py --eval-dir results/your_exp_name/evaluation_test \
+    --output-dir D:/my_figures
+```
+
+#### 5. Generated Figures
+
+The script generates high-quality figures (300 DPI) suitable for publication:
+
+```
+results/your_exp_name/evaluation_test/figures/
+├── timeseries_01013500.png      # Time series with precipitation
+├── scatter_01013500.png          # Scatter plot with 1:1 line
+├── fdc_01013500.png             # Flow duration curve
+├── monthly_01013500.png         # Monthly averages
+└── metrics_comparison.png       # Multi-basin comparison (if applicable)
+```
+
+**Features of generated plots:**
+- **300 DPI resolution** - Ready for publication
+- **Automatic metrics calculation** - NSE, KGE, RMSE, PBIAS displayed on each plot
+- **Professional formatting** - Consistent color schemes and fonts
+- **Period detection** - Automatically labels plots as "Training Period" or "Test Period"
+
+#### 6. Example Workflow
+
+Complete workflow from calibration to visualization:
+
+```bash
+# 1. Calibrate model
+python calibrate_xaj_unified.py --config my_config.yaml --save-config
+
+# 2. Evaluate on test period
+python evaluate_xaj_unified.py --exp my_experiment --eval-period test
+
+# 3. Generate all visualizations
+python visualize_unified.py --eval-dir results/my_experiment/evaluation_test
+
+# 4. Check the figures
+ls results/my_experiment/evaluation_test/figures/
+```
+
+#### 7. Interpreting Results
+
+**Time Series Plot:**
+- Top panel: Precipitation bars (inverted axis)
+- Bottom panel: Observed (blue solid) vs Simulated (red dashed) streamflow
+- Metrics box: Quick performance assessment
+
+**Scatter Plot:**
+- Heat map shows point density (log scale)
+- Black dashed line: 1:1 perfect fit
+- Points above line: Model overestimates
+- Points below line: Model underestimates
+
+**Flow Duration Curve:**
+- Log scale Y-axis
+- Shows flow distribution across entire period
+- Good match indicates correct flow regime representation
+
+**Monthly Comparison:**
+- Bar chart with error bars (standard deviation)
+- Identifies seasonal biases
+- Useful for water resource planning
+
+### Tips for Better Visualization
+
+1. **For papers/presentations**: Use default settings (300 DPI, all plot types)
+2. **For quick checks**: Generate only `timeseries` and `scatter` plots
+3. **For multi-basin studies**: Include the `metrics` comparison plot
+4. **Save config files**: Always use `--save-config` during calibration for reproducibility
+
 
 ## Project Structure
 
@@ -496,7 +717,8 @@ HydroDHM/
 │   │   ├── config_example.yaml           # Example configuration
 │   │   ├── evaluate_xaj.py               # Legacy evaluation script
 │   │   ├── evaluate_xaj_unified.py       # New unified evaluation script
-│   │   └── visualize.py                  # Visualization tools
+│   │   ├── visualize.py                  # Legacy visualization tools
+│   │   └── visualize_unified.py          # New unified visualization tools
 │   ├── streamflow_prediction/    # Neural network models
 │   ├── data-limited_analysis/    # Data-limited basin experiments
 │   └── calculate_and_plot/       # Result analysis and visualization

@@ -24,6 +24,7 @@ dependencies = [
     "wheel",
     "twine",
     "bump2version",
+    "torchhydro",
     "hydroutils @ git+ssh://git@gitcode.com/dlut-water/hydroutils.git@dev",
     "hydrodataset @ git+ssh://git@gitcode.com/dlut-water/hydrodataset.git@dev",
     "hydromodel @ git+ssh://git@gitcode.com/dlut-water/hydromodel.git@dev",

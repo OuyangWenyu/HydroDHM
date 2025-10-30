@@ -1,0 +1,143 @@
+# Example hydro_setting.yml configuration file
+#
+# This file should be placed in one of the following locations:
+# 1. Windows: C:\Users\YourUsername\hydro_setting.yml (same directory as user folder)
+# 2. macOS/Linux: ~/hydro_setting.yml (home directory)
+# 3. Or set HYDRO_SETTING_FILE environment variable to point to this file
+#
+# After copying this file to the correct location, edit the paths
+# to match your local data directories.
+
+# ============================================================================
+# Local Data Paths (Required)
+# ============================================================================
+# Configure paths for storing and processing hydrological datasets
+
+local_data_path:
+  # Root directory for all data
+  # This is the main directory where datasets will be stored
+  root: 'D:\\data'
+
+  # Original datasets directory
+  # Store downloaded raw datasets here (e.g., CAMELS-US, CAMELS-GB)
+  datasets-origin: 'D:\\data'
+
+  # Interim/processed datasets directory
+  # Preprocessed and cached datasets
+  datasets-interim: 'D:\\data'
+
+  # Original basin data directory
+  # Store raw basin-specific data
+  basins-origin: 'D:\\data'
+
+  # Interim/processed basin data directory
+  # Store processed basin data
+  basins-interim: 'D:\\data'
+
+  # Cache directory
+  # For temporary files and cached computations
+  cache: 'C:\\Users\\YourUsername\\.cache'
+
+# ============================================================================
+# MinIO Configuration (Optional)
+# ============================================================================
+# Configure if you're using MinIO object storage for data management
+# Leave empty if not using MinIO
+
+minio:
+  server_url: ''       # MinIO server URL (e.g., 'http://localhost:9000')
+  client_endpoint: ''  # Client endpoint
+  access_key: ''       # Access key
+  secret: ''           # Secret key
+
+# ============================================================================
+# PostgreSQL Configuration (Optional)
+# ============================================================================
+# Configure if you're using PostgreSQL database for metadata
+# Leave empty if not using PostgreSQL
+
+postgres:
+  server_url: ''  # PostgreSQL server URL
+  port: 5432      # PostgreSQL port (default: 5432)
+  username: ''    # Database username
+  password: ''    # Database password
+  database: ''    # Database name
+
+# ============================================================================
+# Dataset-Specific Paths (Optional but Recommended)
+# ============================================================================
+# You can also directly specify paths to specific datasets
+# These will override the paths constructed from local_data_path
+
+# CAMELS-US dataset
+# Download with: python -c "from hydrodataset import Camels; Camels(data_path='D:/project/data/camels_us').download_data()"
+# camels_us: 'D:\project\data\camels_us'
+
+# CAMELS-GB dataset
+# camels_gb: 'D:\project\data\camels_gb'
+
+# CAMELS-AUS dataset
+# camels_aus: 'D:\project\data\camels_aus'
+
+# CAMELS-BR dataset
+# camels_br: 'D:\project\data\camels_br'
+
+# Your own hydrological data (selfmadehydrodataset format)
+# selfmadehydrodataset: 'D:\project\data\FD_sources'
+
+# ============================================================================
+# Configuration Examples by Use Case
+# ============================================================================
+
+# Example 1: Simple single-user setup (most common)
+# -------------------------------------------------
+# local_data_path:
+#   root: 'D:\project\data'
+#   datasets-origin: 'D:\project\data'
+#   datasets-interim: 'D:\project\data'
+#   basins-origin: 'D:\project\data'
+#   basins-interim: 'D:\project\data'
+#   cache: 'C:\Users\YourUsername\.cache'
+
+# Example 2: Separated storage (for large datasets)
+# --------------------------------------------------
+# local_data_path:
+#   root: 'E:\hydro_data'                    # Large external drive
+#   datasets-origin: 'E:\hydro_data\raw'     # Raw datasets
+#   datasets-interim: 'D:\hydro_data\processed'  # Processed on SSD
+#   basins-origin: 'E:\hydro_data\basins'
+#   basins-interim: 'D:\hydro_data\basins_processed'
+#   cache: 'C:\Users\YourUsername\.cache'
+
+# Example 3: Network storage setup
+# ---------------------------------
+# local_data_path:
+#   root: '\\network\share\hydro_data'
+#   datasets-origin: '\\network\share\hydro_data\datasets'
+#   datasets-interim: 'D:\local_cache\datasets'
+#   basins-origin: '\\network\share\hydro_data\basins'
+#   basins-interim: 'D:\local_cache\basins'
+#   cache: 'C:\Users\YourUsername\.cache'
+
+# ============================================================================
+# Notes
+# ============================================================================
+#
+# Path Format:
+# - Windows: Use single quotes and single backslashes: 'D:\path\to\data'
+#   Or use forward slashes: 'D:/path/to/data'
+# - Linux/macOS: Use single quotes: '/home/user/data'
+#
+# Directory Structure:
+# - The system will automatically create subdirectories for different datasets
+# - Example: datasets-origin/camels_us, datasets-origin/camels_gb, etc.
+#
+# Recommendations:
+# - Use SSD for datasets-interim and basins-interim (faster processing)
+# - Use HDD for datasets-origin and basins-origin (cheaper storage)
+# - Keep cache on system drive for better performance
+#
+# For more information, see:
+# - hydromodel: https://github.com/OuyangWenyu/hydromodel
+# - hydrodataset: https://github.com/OuyangWenyu/hydrodataset
+# - hydrodatasource: https://github.com/OuyangWenyu/hydrodatasource
