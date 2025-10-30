@@ -387,73 +387,102 @@ data:
 
 ## Model Evaluation
 
-After calibration is complete, you can evaluate the model performance on both training and test periods.
+After calibration is complete, you can evaluate the model performance on different time periods using the new unified evaluation interface.
 
-### Using the Unified Evaluation Script
+### Using the Unified Evaluation Script (Recommended)
 
-The new `evaluate_xaj_unified.py` script works with the unified configuration format:
+The new `evaluate_xaj_unified.py` script provides a simplified and powerful evaluation interface:
 
-#### 1. Run Evaluation
+#### 1. Basic Evaluation (Test Period)
+
+Evaluate on the test period (default):
 
 ```bash
 cd hydrodhm/run_xaj
-python evaluate_xaj_unified.py --exp expchangdian_61561 --result-dir results
+python evaluate_xaj_unified.py --exp expchangdian_61561
 ```
 
 **Parameters:**
 - `--exp`: Experiment name (subdirectory containing calibration results)
 - `--result-dir`: Root directory where results are stored (default: `./results`)
+- `--eval-period`: Which period to evaluate (`train`, `test`, or `custom`)
 
-#### 2. What the Script Does
+#### 2. Evaluate Different Periods
+
+**Evaluate training period:**
+```bash
+python evaluate_xaj_unified.py --exp expchangdian_61561 --eval-period train
+```
+
+**Evaluate test period (default):**
+```bash
+python evaluate_xaj_unified.py --exp expchangdian_61561 --eval-period test
+```
+
+**Evaluate custom period:**
+```bash
+python evaluate_xaj_unified.py --exp expchangdian_61561 \
+    --eval-period custom --custom-period 2020-01-01 2021-12-31
+```
+
+#### 3. What the Script Does
 
 The evaluation script will:
 - Load the `calibration_config.yaml` from your calibration results
-- Use the calibrated parameters to run predictions
-- Evaluate performance on both training and test periods
-- Save results including:
-  - Simulated streamflow time series
-  - Observed vs. simulated comparisons
-  - Performance metrics (NSE, KGE, RMSE, etc.)
+- Automatically find and load calibrated parameters
+- Use the unified `evaluate()` API from hydromodel
+- Calculate comprehensive performance metrics
+- Save results in multiple formats
 
-#### 3. Check Evaluation Results
+#### 4. Check Evaluation Results
 
 Results are saved in subdirectories within your experiment folder:
 
 ```
 results/expchangdian_61561/
-├── sceua_xaj/                    # Single fold (no CV)
-│   ├── train/                    # Training period evaluation
-│   │   ├── flow_pred.csv         # Predicted streamflow
-│   │   ├── flow_obs.csv          # Observed streamflow
-│   │   └── metrics.json          # Performance metrics
-│   └── test/                     # Test period evaluation
-│       ├── flow_pred.csv
-│       ├── flow_obs.csv
-│       └── metrics.json
+├── calibration_config.yaml           # Original calibration config
+├── param_range.yaml                  # Parameter ranges (if saved)
+├── <basin_id>_sceua.csv             # SCE-UA calibration results
+├── evaluation_test/                  # Test period evaluation results
+│   ├── basins_metrics.csv            # Performance metrics (NSE, KGE, RMSE, etc.)
+│   ├── basins_norm_params.csv        # Normalized parameters [0,1]
+│   ├── basins_denorm_params.csv      # Physical parameter values
+│   ├── xaj_mz_evaluation_results.nc  # Simulation results (NetCDF)
+│   └── evaluation_info.yaml          # Evaluation metadata
+├── evaluation_train/                 # Training period evaluation results
+│   └── ...
+└── evaluation_custom_2020-01-01_2021-12-31/  # Custom period results
+    └── ...
 ```
 
-Or for cross-validation:
+**Key output files:**
+- `basins_metrics.csv`: Performance metrics for each basin (NSE, KGE, RMSE, PBIAS, etc.)
+- `basins_denorm_params.csv`: Calibrated parameters in physical units
+- `xaj_mz_evaluation_results.nc`: Full simulation results with time series data
+- `evaluation_info.yaml`: Metadata about the evaluation run
 
-```
-results/expchangdian_61561/
-├── sceua_xaj_cv1/                # Fold 1
-│   ├── train/
-│   └── test/
-├── sceua_xaj_cv2/                # Fold 2
-│   ├── train/
-│   └── test/
-└── ...
-```
+#### 5. Understanding the Metrics
+
+The evaluation automatically calculates multiple metrics:
+
+| Metric | Description | Range | Best Value |
+|--------|-------------|-------|------------|
+| NSE | Nash-Sutcliffe Efficiency | (-∞, 1] | 1.0 |
+| KGE | Kling-Gupta Efficiency | (-∞, 1] | 1.0 |
+| RMSE | Root Mean Square Error | [0, ∞) | 0.0 |
+| PBIAS | Percent Bias | (-∞, ∞) | 0.0 |
+
+All metrics are printed to console and saved to CSV for easy analysis.
 
 ### Using the Legacy Evaluation Script
 
-For compatibility with older calibration results:
+For compatibility with older calibration results that don't use the unified config format:
 
 ```bash
 python evaluate_xaj.py --exp expchangdian_61561 --result-dir results
 ```
 
-**Note:** The legacy script requires the old configuration format.
+**Note:** The legacy script requires the old configuration format and has limited features compared to the unified script.
 
 
 ## Project Structure

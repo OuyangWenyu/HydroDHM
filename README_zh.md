@@ -391,73 +391,102 @@ data:
 
 ## 模型评估
 
-率定完成后，您可以评估模型在训练期和测试期的性能。
+率定完成后，您可以使用新的统一评估接口在不同时间段评估模型性能。
 
-### 使用统一评估脚本
+### 使用统一评估脚本（推荐）
 
-新的 `evaluate_xaj_unified.py` 脚本适用于统一配置格式：
+新的 `evaluate_xaj_unified.py` 脚本提供了简化而强大的评估接口：
 
-#### 1. 运行评估
+#### 1. 基础评估（测试期）
+
+在测试期进行评估（默认）：
 
 ```bash
 cd hydrodhm/run_xaj
-python evaluate_xaj_unified.py --exp expchangdian_61561 --result-dir results
+python evaluate_xaj_unified.py --exp expchangdian_61561
 ```
 
 **参数：**
 - `--exp`: 实验名称（包含率定结果的子目录）
 - `--result-dir`: 存储结果的根目录（默认：`./results`）
+- `--eval-period`: 要评估的时期（`train`、`test` 或 `custom`）
 
-#### 2. 脚本功能
+#### 2. 评估不同时期
+
+**评估训练期：**
+```bash
+python evaluate_xaj_unified.py --exp expchangdian_61561 --eval-period train
+```
+
+**评估测试期（默认）：**
+```bash
+python evaluate_xaj_unified.py --exp expchangdian_61561 --eval-period test
+```
+
+**评估自定义时期：**
+```bash
+python evaluate_xaj_unified.py --exp expchangdian_61561 \
+    --eval-period custom --custom-period 2020-01-01 2021-12-31
+```
+
+#### 3. 脚本功能
 
 评估脚本将：
 - 从率定结果中加载 `calibration_config.yaml`
-- 使用率定的参数运行预测
-- 评估训练期和测试期的性能
-- 保存结果，包括：
-  - 模拟流量时间序列
-  - 观测值与模拟值的比较
-  - 性能指标（NSE、KGE、RMSE 等）
+- 自动查找并加载率定参数
+- 使用 hydromodel 的统一 `evaluate()` API
+- 计算全面的性能指标
+- 以多种格式保存结果
 
-#### 3. 查看评估结果
+#### 4. 查看评估结果
 
 结果保存在实验文件夹内的子目录中：
 
 ```
 results/expchangdian_61561/
-├── sceua_xaj/                    # 单折（无交叉验证）
-│   ├── train/                    # 训练期评估
-│   │   ├── flow_pred.csv         # 预测流量
-│   │   ├── flow_obs.csv          # 观测流量
-│   │   └── metrics.json          # 性能指标
-│   └── test/                     # 测试期评估
-│       ├── flow_pred.csv
-│       ├── flow_obs.csv
-│       └── metrics.json
+├── calibration_config.yaml           # 原始率定配置
+├── param_range.yaml                  # 参数范围（如果已保存）
+├── <basin_id>_sceua.csv             # SCE-UA 率定结果
+├── evaluation_test/                  # 测试期评估结果
+│   ├── basins_metrics.csv            # 性能指标（NSE、KGE、RMSE 等）
+│   ├── basins_norm_params.csv        # 归一化参数 [0,1]
+│   ├── basins_denorm_params.csv      # 物理参数值
+│   ├── xaj_mz_evaluation_results.nc  # 模拟结果（NetCDF）
+│   └── evaluation_info.yaml          # 评估元数据
+├── evaluation_train/                 # 训练期评估结果
+│   └── ...
+└── evaluation_custom_2020-01-01_2021-12-31/  # 自定义时期结果
+    └── ...
 ```
 
-或对于交叉验证：
+**关键输出文件：**
+- `basins_metrics.csv`: 每个流域的性能指标（NSE、KGE、RMSE、PBIAS 等）
+- `basins_denorm_params.csv`: 物理单位的率定参数
+- `xaj_mz_evaluation_results.nc`: 包含时间序列数据的完整模拟结果
+- `evaluation_info.yaml`: 关于评估运行的元数据
 
-```
-results/expchangdian_61561/
-├── sceua_xaj_cv1/                # 折 1
-│   ├── train/
-│   └── test/
-├── sceua_xaj_cv2/                # 折 2
-│   ├── train/
-│   └── test/
-└── ...
-```
+#### 5. 理解指标
+
+评估会自动计算多个指标：
+
+| 指标 | 描述 | 范围 | 最佳值 |
+|------|------|------|--------|
+| NSE | 纳什效率系数 | (-∞, 1] | 1.0 |
+| KGE | Kling-Gupta 效率系数 | (-∞, 1] | 1.0 |
+| RMSE | 均方根误差 | [0, ∞) | 0.0 |
+| PBIAS | 百分比偏差 | (-∞, ∞) | 0.0 |
+
+所有指标都会打印到控制台并保存到 CSV 文件以便分析。
 
 ### 使用传统评估脚本
 
-为了与旧率定结果兼容：
+为了与不使用统一配置格式的旧率定结果兼容：
 
 ```bash
 python evaluate_xaj.py --exp expchangdian_61561 --result-dir results
 ```
 
-**注意：** 传统脚本需要旧的配置格式。
+**注意：** 传统脚本需要旧的配置格式，与统一脚本相比功能有限。
 
 ## 项目结构
 

@@ -1,5 +1,4 @@
 # XAJ模型率定配置文件示例
-# 基于旧版 calibrate_xaj.py 的默认参数
 
 data:
   # 数据集类型和路径

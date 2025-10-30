@@ -1,8 +1,8 @@
 """
-Author: Wenyu Ouyang
+Author: zhuanglaihong
 Date: 2025-10-29
-LastEditTime: 2025-10-29
-LastEditors: Wenyu Ouyang
+LastEditTime: 2025-10-30
+LastEditors: zhuanglaihong
 Description: Evaluate calibrated XAJ model using unified configuration format
 FilePath: \HydroDHM\hydrodhm\run_xaj\evaluate_xaj_unified.py
 Copyright (c) 2023-2025 Wenyu Ouyang. All rights reserved.
@@ -12,241 +12,59 @@ import argparse
 import os
 import sys
 from pathlib import Path
+import yaml
 
 try:
-    from hydromodel.datasets.data_preprocess import cross_val_split_tsdata
-    from hydromodel.trainers.evaluate import Evaluator, read_yaml_config
+    from hydromodel.trainers.unified_evaluate import evaluate
 except ImportError:
-    print("Error: hydromodel package not found. Please install it first.")
-    print("You can install it with: uv pip install hydromodel")
+    print("Error: hydromodel package not found or version too old.")
+    print("Please install/update it with: uv pip install -U hydromodel")
     sys.exit(1)
 
 
-def load_unified_config(config_path: str) -> dict:
-    """Load unified configuration format and convert to evaluation parameters
-
-    Args:
-        config_path: Path to calibration_config.yaml
-
-    Returns:
-        Dictionary with parameters needed for evaluation
+def load_config_from_calibration(calibration_dir: str) -> dict:
     """
-    config = read_yaml_config(config_path)
+    Load configuration from calibration directory.
 
-    # Extract data configurations
-    data_cfgs = config.get("data_cfgs", {})
-    training_cfgs = config.get("training_cfgs", {})
+    Parameters
+    ----------
+    calibration_dir : str
+        Directory where calibration results are stored
 
-    # Map data source type names to hydromodel expected format
-    # The unified config may use different naming conventions
-    data_source_type = data_cfgs.get("data_source_type",
-                                     data_cfgs.get("dataset_name", "camels_us"))
-
-    # Normalize data type name for hydromodel compatibility
-    data_type_mapping = {
-        "camels_us": "camels",
-        "camels": "camels",
-        "selfmadehydrodataset": "selfmadehydrodataset",
-        "owndata": "owndata",
-    }
-
-    data_type = data_type_mapping.get(data_source_type.lower(), data_source_type)
-
-    # Map unified config to evaluation parameters
-    eval_params = {
-        # Basin IDs - handle both single basin and list of basins
-        "basin_id": data_cfgs.get("basin_ids", []),
-
-        # Data source information
-        "data_type": data_type,
-        "data_dir": data_cfgs.get("data_source_path", ""),
-
-        # Time periods
-        "calibrate_period": data_cfgs.get("train_period", []),
-        "test_period": data_cfgs.get("test_period", []),
-        "period": None,  # Will be computed from train and test periods
-
-        # Warmup length
-        "warmup": data_cfgs.get("warmup_length", 365),
-
-        # Cross-validation fold (default to 1 if not specified)
-        "cv_fold": data_cfgs.get("cv_fold", 1),
-
-        # Experiment name
-        "experiment_name": training_cfgs.get("experiment_name", "experiment"),
-    }
-
-    # Compute overall period from train and test periods
-    if eval_params["calibrate_period"] and eval_params["test_period"]:
-        # Get earliest start and latest end
-        all_dates = (eval_params["calibrate_period"] +
-                    eval_params["test_period"])
-        eval_params["period"] = [min(all_dates[::2]), max(all_dates[1::2])]
-
-    # Add valid_period if exists
-    if "valid_period" in data_cfgs:
-        eval_params["valid_period"] = data_cfgs["valid_period"]
-
-    return eval_params
-
-
-def evaluate(args):
-    """Main evaluation function
-
-    Args:
-        args: Command line arguments
+    Returns
+    -------
+    dict
+        Configuration dictionary
     """
-    result_dir = args.result_dir
-    exp = args.exp
-    cali_dir = Path(os.path.join(result_dir, exp))
+    config_file = os.path.join(calibration_dir, "calibration_config.yaml")
+    if not os.path.exists(config_file):
+        raise FileNotFoundError(
+            f"Configuration file not found: {config_file}\n"
+            "Please make sure you are using the correct calibration directory."
+        )
 
-    # Check if directory exists
-    if not cali_dir.exists():
-        print(f"Error: Calibration directory not found: {cali_dir}")
-        print(f"Please check the experiment name and result directory.")
-        sys.exit(1)
+    with open(config_file, "r", encoding="utf-8") as f:
+        config = yaml.safe_load(f)
 
-    config_path = os.path.join(cali_dir, "calibration_config.yaml")
-
-    # Check if config file exists
-    if not os.path.exists(config_path):
-        print(f"Error: Configuration file not found: {config_path}")
-        print(f"This script requires the unified configuration format.")
-        print(f"For legacy configurations, use evaluate_xaj.py instead.")
-        sys.exit(1)
-
-    # Load and convert configuration
-    print(f"Loading configuration from: {config_path}")
-    eval_params = load_unified_config(config_path)
-
-    # Extract parameters
-    kfold = eval_params["cv_fold"]
-    basins = eval_params["basin_id"]
-    warmup = eval_params["warmup"]
-    data_type = eval_params["data_type"]
-    data_dir = eval_params["data_dir"]
-    train_period = eval_params["calibrate_period"]
-    test_period = eval_params["test_period"]
-    periods = eval_params["period"]
-
-    print(f"\nEvaluation Configuration:")
-    print(f"  Basin(s): {basins}")
-    print(f"  Data type: {data_type}")
-    print(f"  Data directory: {data_dir}")
-    print(f"  Training period: {train_period}")
-    print(f"  Test period: {test_period}")
-    print(f"  Warmup length: {warmup} days")
-    print(f"  CV folds: {kfold}")
-
-    # Prepare data splits
-    print(f"\nPreparing data splits...")
-    train_and_test_data = cross_val_split_tsdata(
-        data_type,
-        data_dir,
-        kfold,
-        train_period,
-        test_period,
-        periods,
-        warmup,
-        basins,
-    )
-
-    # Evaluate based on number of folds
-    if kfold <= 1:
-        print(f"\nEvaluating single fold...")
-        _evaluate_1fold(train_and_test_data, cali_dir)
-    else:
-        for fold in range(kfold):
-            print(f"\n{'='*60}")
-            print(f"Evaluating fold {fold+1}/{kfold}")
-            print(f"{'='*60}")
-            fold_dir = os.path.join(cali_dir, f"sceua_xaj_cv{fold+1}")
-
-            # Check if fold directory exists
-            if not os.path.exists(fold_dir):
-                print(f"Warning: Fold directory not found: {fold_dir}")
-                print(f"Skipping fold {fold+1}")
-                continue
-
-            # Evaluate both train and test period for all basins
-            train_data = train_and_test_data[fold][0]
-            test_data = train_and_test_data[fold][1]
-            _evaluate(cali_dir, fold_dir, train_data, test_data)
-            print(f"Finished evaluating fold {fold+1}")
-
-    print(f"\n{'='*60}")
-    print(f"Evaluation completed successfully!")
-    print(f"Results saved to: {cali_dir}")
-    print(f"{'='*60}")
-
-
-def _evaluate_1fold(train_and_test_data, cali_dir):
-    """Evaluate single fold (no cross-validation)
-
-    Args:
-        train_and_test_data: Tuple of (train_data, test_data)
-        cali_dir: Calibration directory path
-    """
-    print("Evaluating single fold...")
-    train_data = train_and_test_data[0]
-    test_data = train_and_test_data[1]
-    param_dir = os.path.join(cali_dir, "sceua_xaj")
-
-    # Check if parameter directory exists
-    if not os.path.exists(param_dir):
-        print(f"Error: Parameter directory not found: {param_dir}")
-        print(f"Expected directory structure: {cali_dir}/sceua_xaj/")
-        sys.exit(1)
-
-    _evaluate(cali_dir, param_dir, train_data, test_data)
-    print("Finished evaluating single fold")
-
-
-def _evaluate(cali_dir, param_dir, train_data, test_data):
-    """Evaluate model on training and test data
-
-    Args:
-        cali_dir: Calibration directory path
-        param_dir: Parameter directory path
-        train_data: Training dataset
-        test_data: Test dataset
-    """
-    # Create evaluation directories
-    eval_train_dir = os.path.join(param_dir, "train")
-    eval_test_dir = os.path.join(param_dir, "test")
-
-    os.makedirs(eval_train_dir, exist_ok=True)
-    os.makedirs(eval_test_dir, exist_ok=True)
-
-    print(f"  Evaluating training period...")
-    train_eval = Evaluator(cali_dir, param_dir, eval_train_dir)
-    test_eval = Evaluator(cali_dir, param_dir, eval_test_dir)
-
-    # Run predictions
-    qsim_train, qobs_train, etsim_train = train_eval.predict(train_data)
-
-    print(f"  Evaluating test period...")
-    qsim_test, qobs_test, etsim_test = test_eval.predict(test_data)
-
-    # Save results
-    print(f"  Saving results...")
-    train_eval.save_results(train_data, qsim_train, qobs_train, etsim_train)
-    test_eval.save_results(test_data, qsim_test, qobs_test, etsim_test)
-
-    print(f"  Results saved to:")
-    print(f"    Training: {eval_train_dir}")
-    print(f"    Test: {eval_test_dir}")
+    return config
 
 
 def parse_arguments():
-    """Parse command line arguments"""
+    """Parse command line arguments for evaluation script."""
     parser = argparse.ArgumentParser(
-        description="Evaluate a calibrated XAJ model using unified configuration format.",
+        description="Evaluate calibrated XAJ model using unified configuration format",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Examples:
-  # Evaluate using default paths
+Usage Examples:
+  # Evaluate on test period (default)
   python evaluate_xaj_unified.py --exp expchangdian_61561
+
+  # Evaluate on train period
+  python evaluate_xaj_unified.py --exp expchangdian_61561 --eval-period train
+
+  # Evaluate on custom period
+  python evaluate_xaj_unified.py --exp expchangdian_61561 \\
+      --eval-period custom --custom-period 2020-01-01 2021-12-31
 
   # Specify custom result directory
   python evaluate_xaj_unified.py --result-dir /path/to/results --exp my_experiment
@@ -254,8 +72,8 @@ Examples:
 Notes:
   - This script requires the unified calibration_config.yaml format
   - For legacy configurations, use evaluate_xaj.py instead
-  - Results will be saved in subdirectories: sceua_xaj/train/ and sceua_xaj/test/
-        """
+  - Results will be saved in subdirectories: evaluation_train/ or evaluation_test/
+        """,
     )
 
     parser.add_argument(
@@ -270,25 +88,151 @@ Notes:
         "--exp",
         dest="exp",
         help="Experiment name (subdirectory in result_dir)",
-        default="expchangdian_61561",
+        required=True,
         type=str,
+    )
+
+    parser.add_argument(
+        "--eval-period",
+        type=str,
+        choices=["train", "test", "custom"],
+        default="test",
+        help="Evaluation period: train (training period), test (testing period), or custom (custom period)",
+    )
+
+    parser.add_argument(
+        "--custom-period",
+        type=str,
+        nargs=2,
+        help="Custom evaluation period, format: start_date end_date (e.g., 2020-01-01 2021-12-31)",
+    )
+
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        help="Evaluation results output directory (default: calibration-dir/evaluation_<period>)",
+    )
+
+    parser.add_argument(
+        "--param-dir",
+        type=str,
+        help="Parameter files directory (default: use calibration-dir)",
     )
 
     return parser.parse_args()
 
 
 def main():
-    """Main entry point"""
+    """Main evaluation function."""
+    args = parse_arguments()
+
     try:
-        args = parse_arguments()
-        evaluate(args)
+        # Construct calibration directory path
+        calibration_dir = os.path.join(args.result_dir, args.exp)
+        calibration_dir = os.path.abspath(calibration_dir)
+
+        # Check if directory exists
+        if not os.path.exists(calibration_dir):
+            print(f"Error: Calibration directory not found: {calibration_dir}")
+            print(f"Please check the experiment name and result directory.")
+            return 1
+
+        # Load calibration configuration
+        print(f"Loading configuration from: {calibration_dir}")
+        config = load_config_from_calibration(calibration_dir)
+
+        # Determine evaluation period
+        if args.eval_period == "train":
+            eval_period = config["data_cfgs"]["train_period"]
+            period_name = "train"
+        elif args.eval_period == "test":
+            eval_period = config["data_cfgs"]["test_period"]
+            period_name = "test"
+        elif args.eval_period == "custom":
+            if args.custom_period is None:
+                print("Error: --custom-period required when --eval-period is 'custom'")
+                return 1
+            eval_period = list(args.custom_period)
+            period_name = f"custom_{args.custom_period[0]}_{args.custom_period[1]}"
+        else:
+            print(f"Error: Invalid eval-period: {args.eval_period}")
+            return 1
+
+        print(f"Evaluating period: {eval_period}")
+
+        # Determine output directory
+        if args.output_dir:
+            output_dir = args.output_dir
+        else:
+            output_dir = os.path.join(calibration_dir, f"evaluation_{period_name}")
+
+        # Determine parameter directory
+        param_dir = args.param_dir if args.param_dir else calibration_dir
+
+        # Create evaluation configuration
+        print(f"Results will be saved to: {output_dir}")
+        os.makedirs(output_dir, exist_ok=True)
+
+        print("\nEvaluation Configuration:")
+        print(f"  Calibration directory: {calibration_dir}")
+        print(f"  Parameter directory: {param_dir}")
+        print(f"  Evaluation period: {eval_period} ({period_name})")
+        print(f"  Output directory: {output_dir}")
+
+        # Run evaluation
+        print("\nRunning evaluation...")
+        results = evaluate(
+            config,
+            param_dir=param_dir,
+            eval_period=eval_period,
+            eval_output_dir=output_dir,
+        )
+
+        # Save evaluation summary
+        print("\n" + "=" * 80)
+        print("EVALUATION SUMMARY")
+        print("=" * 80)
+        print(f"Calibration directory: {calibration_dir}")
+        print(f"Evaluation period: {eval_period}")
+        print(f"Output directory: {output_dir}")
+        print(f"Number of basins: {len(results)}")
+        print("\nBasin IDs:")
+        for basin_id in results.keys():
+            print(f"  - {basin_id}")
+        print("=" * 80)
+
+        # Save evaluation info
+        eval_info = {
+            "calibration_dir": calibration_dir,
+            "param_dir": param_dir,
+            "eval_period": eval_period,
+            "eval_period_type": args.eval_period,
+            "output_dir": output_dir,
+            "basin_ids": list(results.keys()),
+        }
+
+        eval_info_file = os.path.join(output_dir, "evaluation_info.yaml")
+        with open(eval_info_file, "w", encoding="utf-8") as f:
+            yaml.dump(eval_info, f, allow_unicode=True)
+
+        print(f"\nEvaluation info saved to: {eval_info_file}")
+        print("\nEvaluation completed successfully!")
         return 0
+
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+        return 1
+    except KeyError as e:
+        print(f"Error: Missing configuration key: {e}")
+        print("Please check that the calibration configuration is complete.")
+        return 1
     except KeyboardInterrupt:
         print("\n\nEvaluation interrupted by user")
         return 1
     except Exception as e:
-        print(f"\nError during evaluation: {e}")
+        print(f"Error during evaluation: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 
