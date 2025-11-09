@@ -75,6 +75,8 @@ def load_evaluation_results(eval_dir):
     metrics_file = eval_path / "basins_metrics.csv"
     if metrics_file.exists():
         metrics_df = pd.read_csv(metrics_file, index_col=0)
+        # Ensure index is string type to match basin IDs from NetCDF
+        metrics_df.index = metrics_df.index.astype(str)
     else:
         metrics_df = None
         print("Warning: No metrics file found")
@@ -99,6 +101,7 @@ def plot_timeseries_with_rain(ds, basin_id, save_path, title_suffix=""):
     """
     # Find basin index
     basin_ids = [str(b) for b in ds['basin'].values]
+    basin_id = str(basin_id)  # Ensure basin_id is string
     if basin_id not in basin_ids:
         print(f"Warning: Basin {basin_id} not found in results")
         return
@@ -195,6 +198,7 @@ def plot_scatter(ds, basin_id, save_path, title_suffix=""):
     """
     # Find basin index
     basin_ids = [str(b) for b in ds['basin'].values]
+    basin_id = str(basin_id)  # Ensure basin_id is string
     if basin_id not in basin_ids:
         print(f"Warning: Basin {basin_id} not found in results")
         return
@@ -274,6 +278,7 @@ def plot_flow_duration_curve(ds, basin_id, save_path, title_suffix=""):
     """
     # Find basin index
     basin_ids = [str(b) for b in ds['basin'].values]
+    basin_id = str(basin_id)  # Ensure basin_id is string
     if basin_id not in basin_ids:
         print(f"Warning: Basin {basin_id} not found in results")
         return
@@ -340,6 +345,7 @@ def plot_monthly_comparison(ds, basin_id, save_path, title_suffix=""):
     """
     # Find basin index
     basin_ids = [str(b) for b in ds['basin'].values]
+    basin_id = str(basin_id)  # Ensure basin_id is string
     if basin_id not in basin_ids:
         print(f"Warning: Basin {basin_id} not found in results")
         return
@@ -494,6 +500,8 @@ def visualize_evaluation(eval_dir, output_dir=None, plot_types='all', basins=Non
     if basins is None:
         basins = all_basins
     else:
+        # Ensure input basins are also strings
+        basins = [str(b) for b in basins]
         basins = [b for b in basins if b in all_basins]
 
     if len(basins) == 0:
@@ -545,8 +553,14 @@ def visualize_evaluation(eval_dir, output_dir=None, plot_types='all', basins=Non
         print("\n  Multi-basin comparison:")
         save_path = output_dir / "metrics_comparison.png"
         # Filter metrics for selected basins
-        metrics_subset = metrics_df.loc[basins]
-        plot_metrics_comparison(metrics_subset, save_path)
+        # Only include basins that exist in metrics_df
+        available_basins = [b for b in basins if b in metrics_df.index]
+        if len(available_basins) == 0:
+            print(f"  Warning: No metrics found for basins {basins}")
+            print(f"  Available basins in metrics: {list(metrics_df.index)}")
+        else:
+            metrics_subset = metrics_df.loc[available_basins]
+            plot_metrics_comparison(metrics_subset, save_path)
 
     print(f"\n[OK] All figures saved to: {output_dir}")
     print(f"[OK] Visualization complete!")

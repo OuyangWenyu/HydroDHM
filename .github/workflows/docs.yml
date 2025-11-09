@@ -1,0 +1,40 @@
+name: docs
+
+on:
+  push:
+    branches:
+      - main
+      
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for git info
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Setup Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: |
+          uv sync --all-extras
+          uv pip install mkdocs-material mkdocs-git-revision-date-localized-plugin
+
+      - name: Configure git
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+
+      - name: Deploy documentation
+        run: uv run mkdocs gh-deploy --force

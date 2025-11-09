@@ -16,37 +16,11 @@ import yaml
 
 try:
     from hydromodel.trainers.unified_evaluate import evaluate
+    from hydromodel.configs.config_manager import load_config_from_calibration
 except ImportError:
     print("Error: hydromodel package not found or version too old.")
     print("Please install/update it with: uv pip install -U hydromodel")
     sys.exit(1)
-
-
-def load_config_from_calibration(calibration_dir: str) -> dict:
-    """
-    Load configuration from calibration directory.
-
-    Parameters
-    ----------
-    calibration_dir : str
-        Directory where calibration results are stored
-
-    Returns
-    -------
-    dict
-        Configuration dictionary
-    """
-    config_file = os.path.join(calibration_dir, "calibration_config.yaml")
-    if not os.path.exists(config_file):
-        raise FileNotFoundError(
-            f"Configuration file not found: {config_file}\n"
-            "Please make sure you are using the correct calibration directory."
-        )
-
-    with open(config_file, "r", encoding="utf-8") as f:
-        config = yaml.safe_load(f)
-
-    return config
 
 
 def parse_arguments():
@@ -57,30 +31,31 @@ def parse_arguments():
         epilog="""
 Usage Examples:
   # Evaluate on test period (default)
-  python evaluate_xaj_unified.py --exp expchangdian_61561
+  python evaluate_xaj_unified.py --exp xaj_SCE_UA
 
   # Evaluate on train period
-  python evaluate_xaj_unified.py --exp expchangdian_61561 --eval-period train
+  python evaluate_xaj_unified.py --exp xaj_SCE_UA --eval-period train
 
   # Evaluate on custom period
-  python evaluate_xaj_unified.py --exp expchangdian_61561 \\
+  python evaluate_xaj_unified.py --exp xaj_SCE_UA \\
       --eval-period custom --custom-period 2020-01-01 2021-12-31
 
   # Specify custom result directory
   python evaluate_xaj_unified.py --result-dir /path/to/results --exp my_experiment
 
 Notes:
+  - Default result directory: results/ (relative to current working directory)
+  - Full path will be: results/<experiment_name>/
+  - Evaluation outputs saved in: results/<experiment_name>/evaluation_<period>/
   - This script requires the unified calibration_config.yaml format
-  - For legacy configurations, use evaluate_xaj.py instead
-  - Results will be saved in subdirectories: evaluation_train/ or evaluation_test/
         """,
     )
 
     parser.add_argument(
         "--result-dir",
         dest="result_dir",
-        help="Root directory of calibration results (default: ./results)",
-        default=os.path.join(os.path.dirname(__file__), "results"),
+        help="Root directory of calibration results (default: results)",
+        default="results",
         type=str,
     )
 

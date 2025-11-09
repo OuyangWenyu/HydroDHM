@@ -22,88 +22,13 @@ try:
         setup_configuration_from_args,
         validate_and_show_config,
         save_config_to_file,
+        load_simplified_config,
     )
     from hydromodel.models.model_config import MODEL_PARAM_DICT
 except ImportError:
     print("Error: hydromodel package not found. Please install it first.")
     print("You can install it with: uv pip install hydromodel")
     sys.exit(1)
-
-
-def load_simplified_config(
-    config_path: str = None, simple_config: dict = None
-) -> dict:
-    """加载简化的配置文件并转换为统一格式
-
-    Args:
-        config_path: YAML配置文件路径
-        simple_config: 直接提供的配置字典
-
-    Returns:
-        统一格式的配置字典
-    """
-    import yaml
-
-    if config_path:
-        with open(config_path, "r", encoding="utf-8") as f:
-            simple_config = yaml.safe_load(f)
-    elif simple_config is None:
-        raise ValueError("必须提供config_path或simple_config参数")
-
-    # 验证简化配置的完整性
-    required_sections = ["data", "model", "training", "evaluation"]
-    for section in required_sections:
-        if section not in simple_config:
-            raise ValueError(f"配置缺少必需部分: {section}")
-
-    data_cfg = simple_config["data"]
-    model_cfg = simple_config["model"]
-    training_cfg = simple_config["training"]
-    eval_cfg = simple_config["evaluation"]
-
-    # 转换为统一配置格式
-    unified_config = {
-        "data_cfgs": {
-            "data_source_type": data_cfg.get("dataset", "selfmadehydrodataset"),
-            "data_source_path": data_cfg["path"],
-            "dataset_name": data_cfg.get("dataset", "selfmadehydrodataset"),
-            "basin_ids": data_cfg["basin_ids"],
-            "variables": data_cfg.get(
-                "variables", ["prcp", "PET", "streamflow"]
-            ),
-            "train_period": data_cfg["train_period"],
-            "test_period": data_cfg["test_period"],
-            "warmup_length": data_cfg.get("warmup_length", 365),
-        },
-        "model_cfgs": {
-            "model_name": model_cfg["name"],
-            **model_cfg.get("params", {}),
-        },
-        "training_cfgs": {
-            "algorithm": training_cfg["algorithm"],
-            "loss_func": training_cfg["loss"],
-            "output_dir": data_cfg.get("output_dir", "results"),
-            "experiment_name": data_cfg.get(
-                "experiment_name",
-                f"{model_cfg['name']}_{training_cfg['algorithm']}"
-            ),
-            # 根据算法添加对应参数
-            **training_cfg.get(training_cfg["algorithm"], {}),
-        },
-        "evaluation_cfgs": {
-            "metrics": eval_cfg.get("metrics", ["NSE", "KGE", "RMSE"]),
-        },
-    }
-
-    # 添加验证期（如果有）
-    if "valid_period" in data_cfg:
-        unified_config["data_cfgs"]["valid_period"] = data_cfg["valid_period"]
-
-    # 添加交叉验证配置（如果有）
-    if "cv_fold" in data_cfg and data_cfg["cv_fold"] > 1:
-        unified_config["data_cfgs"]["cv_fold"] = data_cfg["cv_fold"]
-
-    return unified_config
 
 
 def parse_arguments():

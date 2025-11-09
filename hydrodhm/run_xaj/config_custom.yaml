@@ -1,0 +1,142 @@
+# XAJ Model Calibration Configuration - Custom Dataset Example
+# This configuration file demonstrates how to calibrate XAJ model using selfmadehydrodataset
+
+data:
+  # Dataset configuration
+  dataset: "selfmadehydrodataset"  # Use custom dataset or "floodevent" for flood data
+  path: null                       # Data path (null = auto-detect from hydro_setting.yml)
+                                   # Or specify parent directory: "D:\\project\\data"
+
+  # Custom dataset configuration (REQUIRED for selfmadehydrodataset)
+  dataset_name: "my_basin_data"   # Your dataset folder name
+                                   # This folder should be located in:
+                                   #   - {path}/{dataset_name}/ if path is specified
+                                   #   - Value from hydro_setting.yml if path is null
+
+  time_unit: ["3h"]                # Time resolution: ["1h"], ["3h"], ["1D"], or multiple
+                                   # Must match subdirectory names in timeseries/ folder
+
+  # Additional dataset parameters (optional)
+  datasource_kwargs:
+    version: null                  # Dataset version (optional)
+    offset_to_utc: false           # Convert time to UTC (set true for local time data)
+    trange4cache: null             # Time range for caching (optional)
+    start_hour_in_a_day: 0         # Starting hour for sub-daily data (e.g., 0, 2)
+                                   # If 3h data is [0,3,6,9,12,15,18,21], set to 0
+                                   # If 3h data is [2,5,8,11,14,17,20,23], set to 2
+
+  # Basin selection
+  basin_ids:
+    - "basin_01"  # Replace with your basin IDs
+    - "basin_02"
+    # Add more basin IDs as needed
+
+  # Time periods
+  train_period: ["2010-01-01", "2015-12-31"]  # Training period
+  valid_period: ["2011-01-01", "2015-12-31"]  # Validation period (optional)
+  test_period: ["2016-01-01", "2020-12-31"]   # Testing period
+
+  # Data parameters
+  warmup_length: 365               # Warmup period in days
+  is_event_data: false             # true: flood event data, false: continuous data
+                                   # Event data: keeps full obs for loss calculation
+                                   # Continuous: removes warmup from observations
+
+  variables:  # Variable names (must match column names in timeseries CSV files)
+    - "rian"              # Precipitation
+    - "ES"  # Potential ET
+    - "inflow"                 # Observed streamflow
+
+  # Output configuration
+  output_dir: "results"            # Output directory
+  experiment_name: "xaj_custom"    # Experiment name
+
+  # Optional: Cross-validation
+  # cv_fold: 5  # Number of folds for cross-validation
+
+model:
+  # Model type
+  name: "xaj"  # XAJ model variant (xaj, xaj_mz)
+
+  # Model parameters
+  params:
+    source_type: "sources"    # Source data type
+    source_book: "HF"         # Parameter book: "HF" (Hydrological Forecast) or "EH" (Engineering Hydrology)
+    kernel_size: 15           # Routing kernel size
+    time_interval_hours: 24   # Time interval in hours
+
+training:
+  # Calibration algorithm
+  algorithm: "SCE_UA"  # Options: "SCE_UA", "GA", "scipy"
+
+  # Loss function
+  loss: "RMSE"  # Options: "RMSE", "NSE", "KGE"
+
+  # SCE_UA algorithm parameters (Recommended)
+  SCE_UA:
+    random_seed: 1234
+    rep: 5000       # Maximum number of model evaluations
+    ngs: 100        # Number of complexes
+    kstop: 50       # Stop criterion (evolution loops)
+    peps: 0.1       # Convergence threshold
+    pcento: 0.1     # Convergence percentage
+
+  # GA (Genetic Algorithm) parameters
+  GA:
+    random_seed: 1234
+    run_counts: 2      # Number of independent runs
+    pop_num: 50        # Population size
+    cross_prob: 0.5    # Crossover probability
+    mut_prob: 0.5      # Mutation probability
+    save_freq: 1       # Save frequency (generations)
+
+  # scipy optimization parameters
+  scipy:
+    method: "differential_evolution"
+    maxiter: 1000
+    popsize: 15
+    tol: 0.01
+    seed: 1234
+
+  save_config: true
+
+evaluation:
+  # Evaluation metrics
+  metrics:
+    - "NSE"   # Nash-Sutcliffe Efficiency
+    - "KGE"   # Kling-Gupta Efficiency
+    - "RMSE"  # Root Mean Square Error
+    - "PBIAS" # Percent Bias
+
+  save_results: true
+  plot_results: true
+
+
+# ==============================================================================
+# CUSTOM DATASET DIRECTORY STRUCTURE
+# ==============================================================================
+#
+# Your custom dataset should be organized as follows:
+#
+# {path}/{dataset_name}/              # e.g., D:\project\data\my_basin_data\
+#     ├── attributes/
+#     │   └── attributes.csv          # Basin attributes (REQUIRED)
+#     │                               # Must have columns: basin_id, area (km²)
+#     │
+#     ├── shapes/                     # Basin boundary shapefiles (optional)
+#     │   └── basins.shp
+#     │
+#     └── timeseries/
+#         ├── 1D/                     # Time resolution folder (must match time_unit)
+#         │   ├── basin_01.csv        # One CSV file per basin
+#         │   ├── basin_02.csv        # Filename must be: {basin_id}.csv
+#         │   ├── basin_03.csv
+#         │   └── ...
+#         │
+#         └── 1D_units_info.json      # Units information (REQUIRED)
+#                                     # Format: {"variable_name": "unit"}
+#
+# ==============================================================================
+# For more help, see:
+# https://github.com/OuyangWenyu/hydrodatasource
+# ==============================================================================
