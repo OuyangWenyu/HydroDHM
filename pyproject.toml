@@ -3,7 +3,7 @@ name = "HydroDHM"
 version = "0.1.0"
 description = "A Differentiable Hydrological Model in Data-Scarce Basins"
 readme = "README.md"
-requires-python = ">=3.12,<3.13"
+requires-python = ">=3.11,<3.13"
 dependencies = [
     "ipykernel",
     "xarray",
@@ -24,7 +24,11 @@ dependencies = [
     "wheel",
     "twine",
     "bump2version",
-    "eccodes>=2.44.0,<2.44.1",
+    # Linux/macOS 特定版本
+    "eccodes>=2.44.0,<2.44.1; platform_system == 'Linux' or platform_system == 'Darwin'",
+    "eccodeslib>=2.44.0.5,<2.44.0.6; platform_system == 'Linux' or platform_system == 'Darwin'",
+    # Windows 使用更宽松的版本要求（eccodeslib 在 Windows 上不可用）
+    "eccodes; platform_system == 'Windows'",
     "torchhydro",
     "hydroutils>=0.1.0",
     "hydrodatasource>=0.2.0",

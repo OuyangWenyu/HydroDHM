@@ -914,22 +914,26 @@ wheels = [
 
 [[package]]
 name = "eccodeslib"
-version = "2.45.1.dev6"
+version = "2.44.0.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "eckitlib" },
-    { name = "fckitlib" },
+    { name = "eckitlib", marker = "sys_platform != 'win32'" },
+    { name = "fckitlib", marker = "sys_platform != 'win32'" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/08/42/9ddcf99728a92006cbd25c726412fb1b78435f932a037c60bf905b5e6645/eccodeslib-2.45.1.dev6-cp312-cp312-macosx_13_0_x86_64.whl", hash = "sha256:ed7f992ee8fb69f3f9b85e145d4419a76845c46317b1a9bae112709ddd7096ab", size = 8615571, upload-time = "2025-10-31T11:37:53.856Z" },
+    { url = "https://files.pythonhosted.org/packages/50/68/97b7e0cde5368f38335a1e99188726d383084b3014447cccc535cc7f9eac/eccodeslib-2.44.0.5-cp312-cp312-macosx_13_0_arm64.whl", hash = "sha256:6eed3e0ab2f7172972d9fdee811a4816c8654cefed4b9a9f2dd5d72b019bc26f", size = 8926798, upload-time = "2025-10-29T12:58:14.911Z" },
+    { url = "https://files.pythonhosted.org/packages/e2/b2/0109b572f5fc257c0d8f070fc4fdc8e7d1b1fc3d54cfeeb4cea9a5d95f3f/eccodeslib-2.44.0.5-cp312-cp312-macosx_13_0_x86_64.whl", hash = "sha256:3f14740840785a552edfc367fafbb80255d56a4f561185a8f4413f0cfd638eb8", size = 8725655, upload-time = "2025-10-29T13:05:42.544Z" },
+    { url = "https://files.pythonhosted.org/packages/7d/fc/3f8815eaff975c1df1453f38310943de80ca029a0eff63cf9708db1caa0d/eccodeslib-2.44.0.5-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:479b625fa4cb2e78dcbafdde127166fad2df9662d3278b68f8186b60ff91b5fb", size = 20853435, upload-time = "2025-10-29T13:15:28.335Z" },
 ]
 
 [[package]]
 name = "eckitlib"
-version = "1.32.3.dev6"
+version = "1.32.2.5"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/54/82/a001fdffd84c74ed0dcd6537bcaaad8bc13068150329f6cc738b7ef23c23/eckitlib-1.32.3.dev6-cp312-cp312-macosx_13_0_x86_64.whl", hash = "sha256:0def3fca95adc373119984dd6e2095c44a1b27fd7f8aa1c2b5e081db78aa39c0", size = 3030280, upload-time = "2025-10-31T11:38:00.196Z" },
+    { url = "https://files.pythonhosted.org/packages/bc/9d/2fb84682c4e412df5f4477427839b28d8c78d5b41835b12fa992598d87a3/eckitlib-1.32.2.5-cp312-cp312-macosx_13_0_arm64.whl", hash = "sha256:e5cb195558e566239831d6e39b3693aa27c656f8e9316be8ed6ef329eadd1d92", size = 2925743, upload-time = "2025-10-29T12:58:20.448Z" },
+    { url = "https://files.pythonhosted.org/packages/3c/e7/b14c4194f61d9b27c6b9e26d6644cb247c27a0b6e3acc99bf14bafcf6c61/eckitlib-1.32.2.5-cp312-cp312-macosx_13_0_x86_64.whl", hash = "sha256:cc535fa2bde152c180300ad629530493f101d4638dac936522c5fbcfeab46e29", size = 3028911, upload-time = "2025-10-29T13:05:51.026Z" },
+    { url = "https://files.pythonhosted.org/packages/6c/d2/1a985b441539487e0b1698bac967c088e2d3d4029f534f75fa63271ab9e9/eckitlib-1.32.2.5-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:50ba1390b0df9b47bb7631ba03ecc44688a245b9781d0005c1ca9e3020ef9598", size = 44583600, upload-time = "2025-10-29T13:15:41.438Z" },
 ]
 
 [[package]]
@@ -952,13 +956,15 @@ wheels = [
 
 [[package]]
 name = "fckitlib"
-version = "0.14.1.dev6"
+version = "0.14.0.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "eckitlib" },
+    { name = "eckitlib", marker = "sys_platform != 'win32'" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/cb/b8/e37ae937576e4d0b1843f155ca9e0961eaafa6472b1f12091f82e61c7135/fckitlib-0.14.1.dev6-cp312-cp312-macosx_13_0_x86_64.whl", hash = "sha256:e6ab1efd5b80cde0ff4c0c798899494da5156c0133eb1cf934bdff117bae4b08", size = 417196, upload-time = "2025-10-31T11:38:03.828Z" },
+    { url = "https://files.pythonhosted.org/packages/32/02/fc8e1eb63057c862ed0c7fb65edd2f0a87794fb8b16a72d514f6e9e22b5c/fckitlib-0.14.0.5-cp312-cp312-macosx_13_0_arm64.whl", hash = "sha256:5c4d0313a1bb86c49ed50e6c658dccdc9200ed6e7524ed5515f76171c347b9ee", size = 411476, upload-time = "2025-10-29T12:58:23.247Z" },
+    { url = "https://files.pythonhosted.org/packages/f7/3d/0200e76f08ab79fcd6c8379140c558c701fd6c77c81ed86aee10bd0df240/fckitlib-0.14.0.5-cp312-cp312-macosx_13_0_x86_64.whl", hash = "sha256:ec5113cd9c9d18f1682a380d46129d7107eaea3247cc2c0845e144a34356f635", size = 417160, upload-time = "2025-10-29T13:05:54.339Z" },
+    { url = "https://files.pythonhosted.org/packages/f1/30/6b0727a63f4f66970d4a383c6a244804bb54369f53c37c53453d7b8d9829/fckitlib-0.14.0.5-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:31fb81005dd07331bd4ac3f55128b3788f35afe3a04afa63443e878f9cdc9023", size = 13392933, upload-time = "2025-10-29T13:15:48.494Z" },
 ]
 
 [[package]]
@@ -1300,7 +1306,8 @@ source = { editable = "." }
 dependencies = [
     { name = "black" },
     { name = "bump2version" },
-    { name = "eccodes" },
+    { name = "eccodes", marker = "sys_platform == 'darwin' or sys_platform == 'linux' or sys_platform == 'win32'" },
+    { name = "eccodeslib", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "flake8" },
     { name = "geopandas" },
     { name = "hydrodataset" },
@@ -1336,7 +1343,9 @@ docs = [
 requires-dist = [
     { name = "black" },
     { name = "bump2version" },
-    { name = "eccodes", specifier = ">=2.44.0,<2.44.1" },
+    { name = "eccodes", marker = "sys_platform == 'darwin' or sys_platform == 'linux'", specifier = ">=2.44.0,<2.44.1" },
+    { name = "eccodes", marker = "sys_platform == 'win32'" },
+    { name = "eccodeslib", marker = "sys_platform == 'darwin' or sys_platform == 'linux'", specifier = ">=2.44.0.5,<2.44.0.6" },
     { name = "flake8" },
     { name = "geopandas" },
     { name = "hydrodataset", specifier = ">=0.2.2" },
@@ -2176,16 +2185,16 @@ wheels = [
 
 [[package]]
 name = "mkdocstrings-python"
-version = "1.18.2"
+version = "1.19.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "griffe" },
     { name = "mkdocs-autorefs" },
     { name = "mkdocstrings" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/95/ae/58ab2bfbee2792e92a98b97e872f7c003deb903071f75d8d83aa55db28fa/mkdocstrings_python-1.18.2.tar.gz", hash = "sha256:4ad536920a07b6336f50d4c6d5603316fafb1172c5c882370cbbc954770ad323", size = 207972, upload-time = "2025-08-28T16:11:19.847Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/75/1c/3af8413919b0839b96a78f60e8bd0dfd26c844d3717eeb77f80b43f5be1c/mkdocstrings_python-1.19.0.tar.gz", hash = "sha256:917aac66cf121243c11db5b89f66b0ded6c53ec0de5318ff5e22424eb2f2e57c", size = 204010, upload-time = "2025-11-10T13:30:55.915Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d5/8f/ce008599d9adebf33ed144e7736914385e8537f5fc686fdb7cceb8c22431/mkdocstrings_python-1.18.2-py3-none-any.whl", hash = "sha256:944fe6deb8f08f33fa936d538233c4036e9f53e840994f6146e8e94eb71b600d", size = 138215, upload-time = "2025-08-28T16:11:18.176Z" },
+    { url = "https://files.pythonhosted.org/packages/98/5c/2597cef67b6947b15c47f8dba967a0baf19fbdfdc86f6e4a8ba7af8b581a/mkdocstrings_python-1.19.0-py3-none-any.whl", hash = "sha256:395c1032af8f005234170575cc0c5d4d20980846623b623b35594281be4a3059", size = 143417, upload-time = "2025-11-10T13:30:54.164Z" },
 ]
 
 [[package]]
@@ -2445,7 +2454,7 @@ name = "nvidia-cudnn-cu11"
 version = "9.1.0.70"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas-cu11" },
+    { name = "nvidia-cublas-cu11", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/00/3b/0b776f04e364cd99e4cf152c2a9eadb5934c67c9a91429da55169a9447fd/nvidia_cudnn_cu11-9.1.0.70-py3-none-manylinux2014_x86_64.whl", hash = "sha256:e6135ac63fe9d5b0b89cfb35c3fc1c1349f2b995becadf2e9dc21bca89d9633d", size = 663919573, upload-time = "2024-04-22T15:20:24.839Z" },
@@ -2474,7 +2483,7 @@ name = "nvidia-cusolver-cu11"
 version = "11.4.1.48"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas-cu11" },
+    { name = "nvidia-cublas-cu11", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/55/ee/939ff0104991dd7bdabb4c9767994c612ba0e1c9a55672a1ddd42f5e5b16/nvidia_cusolver_cu11-11.4.1.48-py3-none-manylinux1_x86_64.whl", hash = "sha256:ca538f545645b7e6629140786d3127fe067b3d5a085bd794cde5bfe877c8926f", size = 128240842, upload-time = "2022-10-03T23:30:24.348Z" },
@@ -4013,7 +4022,7 @@ name = "triton"
 version = "3.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "setuptools" },
+    { name = "setuptools", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/24/5f/950fb373bf9c01ad4eb5a8cd5eaf32cdf9e238c02f9293557a2129b9c4ac/triton-3.3.1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:9999e83aba21e1a78c1f36f21bce621b77bcaa530277a50484a7cb4a822f6e43", size = 155669138, upload-time = "2025-05-29T23:39:51.771Z" },
