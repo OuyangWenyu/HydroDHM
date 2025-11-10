@@ -27,9 +27,9 @@ dependencies = [
     "eccodes>=2.44.0,<2.44.1",
     "torchhydro",
     "hydroutils>=0.1.0",
-    "hydrodataset>=0.2.1",
     "hydrodatasource>=0.2.0",
     "hydromodel>=0.3.0",
+    "hydrodataset>=0.2.2",
 ]
 
 [project.optional-dependencies]
