@@ -4,7 +4,8 @@
 data:
   # Dataset configuration
   dataset: "camels_us"  # CAMELS dataset type (camels_us, camels_gb, camels_aus, etc.)
-  path: "D:\\project\\data"  # Path to CAMELS data directory
+  path: null            # Path to CAMELS data directory(null = auto-detect "datasets-origin" from hydro_setting.yml)
+                        # Or specify parent directory: "D:\\data"
 
   # Basin selection
   basin_ids:

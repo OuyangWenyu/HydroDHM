@@ -54,7 +54,37 @@ local_data_path:
   cache: 'D:\data\.cache'
 ```
 
-### 3. Prepare Configuration File
+### 3. Download CAMELS Dataset
+
+**Option A: Automatic Download (Recommended)**
+
+Use our download tool to automatically fetch CAMELS-US data:
+
+```bash
+# List available CAMELS datasets
+python hydrodhm/data_tools/download_camels.py --list
+
+# Download CAMELS-US (uses path from hydro_setting.yml)
+python hydrodhm/data_tools/download_camels.py camels_us
+
+# Or download to a specific path
+python hydrodhm/data_tools/download_camels.py camels_us --data-path D:/data/camels
+```
+
+**Note:** First download takes 1-3 hours (~15GB). Data is cached as NetCDF files for instant future access.
+
+**Option B: Automatic Download on First Run**
+
+Skip this step and data will be automatically downloaded when you first run the model. However, this may interrupt your workflow.
+
+**Option C: Manual Download**
+
+Due to network issues, automatic download may not be possible. If possible, you will need to manually download:
+1. Visit [CAMELS-US on Zenodo](https://zenodo.org/records/15529996)
+2. Download and extract to your `datasets-origin` directory
+3. Ensure the structure matches: `datasets-origin/CAMELS_US/...` (The "camels_us" dataset path here should be capitalized)
+
+### 4. Prepare Configuration File
 
 Choose a config template based on your data:
 
@@ -73,7 +103,7 @@ For detailed examples, refer to `config_camels.yaml` and `config_custom.yaml`.
 
 Edit `my_config.yaml` to set your basin IDs, time periods, and parameters.
 
-### 4. Run XAJ Model Workflow
+### 5. Run XAJ Model Workflow
 
 **Step 1: Calibrate the model**
 ```bash
@@ -102,7 +132,7 @@ Train a standard LSTM neural network:
 cd hydrodhm/run_lstm
 
 # Train LSTM model
-python lstm_camels_example.py 
+python lstm_camels_example.py
 
 ```
 
@@ -125,7 +155,19 @@ python dpl_xaj_example.py
 | **LSTM** | Pure deep learning | Fast, data-driven | Large datasets, pure prediction |
 | **DPL-XAJ** | Hybrid physics-ML | Combines physics & data | Best of both worlds |
 
-See `hydrodhm/run_lstm/README.md` for more details.
+### Debugging and Parameter Tuning
+
+For detailed guidance on configuring and debugging deep learning models, see:
+
+📖 **[LSTM Configuration and Debugging](docs/usage.md#lstm-configuration-details-and-debugging)** | **[DPL-XAJ Configuration and Debugging](docs/usage.md#dpl-xaj-configuration-details-and-debugging)**
+
+These guides cover:
+- Complete configuration examples with annotations
+- Common errors and step-by-step solutions
+- Parameter tuning strategies
+- Dimension mismatch debugging
+- Memory optimization tips
+- Configuration checklists
 
 
 ## Documentation

@@ -66,7 +66,37 @@ local_data_path:
   cache: 'D:\data\.cache'
 ```
 
-### 3. 准备配置文件
+### 3. 下载 CAMELS 数据集
+
+**方式A：自动下载（推荐）**
+
+使用我们的下载工具自动获取 CAMELS-US 数据：
+
+```bash
+# 列出所有可用的 CAMELS 数据集
+python hydrodhm/data_tools/download_camels.py --list
+
+# 下载 CAMELS-US（使用 hydro_setting.yml 中的路径）
+python hydrodhm/data_tools/download_camels.py camels_us
+
+# 或指定下载路径
+python hydrodhm/data_tools/download_camels.py camels_us --data-path D:/data/
+```
+
+**注意：** 首次下载需要 1-3 小时（约 15GB）。数据会缓存为 NetCDF 文件，后续访问即时加载。
+
+**方式B：首次运行时自动下载**
+
+跳过此步骤，数据将在首次运行模型时自动下载。但这可能会中断您的工作流程。
+
+**方式C：手动下载**
+
+可能由于网络原因无法自动下载，如果可以您需要手动下载：
+1. 访问 [CAMELS-US on Zenodo](https://zenodo.org/records/15529996)
+2. 下载并解压到您的 `datasets-origin` 目录
+3. 确保目录结构为：`datasets-origin/CAMELS_US/...` (这里的camels_us数据集路径名要大写)
+
+### 4. 准备配置文件
 
 根据你的数据类型选择配置模板：
 
@@ -86,7 +116,7 @@ cp config_custom.yaml my_config.yaml
 
 编辑`my_config.yaml`设置您的流域ID、时间段和参数。
 
-### 4. 运行XAJ模型工作流
+### 5. 运行XAJ模型工作流
 
 **步骤1：率定模型**
 ```bash
@@ -117,7 +147,7 @@ HydroDHM也提供基于[torchhydro](https://github.com/OuyangWenyu/torchhydro)�
 cd hydrodhm/run_lstm
 
 # 训练LSTM模型
-python lstm_camels_example.py 
+python lstm_camels_example.py
 ```
 
 ### DPL-XAJ模型
@@ -139,7 +169,19 @@ python dpl_xaj_example.py
 | **LSTM** | 纯深度学习 | 训练快，数据驱动 | 大数据集，纯预测 |
 | **DPL-XAJ** | 混合物理-ML | 结合物理与数据 | 兼顾两者优势 |
 
-详见`hydrodhm/run_lstm/README.md`。
+### 调试和参数调优
+
+关于深度学习模型配置和调试的详细指导，请参阅：
+
+📖 **[LSTM配置和调试](docs/usage.md#lstm-configuration-details-and-debugging)** | **[DPL-XAJ配置和调试](docs/usage.md#dpl-xaj-configuration-details-and-debugging)**
+
+本指南涵盖：
+- 带注释的完整配置示例
+- 常见错误及逐步解决方案
+- 参数调优策略
+- 维度不匹配调试
+- 内存优化技巧
+- 配置检查清单
 
 ## 文档
 

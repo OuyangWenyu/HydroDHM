@@ -554,6 +554,272 @@ results/my_lstm_experiment/
 └── dapengscaler_stat.json             # Normalization stats
 ```
 
+### LSTM Configuration Details and Debugging
+
+#### Understanding `n_input_features`
+
+**What it is**: Total number of features fed into LSTM at each timestep
+
+**Formula**:
+```
+n_input_features = len(var_t) + len(constant_attributes)
+```
+
+**For CAMELS-US with attributes**:
+```python
+# Example from lstm_camels_example.py
+var_t=[
+    StandardVariable.PRECIPITATION,           # 1
+    StandardVariable.DAYLIGHT_DURATION,       # 2
+    StandardVariable.SOLAR_RADIATION,         # 3
+    StandardVariable.TEMPERATURE_MAX,         # 4
+    StandardVariable.TEMPERATURE_MIN,         # 5
+    StandardVariable.VAPOR_PRESSURE,          # 6
+]  # 6 time series variables
+
+# + basin attributes (automatically concatenated)
+# CAMELS-US has ~17 static attributes
+# Total: 6 + 17 = 23 input features
+```
+
+**How to verify your dataset's feature count**:
+```python
+from hydrodataset.camels_us import CamelsUs
+from hydrodataset import SETTING
+
+ds = CamelsUs(SETTING['local_data_path']['datasets-origin'])
+n_time_series = len(var_t)  # Count your variables
+n_attributes = len(ds.available_static_features)  # e.g., 17 for CAMELS-US
+n_input_features = n_time_series + n_attributes  # e.g., 23
+```
+
+#### Model Selection: CpuLSTM vs CudnnLSTM
+
+| Model | Use When | Performance | Memory |
+|-------|----------|-------------|--------|
+| **CpuLSTM** | `ctx=[-1]` (CPU mode) | Slower | Low |
+| **CudnnLSTM** | `ctx=[0]` (GPU mode) | 5-10x faster | Higher |
+
+**Example configuration**:
+```python
+# For GPU
+ctx=[0],
+model_name="CudnnLSTM",
+batch_size=64,
+
+# For CPU
+ctx=[-1],
+model_name="CpuLSTM",
+batch_size=8,  # Keep smaller for CPU
+```
+
+#### Sequence Length (`forecast_length`)
+
+**Trade-offs**:
+
+| Length | Memory | Training Time | Pattern Capture |
+|--------|--------|---------------|-----------------|
+| 90 days | Low | Fast | Short-term |
+| 270 days | Medium | Medium | Seasonal |
+| 365 days | High | Slow | Full annual cycle |
+
+**Recommendations**:
+- **Quick testing**: 90 days
+- **Standard training**: 270 days
+- **Seasonal basins**: 365 days
+
+#### Batch Size and GPU Memory
+
+**GPU memory guide**:
+
+| GPU VRAM | Max batch_size | forecast_length | n_hidden_states |
+|----------|----------------|-----------------|-----------------|
+| 6 GB     | 8-16           | 270             | 256             |
+| 8 GB     | 16-32          | 270             | 256             |
+| 12 GB    | 32-64          | 270             | 256             |
+| 24 GB    | 64-128         | 270             | 256             |
+
+**If you encounter CUDA OOM**:
+1. Reduce `batch_size` (e.g., 64 → 32 → 16)
+2. Reduce `forecast_length` (e.g., 270 → 180 → 90)
+3. Reduce `n_hidden_states` (e.g., 256 → 128)
+4. Switch to CPU: `ctx=[-1]`, `model_name="CpuLSTM"`
+
+### Common LSTM Errors and Solutions
+
+#### Error 1: Input Feature Dimension Mismatch
+
+**Error message**:
+```
+RuntimeError: mat1 and mat2 shapes cannot be multiplied (2160x6 and 23x256)
+                                                             ↑      ↑↑
+                                                          Actual  Expected
+```
+
+**Cause**: `n_input_features` doesn't match actual input dimensions
+
+**Solution**:
+```python
+# Step 1: Count your time series variables
+var_t = [...]  # Your variable list
+n_time_series = len(var_t)
+
+# Step 2: Check if attributes are concatenated (default for CAMELS)
+from hydrodataset.camels_us import CamelsUs
+ds = CamelsUs(data_path)
+n_attributes = len(ds.available_static_features)  # Usually 17 for CAMELS-US
+
+# Step 3: Calculate total
+n_input_features = n_time_series + n_attributes
+
+# Step 4: Update configuration
+model_hyperparam={
+    "n_input_features": n_input_features,  # Update this value
+    "n_output_features": 1,
+    "n_hidden_states": 256,
+}
+```
+
+#### Error 2: CUDA Out of Memory
+
+**Error message**:
+```
+RuntimeError: CUDA out of memory. Tried to allocate 2.00 GiB
+```
+
+**Solutions (try in order)**:
+
+**Option 1: Reduce batch size**
+```python
+batch_size=16,  # Reduce from 64
+```
+
+**Option 2: Reduce sequence length**
+```python
+forecast_length=90,  # Reduce from 270
+```
+
+**Option 3: Reduce hidden states**
+```python
+model_hyperparam={
+    "n_hidden_states": 128,  # Reduce from 256
+}
+```
+
+**Option 4: Use CPU**
+```python
+ctx=[-1],
+model_name="CpuLSTM",
+batch_size=8,
+```
+
+#### Error 3: Training Loss Becomes NaN
+
+**Error message**:
+```
+Epoch 5: Training loss = nan
+```
+
+**Possible causes and solutions**:
+
+**Cause 1: Learning rate too high**
+```python
+# Solution: Reduce learning rate
+opt="Adam",
+lr_scheduler={0: 1e-4, 10: 5e-5, 20: 1e-5},  # Start smaller
+```
+
+**Cause 2: Gradient explosion**
+```python
+# Solution: Add gradient clipping
+gradient_clip_value=1.0,
+```
+
+**Cause 3: Data normalization issues**
+```python
+# Solution: Check data quality
+import numpy as np
+
+# Check for NaN or Inf values in your data
+print(f"NaN in data: {np.isnan(data).sum()}")
+print(f"Inf in data: {np.isinf(data).sum()}")
+
+# Ensure scaler is properly configured
+scaler="DapengScaler",
+```
+
+#### Error 4: Model Not Improving
+
+**Symptoms**: Loss stays constant or decreases very slowly
+
+**Diagnostic checklist**:
+
+1. **Check learning rate**:
+   ```python
+   # Try higher initial learning rate
+   lr_scheduler={0: 1e-3, 10: 5e-4, 20: 1e-4},
+   ```
+
+2. **Increase model capacity**:
+   ```python
+   model_hyperparam={
+       "n_hidden_states": 512,  # Increase from 256
+   }
+   ```
+
+3. **Check data quality**:
+   - Verify correct train/validation/test splits
+   - Ensure no data leakage
+   - Check for sufficient variability in training data
+
+4. **Train longer**:
+   ```python
+   train_epoch=100,  # Increase from 50
+   ```
+
+5. **Monitor validation metrics**:
+   - If training loss decreases but validation doesn't → overfitting
+   - If both stay high → model capacity or data issues
+
+### LSTM Configuration Checklist
+
+Before running, verify:
+
+- [ ] `n_input_features` = `len(var_t)` + number of basin attributes
+- [ ] `model_name` matches `ctx` setting (CpuLSTM for CPU, CudnnLSTM for GPU)
+- [ ] `batch_size` fits in available GPU/CPU memory
+- [ ] `forecast_length` is appropriate for your analysis (90-365 days)
+- [ ] Learning rate schedule is configured
+- [ ] Train/validation/test periods don't overlap
+- [ ] Data path in `hydro_setting.yml` is correct
+- [ ] All required variables are available in your dataset
+
+### LSTM Performance Tuning Tips
+
+**Start with baseline configuration**:
+```python
+n_hidden_states=256
+batch_size=16
+forecast_length=270
+learning_rate=1e-3
+```
+
+**Tune one parameter at a time**:
+
+1. **Hidden states**: Try 128, 256, 512 → monitor validation NSE
+2. **Batch size**: Try 8, 16, 32, 64 → balance speed and stability
+3. **Sequence length**: Try 90, 180, 270, 365 → monitor performance vs. time
+4. **Learning rate**: Try different schedules → avoid NaN and slow convergence
+
+**Monitor training with**:
+```bash
+# View training logs
+tail -f results/lstm_camels/train_log.txt
+
+# Check GPU memory usage
+nvidia-smi -l 1  # Update every second
+```
+
 ## DPL-XAJ Model Usage
 
 DPL-XAJ (Differentiable Parameter Learning - XAJ) is a hybrid physics-ML model that combines LSTM with the XAJ hydrological model.
@@ -623,6 +889,386 @@ args = cmd(
 - **Interpretability**: XAJ parameters have physical meaning
 - **Data efficiency**: Combines data-driven and physics-based approaches
 - **Robustness**: Better extrapolation than pure deep learning
+
+### DPL-XAJ Configuration Details and Debugging
+
+#### Understanding DPL-XAJ Data Flow
+
+**Important**: DplAttrXaj has a **different** data flow than standard LSTM:
+
+```
+Standard LSTM:
+Time Series → LSTM → Streamflow
+
+DPL-XAJ:
+Basin Attributes (static) → ANN → XAJ Parameters (15 values)
+                                          ↓
+Time Series (P, PET) → XAJ Physical Model → Streamflow + ET
+```
+
+**Key differences**:
+- **ANN input**: Static basin attributes (NOT time series)
+- **ANN output**: 15 XAJ parameters
+- **XAJ input**: Time series data (P and PET)
+
+#### Critical Configuration: `n_input_features`
+
+**What it is**: Number of basin **static attributes** (NOT time series variables!)
+
+**How to determine for CAMELS-US**:
+```python
+from hydrodataset.camels_us import CamelsUs
+from hydrodataset import SETTING
+
+ds = CamelsUs(SETTING['local_data_path']['datasets-origin'])
+n_attributes = len(ds.available_static_features)
+print(f"CAMELS-US has {n_attributes} attributes")  # Should be 19
+```
+
+**Common values**:
+- CAMELS-US: **19** attributes
+- CAMELS-AUS: 17 attributes
+- CAMELS-GB: 20 attributes
+
+**Configuration**:
+```python
+model_hyperparam={
+    "n_input_features": 19,      # ⚠️ Must match your dataset!
+    "n_output_features": 15,     # ✅ Fixed: 15 XAJ parameters
+    "n_hidden_states": 256,
+    "kernel_size": 15,
+    "warmup_length": 30,
+    "param_limit_func": "clamp",
+},
+```
+
+#### Critical Configuration: `constant_only=True`
+
+**REQUIRED**: Must set `constant_only=True` for attribute-based DPL models
+
+**What it does**:
+```python
+# With constant_only=True (CORRECT for DplAttrXaj):
+z_train = torch.from_numpy(self.c[basin, :]).float()  # Uses attributes
+
+# Without constant_only=True (WRONG):
+z_train = xc_norm.float()  # Uses time series → dimension error!
+```
+
+**Full configuration**:
+```python
+dpl_args = cmd(
+    model_name="DplAttrXaj",
+    dataset="DplDataset",
+    constant_only=True,  # ⚠️ CRITICAL! Do not omit!
+    ...
+)
+```
+
+#### XAJ Parameters (15 total)
+
+The ANN learns to predict these 15 parameters:
+
+| # | Parameter | Description | Typical Range |
+|---|-----------|-------------|---------------|
+| 1 | K | Evapotranspiration coefficient | 0.5 - 1.5 |
+| 2 | B | Tension water distribution | 0.1 - 0.5 |
+| 3 | IM | Impervious area fraction | 0.0 - 0.1 |
+| 4 | UM | Upper layer capacity | 5 - 20 mm |
+| 5 | LM | Lower layer capacity | 60 - 90 mm |
+| 6 | DM | Deep layer capacity | 20 - 60 mm |
+| 7 | C | Deep ET coefficient | 0.1 - 0.2 |
+| 8 | SM | Free water capacity | 10 - 50 mm |
+| 9 | EX | Free water distribution | 1.0 - 2.0 |
+| 10 | KI | Interflow outflow coef. | 0.2 - 0.7 |
+| 11 | KG | Groundwater outflow coef. | 0.2 - 0.7 |
+| 12 | A | Recession constant | Varies |
+| 13 | Theta | Time constant | Varies |
+| 14 | CI | Interflow recession | 0.5 - 0.9 |
+| 15 | CG | Groundwater recession | 0.95 - 0.998 |
+
+**Fixed value**: Always `n_output_features=15` for XAJ
+
+#### Input Variables (`var_t`)
+
+**For XAJ physical model**, only need 2 variables:
+
+```python
+var_t=[
+    StandardVariable.PRECIPITATION,              # Required
+    StandardVariable.POTENTIAL_EVAPOTRANSPIRATION,  # Required
+]
+```
+
+**Note**: These are inputs to **XAJ**, not the ANN!
+- **ANN inputs**: Basin attributes (from `constant_only=True`)
+- **XAJ inputs**: P and PET time series
+
+### Common DPL-XAJ Errors and Solutions
+
+#### Error 1: ANN Input Dimension Mismatch
+
+**Error message**:
+```
+RuntimeError: mat1 and mat2 shapes cannot be multiplied (6000x19 and 17x256)
+                                                             ↑↑      ↑↑
+                                                          Actual  Expected
+```
+
+**Cause**: `n_input_features` doesn't match dataset's attribute count
+
+**Solution**:
+```python
+# Step 1: Check your dataset's attributes
+from hydrodataset.camels_us import CamelsUs
+ds = CamelsUs(data_path)
+n_attrs = len(ds.available_static_features)
+print(f"Dataset has {n_attrs} attributes")
+
+# Step 2: Update configuration
+model_hyperparam={
+    "n_input_features": 19,  # ← Must match n_attrs
+    "n_output_features": 15,  # ← Always 15 for XAJ
+    ...
+}
+```
+
+#### Error 2: Missing `constant_only=True`
+
+**Error message**:
+```
+IndexError: index 5 is out of bounds for dimension 1 with size 5
+```
+
+or
+
+```
+RuntimeError: The size of tensor a (50) must match the size of tensor b (15)
+```
+
+**Cause**: Dataset is using time series instead of attributes for ANN input
+
+**Solution**:
+```python
+dpl_args = cmd(
+    model_name="DplAttrXaj",
+    dataset="DplDataset",
+    constant_only=True,  # ← Add this line!
+    ...
+)
+```
+
+#### Error 3: Wrong Number of Time Series Variables
+
+**Error**: XAJ model fails or gives poor results
+
+**Cause**: Using wrong variables for XAJ input
+
+**Correct configuration**:
+```python
+# For XAJ, ONLY need these 2:
+var_t=[
+    StandardVariable.PRECIPITATION,
+    StandardVariable.POTENTIAL_EVAPOTRANSPIRATION,
+]
+
+# DO NOT add other variables like temperature, etc.
+# They are not used by XAJ physical model
+```
+
+#### Error 4: NaN Values During Training
+
+**Error message**:
+```
+ValueError: Error: NaN values detected. Check your data firstly!!!
+```
+
+**Possible causes and solutions**:
+
+**Cause 1: Warmup period too short**
+```python
+# Solution: Increase warmup
+warmup_length=365,  # Use 1 year instead of 30 days
+```
+
+**Cause 2: Learning rate too high**
+```python
+# Solution: Use Adadelta (more stable)
+opt="Adadelta",  # Recommended for DPL models
+```
+
+**Cause 3: Data quality issues**
+```python
+# Solution: Check for NaN in data
+import numpy as np
+prcp_data = ds.read_ts_xrdataset(...)
+print(f"NaN count: {np.isnan(prcp_data).sum()}")
+```
+
+**Cause 4: Parameter constraints**
+```python
+# Solution: Use clamp instead of sigmoid
+param_limit_func="clamp",  # More stable than "sigmoid"
+```
+
+### DPL-XAJ Complete Configuration Example
+
+```python
+from hydrodataset.hydro_dataset import StandardVariable
+from torchhydro import SETTING
+from torchhydro.configs.config import cmd, default_config_file, update_cfg
+from torchhydro.trainers.trainer import train_and_evaluate
+import os
+
+def main():
+    source_path = SETTING["local_data_path"]["datasets-origin"]
+
+    dpl_args = cmd(
+        # Output directory
+        sub=os.path.join("results", "dpl_xaj_camels"),
+
+        # Data source
+        source_cfgs={"source_name": "camels_us", "source_path": source_path},
+
+        # GPU/CPU
+        ctx=[0],  # [0] for GPU, [-1] for CPU
+
+        # Model configuration
+        model_name="DplAttrXaj",
+        model_hyperparam={
+            "n_input_features": 19,      # ⚠️ CAMELS-US attribute count
+            "n_output_features": 15,     # ✅ Fixed: 15 XAJ parameters
+            "n_hidden_states": 256,      # ANN hidden layer size
+            "kernel_size": 15,           # XAJ routing kernel
+            "warmup_length": 30,         # XAJ warmup period
+            "param_limit_func": "clamp", # Parameter constraint method
+        },
+
+        # Dataset configuration
+        dataset="DplDataset",
+        constant_only=True,  # ⚠️ CRITICAL: Use attributes for ANN
+
+        # Loss function
+        loss_func="MultiOutLoss",
+        loss_param={
+            "loss_funcs": "RMSESum",
+            "data_gap": [0, 0],
+            "device": [0],
+            "item_weight": [1, 0],  # [streamflow_weight, ET_weight]
+            "limit_part": [1],
+        },
+
+        # Data normalization
+        scaler="DapengScaler",
+        scaler_params={
+            "prcp_norm_cols": ["streamflow"],
+            "gamma_norm_cols": [
+                StandardVariable.PRECIPITATION,
+                StandardVariable.POTENTIAL_EVAPOTRANSPIRATION,
+            ],
+            "pbm_norm": True,  # ✅ Required for physics-based models
+        },
+
+        # Basins
+        gage_id=[
+            "01013500",
+            "01022500",
+            "01030500",
+            "01031500",
+            "01047000",
+        ],
+
+        # Training configuration
+        batch_size=50,
+        train_epoch=50,
+        forecast_length=60,
+        warmup_length=30,
+
+        # Time periods
+        train_period=["1985-10-01", "1995-09-30"],
+        test_period=["2000-10-01", "2010-09-30"],
+        valid_period=None,
+
+        # Input variables (for XAJ physical model)
+        var_t=[
+            StandardVariable.PRECIPITATION,
+            StandardVariable.POTENTIAL_EVAPOTRANSPIRATION,
+        ],
+
+        # Output variables
+        var_out=[StandardVariable.STREAMFLOW, StandardVariable.EVAPOTRANSPIRATION],
+        n_output=2,
+
+        # Optimizer
+        opt="Adadelta",  # Recommended for DPL
+
+        # Model loading
+        model_loader={"load_way": "specified", "test_epoch": 50},
+
+        # Tensor layout
+        which_first_tensor="sequence",
+    )
+
+    config_data = default_config_file()
+    update_cfg(config_data, dpl_args)
+    train_and_evaluate(config_data)
+
+if __name__ == "__main__":
+    main()
+```
+
+### DPL-XAJ Configuration Checklist
+
+Before running, verify:
+
+- [ ] `n_input_features` matches dataset attribute count (19 for CAMELS-US)
+- [ ] `constant_only=True` is set in configuration
+- [ ] `n_output_features=15` (for XAJ parameters)
+- [ ] `var_t` includes **only** Precipitation and PET
+- [ ] `pbm_norm=True` in scaler_params
+- [ ] `warmup_length` ≥ 30 days (365 recommended for stability)
+- [ ] `opt="Adadelta"` (more stable than Adam for DPL)
+- [ ] Data path is correctly configured in `hydro_setting.yml`
+- [ ] Dataset has sufficient data (at least several years)
+
+### DPL-XAJ vs Standard LSTM Comparison
+
+| Aspect | Standard LSTM | DPL-XAJ |
+|--------|--------------|----------|
+| **ANN Input** | Time series + attributes | Attributes only |
+| **ANN Output** | Streamflow directly | XAJ parameters (15) |
+| **Time Series Input** | Multiple variables | P and PET only |
+| **`constant_only`** | False (default) | **True** (required) |
+| **`n_input_features`** | Time vars + attributes | Attributes only |
+| **Physical Model** | None | XAJ |
+| **Interpretability** | Black box | Physical parameters |
+| **Data Requirements** | Large datasets | Smaller datasets OK |
+| **Training Stability** | May need tuning | More stable |
+| **Best Use Case** | Pure prediction | Physical understanding |
+
+### DPL-XAJ Performance Tips
+
+1. **Start with longer warmup**: Use 365 days for stable initial states
+2. **Use Adadelta optimizer**: More stable than Adam for DPL models
+3. **Check parameter ranges**: Use `param_limit_func="clamp"` to keep params valid
+4. **Monitor XAJ outputs**: Check both streamflow and ET predictions
+5. **Compare with XAJ-only**: First calibrate pure XAJ to get baseline
+
+**Debugging workflow**:
+```bash
+# Step 1: Verify data
+python -c "from hydrodataset.camels_us import CamelsUs; ..."
+
+# Step 2: Test with minimal config
+# - Use 1-2 basins
+# - Set train_epoch=2
+# - Check for errors
+
+# Step 3: Scale up gradually
+# - Add more basins
+# - Increase epochs
+# - Monitor validation metrics
+```
 
 ## Working with Custom Data
 

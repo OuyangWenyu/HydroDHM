@@ -35,7 +35,7 @@ def main():
         # DPL model selection
         model_name="DplAttrXaj",
         model_hyperparam={
-            "n_input_features": 19,
+            "n_input_features": 17,
             "n_output_features": 15,  # Number of XAJ model parameters
             "n_hidden_states": 256,
             "kernel_size": 15,
@@ -44,6 +44,7 @@ def main():
         },
         # DPL models often require a specialized dataset
         dataset="DplDataset",
+        constant_only=True, # Using watershed attributes as input for ANN
         # Use a hybrid loss function for multiple outputs
         loss_func="MultiOutLoss",
         loss_param={
@@ -82,7 +83,7 @@ def main():
             StandardVariable.POTENTIAL_EVAPOTRANSPIRATION,
         ],
         # Output variables (streamflow from XAJ, plus a dummy variable)
-        var_out=[StandardVariable.STREAMFLOW, StandardVariable.EVAPOTRANSPIRATION],
+        var_out=[StandardVariable.STREAMFLOW, StandardVariable.POTENTIAL_EVAPOTRANSPIRATION],
         n_output=2,
         train_epoch=2,  # Set a small number of epochs for quick testing
         model_loader={"load_way": "specified", "test_epoch": 2},
