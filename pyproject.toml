@@ -3,7 +3,7 @@ name = "HydroDHM"
 version = "0.1.0"
 description = "A Differentiable Hydrological Model in Data-Scarce Basins"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.13"
 dependencies = [
     "ipykernel",
     "xarray",

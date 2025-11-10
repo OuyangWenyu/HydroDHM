@@ -62,6 +62,8 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Quick Start: quickstart.md
+  - Usage Guide: usage.md
   - Getting Started:
       - Installation: getting-started/installation.md
       - Quick Start: getting-started/quickstart.md
@@ -70,32 +72,9 @@ nav:
       - Overview: models/overview.md
       - XAJ Model:
           - Introduction: models/xaj/introduction.md
-          - Calibration: models/xaj/calibration.md
-          - Evaluation: models/xaj/evaluation.md
-          - Visualization: models/xaj/visualization.md
       - Deep Learning Models:
           - Introduction: models/deep-learning/introduction.md
-          - LSTM: models/deep-learning/lstm.md
-          - DPL-XAJ: models/deep-learning/dpl-xaj.md
-          - Training Guide: models/deep-learning/training.md
-  - Datasets:
-      - Overview: datasets/overview.md
-      - CAMELS: datasets/camels.md
-      - Custom Data: datasets/custom-data.md
-  - Tutorials:
-      - XAJ Calibration: tutorials/xaj-calibration.md
-      - LSTM Training: tutorials/lstm-training.md
-      - DPL-XAJ Training: tutorials/dpl-xaj-training.md
-      - Multi-Basin Analysis: tutorials/multi-basin.md
-  - Advanced:
-      - Hyperparameter Tuning: advanced/hyperparameter-tuning.md
-      - Multi-GPU Training: advanced/multi-gpu.md
-      - Custom Models: advanced/custom-models.md
-      - Troubleshooting: advanced/troubleshooting.md
-  - API Reference:
-      - XAJ API: api/xaj.md
-      - Deep Learning API: api/deep-learning.md
-      - Utilities: api/utilities.md
+          - Detailed Guide: models/deep-learning/detailed-guide.md
   - About:
       - Citation: about/citation.md
       - Contributing: about/contributing.md
