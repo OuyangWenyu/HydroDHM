@@ -57,9 +57,12 @@ override-dependencies = [
 # Allow pre-release versions (e.g., aqua-fetch 1.0.0rc3)
 prerelease = "allow"
 
-# Note: uv will automatically select the appropriate PyTorch version:
-# - macOS: CPU-only version from PyPI (CUDA index doesn't have macOS wheels)
-# - Linux/Windows: CUDA version from extra-index-url when available, falls back to PyPI if not found
+# Note: We use --index-strategy unsafe-best-match in workflow to allow uv to find
+# the best version across all indexes. This is needed because:
+# - PyTorch index has numpy but with versions that don't satisfy all dependencies
+# - PyPI has compatible numpy versions (>=2.2.6,<2.3) that work with scipy and hydromodel
+# - torch and torchvision should come from PyTorch index (CUDA versions for Linux/Windows)
+# - Other packages (numpy, scipy, etc.) should come from PyPI
 
 [[tool.uv.index]]
 name = "pytorch-cuda"
