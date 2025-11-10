@@ -54,6 +54,59 @@ jobs:
                 uv cache clean || true
                 rm -rf .venv || true
                 rm -f uv.lock || true
+
+            - name: Configure for Linux (disable CUDA index)
+              if: matrix.os == 'ubuntu-latest'
+              run: |
+                  # GitHub-hosted Ubuntu runners do not have NVIDIA CUDA drivers,
+                  # so ensure we install CPU wheels for PyTorch-related packages.
+                  python3 << 'EOF'
+                  with open('pyproject.toml', 'r', encoding='utf-8') as f:
+                      lines = f.readlines()
+
+                  new_lines = []
+                  in_pytorch_index_block = False
+
+                  for i, line in enumerate(lines):
+                      if 'extra-index-url' in line and 'pytorch.org' in line:
+                          if line.lstrip().startswith('#'):
+                              new_lines.append(line)
+                          else:
+                              new_lines.append('# ' + line.rstrip() + '  # Disabled for Ubuntu runners\n')
+                          continue
+
+                      if '[[tool.uv.index]]' in line:
+                          if i + 1 < len(lines) and 'pytorch-cuda' in lines[i + 1]:
+                              if line.lstrip().startswith('#'):
+                                  new_lines.append(line)
+                              else:
+                                  in_pytorch_index_block = True
+                                  new_lines.append('# ' + line.rstrip() + '  # Disabled for Ubuntu runners\n')
+                              continue
+
+                      if in_pytorch_index_block:
+                          stripped = line.strip()
+                          if stripped and (stripped.startswith('name') or stripped.startswith('url') or stripped.startswith('explicit')):
+                              if line.lstrip().startswith('#'):
+                                  new_lines.append(line)
+                              else:
+                                  new_lines.append('# ' + line.rstrip() + '  # Disabled for Ubuntu runners\n')
+                              if 'explicit' in line:
+                                  in_pytorch_index_block = False
+                              continue
+                          elif not stripped:
+                              new_lines.append(line)
+                              continue
+                          else:
+                              in_pytorch_index_block = False
+
+                      new_lines.append(line)
+
+                  with open('pyproject.toml', 'w', encoding='utf-8') as f:
+                      f.writelines(new_lines)
+
+                  print("✅ Disabled CUDA-specific indexes for Ubuntu runner")
+                  EOF
                 
             - name: Configure for macOS (remove CUDA index)
               if: matrix.os == 'macOS-latest'
