@@ -15,6 +15,10 @@
         <link rel="canonical" href="https://OuyangWenyu.github.io/HydroDHM/quickstart/">
       
       
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../usage/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -22,7 +26,7 @@
     
     
       
-        <title>multi-basin Tutorial - HydroDHM</title>
+        <title>Quick Start - HydroDHM</title>
       
     
     
@@ -74,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#multi-basin-tutorial" class="md-skip">
+        <a href="#quick-start-guide" class="md-skip">
           Skip to content
         </a>
       
@@ -108,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              multi-basin Tutorial
+              Quick Start
             
           </span>
         </div>
@@ -238,6 +242,46 @@
   
   
   
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Quick Start
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../usage/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Usage Guide
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
   
     
     
@@ -267,86 +311,6 @@
   
   
   Models
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../datasets/overview.md" class="md-tabs__link">
-          
-  
-  
-  Datasets
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../tutorials/xaj-calibration.md" class="md-tabs__link">
-          
-  
-  
-  Tutorials
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../advanced/hyperparameter-tuning.md" class="md-tabs__link">
-          
-  
-  
-  Advanced
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../api/xaj.md" class="md-tabs__link">
-          
-  
-  
-  API Reference
 
         </a>
       </li>
@@ -445,6 +409,443 @@
       
   
   
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Quick Start
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Quick Start
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prerequisites
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-1-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1: Installation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 1: Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-uv-package-manager" class="md-nav__link">
+    <span class="md-ellipsis">
+      Install uv (Package Manager)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clone-and-install-hydrodhm" class="md-nav__link">
+    <span class="md-ellipsis">
+      Clone and Install HydroDHM
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-2-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2: Configuration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 2: Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-global-configuration-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create Global Configuration File
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-download" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data Download
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-3-choose-your-model-and-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 3: Choose Your Model and Run
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 3: Choose Your Model and Run">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-a-xaj-model-physics-based" class="md-nav__link">
+    <span class="md-ellipsis">
+      Option A: XAJ Model (Physics-Based)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Option A: XAJ Model (Physics-Based)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-prepare-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Prepare Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-run-calibration" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Run Calibration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-evaluate-on-test-period" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Evaluate on Test Period
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-generate-visualizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Generate Visualizations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-b-lstm-model-deep-learning" class="md-nav__link">
+    <span class="md-ellipsis">
+      Option B: LSTM Model (Deep Learning)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Option B: LSTM Model (Deep Learning)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-navigate-to-lstm-directory" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Navigate to LSTM Directory
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-train-lstm-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Train LSTM Model
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-c-dpl-xaj-model-hybrid" class="md-nav__link">
+    <span class="md-ellipsis">
+      Option C: DPL-XAJ Model (Hybrid)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Option C: DPL-XAJ Model (Hybrid)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-navigate-to-lstm-directory_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Navigate to LSTM Directory
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-train-dpl-xaj-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Train DPL-XAJ Model
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#understanding-the-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      Understanding the Results
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Understanding the Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#xaj-results-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      XAJ Results Structure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lstm-results-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      LSTM Results Structure
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      Next Steps
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Next Steps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#learn-more" class="md-nav__link">
+    <span class="md-ellipsis">
+      Learn More
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#advanced-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Advanced Usage
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-issues-and-solutions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common Issues and Solutions
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Issues and Solutions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-hydro_settingyml-not-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue: "hydro_setting.yml not found"
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-dataset-download-is-too-slow" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue: "Dataset download is too slow"
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-cuda-out-of-memory-deep-learning" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue: "CUDA out of memory" (Deep Learning)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-sce-ua-calibration-is-very-slow" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue: "SCE-UA calibration is very slow"
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-help" class="md-nav__link">
+    <span class="md-ellipsis">
+      Getting Help
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-reference-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Quick Reference Commands
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Usage Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
   
   
     
@@ -463,10 +864,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
         
           
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -479,8 +880,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             Getting Started
           </label>
@@ -584,10 +985,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   
@@ -600,8 +1001,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             Models
           </label>
@@ -652,10 +1053,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2" >
         
           
-          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
             
   
   
@@ -668,8 +1069,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3_2">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
             <span class="md-nav__icon md-icon"></span>
             XAJ Model
           </label>
@@ -688,75 +1089,6 @@
   
   <span class="md-ellipsis">
     Introduction
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../models/xaj/calibration.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Calibration
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../models/xaj/evaluation.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Evaluation
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../models/xaj/visualization.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Visualization
     
   </span>
   
@@ -797,10 +1129,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_3" >
         
           
-          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
             
   
   
@@ -813,8 +1145,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_3">
             <span class="md-nav__icon md-icon"></span>
             Deep Learning Models
           </label>
@@ -850,58 +1182,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../models/deep-learning/lstm.md" class="md-nav__link">
+      <a href="../models/deep-learning/detailed-guide/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    LSTM
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../models/deep-learning/dpl-xaj.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    DPL-XAJ
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../models/deep-learning/training.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Training Guide
+    Detailed Guide
     
   </span>
   
@@ -915,271 +1201,6 @@
           </ul>
         </nav>
       
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
-        
-          
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    Datasets
-    
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
-            <span class="md-nav__icon md-icon"></span>
-            Datasets
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../datasets/overview.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Overview
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../datasets/camels.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    CAMELS
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../datasets/custom-data.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Custom Data
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
-        
-          
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    Tutorials
-    
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5">
-            <span class="md-nav__icon md-icon"></span>
-            Tutorials
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../tutorials/xaj-calibration.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    XAJ Calibration
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../tutorials/lstm-training.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    LSTM Training
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../tutorials/dpl-xaj-training.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    DPL-XAJ Training
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../tutorials/multi-basin.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Multi-Basin Analysis
-    
-  </span>
-  
-
-      </a>
     </li>
   
 
@@ -1222,7 +1243,7 @@
   
   
   <span class="md-ellipsis">
-    Advanced
+    About
     
   </span>
   
@@ -1232,271 +1253,6 @@
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_6">
-            <span class="md-nav__icon md-icon"></span>
-            Advanced
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../advanced/hyperparameter-tuning.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Hyperparameter Tuning
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../advanced/multi-gpu.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Multi-GPU Training
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../advanced/custom-models.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Custom Models
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../advanced/troubleshooting.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Troubleshooting
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
-        
-          
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    API Reference
-    
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7">
-            <span class="md-nav__icon md-icon"></span>
-            API Reference
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/xaj.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    XAJ API
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/deep-learning.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Deep Learning API
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/utilities.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Utilities
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
-        
-          
-          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    About
-    
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             About
           </label>
@@ -1598,6 +1354,365 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prerequisites
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-1-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1: Installation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 1: Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-uv-package-manager" class="md-nav__link">
+    <span class="md-ellipsis">
+      Install uv (Package Manager)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clone-and-install-hydrodhm" class="md-nav__link">
+    <span class="md-ellipsis">
+      Clone and Install HydroDHM
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-2-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2: Configuration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 2: Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-global-configuration-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create Global Configuration File
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-download" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data Download
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-3-choose-your-model-and-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 3: Choose Your Model and Run
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 3: Choose Your Model and Run">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-a-xaj-model-physics-based" class="md-nav__link">
+    <span class="md-ellipsis">
+      Option A: XAJ Model (Physics-Based)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Option A: XAJ Model (Physics-Based)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-prepare-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Prepare Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-run-calibration" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Run Calibration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-evaluate-on-test-period" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Evaluate on Test Period
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-generate-visualizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Generate Visualizations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-b-lstm-model-deep-learning" class="md-nav__link">
+    <span class="md-ellipsis">
+      Option B: LSTM Model (Deep Learning)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Option B: LSTM Model (Deep Learning)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-navigate-to-lstm-directory" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Navigate to LSTM Directory
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-train-lstm-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Train LSTM Model
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-c-dpl-xaj-model-hybrid" class="md-nav__link">
+    <span class="md-ellipsis">
+      Option C: DPL-XAJ Model (Hybrid)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Option C: DPL-XAJ Model (Hybrid)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-navigate-to-lstm-directory_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Navigate to LSTM Directory
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-train-dpl-xaj-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Train DPL-XAJ Model
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#understanding-the-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      Understanding the Results
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Understanding the Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#xaj-results-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      XAJ Results Structure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lstm-results-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      LSTM Results Structure
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      Next Steps
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Next Steps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#learn-more" class="md-nav__link">
+    <span class="md-ellipsis">
+      Learn More
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#advanced-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Advanced Usage
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-issues-and-solutions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common Issues and Solutions
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Issues and Solutions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-hydro_settingyml-not-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue: "hydro_setting.yml not found"
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-dataset-download-is-too-slow" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue: "Dataset download is too slow"
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-cuda-out-of-memory-deep-learning" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue: "CUDA out of memory" (Deep Learning)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-sce-ua-calibration-is-very-slow" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue: "SCE-UA calibration is very slow"
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-help" class="md-nav__link">
+    <span class="md-ellipsis">
+      Getting Help
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-reference-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Quick Reference Commands
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1615,9 +1730,255 @@
   
 
 
-<h1 id="multi-basin-tutorial">multi-basin Tutorial</h1>
-<p>Step-by-step tutorial coming soon.</p>
-<p>See <a href="../getting-started/quickstart.md">Quick Start</a> for basic examples.</p>
+<h1 id="quick-start-guide">Quick Start Guide</h1>
+<p>Get started with HydroDHM in three simple steps! This guide will walk you through installation, configuration, and running your first hydrological model.</p>
+<h2 id="overview">Overview</h2>
+<p>HydroDHM provides three types of models for streamflow prediction:</p>
+<table>
+<thead>
+<tr>
+<th>Model Type</th>
+<th>Description</th>
+<th>Best For</th>
+<th>Requires GPU</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>XAJ</strong></td>
+<td>Physics-based model (Xin'anjiang)</td>
+<td>Physical interpretability, small datasets</td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>LSTM</strong></td>
+<td>Deep learning neural network</td>
+<td>Large datasets, pure prediction</td>
+<td>Optional</td>
+</tr>
+<tr>
+<td><strong>DPL-XAJ</strong></td>
+<td>Hybrid physics-ML model</td>
+<td>Best of both worlds</td>
+<td>Recommended</td>
+</tr>
+</tbody>
+</table>
+<h2 id="prerequisites">Prerequisites</h2>
+<p>Before starting, ensure you have:
+- Python 3.10 or higher
+- Git (for cloning the repository)
+- At least 20GB free disk space (for CAMELS dataset)
+- (Optional) NVIDIA GPU with CUDA for deep learning models</p>
+<h2 id="step-1-installation">Step 1: Installation</h2>
+<h3 id="install-uv-package-manager">Install uv (Package Manager)</h3>
+<p>We recommend using <a href="https://github.com/astral-sh/uv">uv</a> for fast dependency management:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Windows</label><label for="__tabbed_1_2">macOS/Linux</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">powershell</span> <span class="n">-ExecutionPolicy</span> <span class="n">ByPass</span> <span class="n">-c</span> <span class="s2">&quot;irm https://astral.sh/uv/install.ps1 | iex&quot;</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>curl<span class="w"> </span>-LsSf<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
+</code></pre></div>
+</div>
+</div>
+</div>
+<h3 id="clone-and-install-hydrodhm">Clone and Install HydroDHM</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Clone the repository</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/OuyangWenyu/HydroDHM.git
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nb">cd</span><span class="w"> </span>HydroDHM
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1"># Create virtual environment and install dependencies</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>uv<span class="w"> </span>venv
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1"># Activate virtual environment:</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="c1"># - Windows: .venv\Scripts\activate</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="c1"># - macOS/Linux: source .venv/bin/activate</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>uv<span class="w"> </span>sync
+</code></pre></div>
+<h2 id="step-2-configuration">Step 2: Configuration</h2>
+<h3 id="create-global-configuration-file">Create Global Configuration File</h3>
+<p>Create a file named <code>hydro_setting.yml</code> in your home directory:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Windows</label><label for="__tabbed_2_2">macOS/Linux</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p>Location: <code>C:\Users\YourUsername\hydro_setting.yml</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">local_data_path</span><span class="p">:</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">datasets-origin</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;D:\data&#39;</span><span class="w">  </span><span class="c1"># Update with your data path</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">cache</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;D:\data\.cache&#39;</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<p>Location: <code>~/hydro_setting.yml</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">local_data_path</span><span class="p">:</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">datasets-origin</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;/home/username/data&#39;</span><span class="w">  </span><span class="c1"># Update with your data path</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nt">cache</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;/home/username/data/.cache&#39;</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<h3 id="data-download">Data Download</h3>
+<p><strong>Important</strong>: On first run, HydroDHM will automatically download the CAMELS dataset via <a href="https://github.com/OuyangWenyu/hydrodataset">hydrodataset</a>. This can take 1-3 hours depending on your internet connection.</p>
+<p>To manually download datasets beforehand, see the <a href="https://github.com/OuyangWenyu/hydrodataset#quick-start">hydrodataset documentation</a>.</p>
+<h2 id="step-3-choose-your-model-and-run">Step 3: Choose Your Model and Run</h2>
+<h3 id="option-a-xaj-model-physics-based">Option A: XAJ Model (Physics-Based)</h3>
+<p>Best for beginners and understanding hydrological processes.</p>
+<h4 id="1-prepare-configuration">1. Prepare Configuration</h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nb">cd</span><span class="w"> </span>hydrodhm/run_xaj
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>cp<span class="w"> </span>config_camels.yaml<span class="w"> </span>my_config.yaml
+</code></pre></div>
+<p>Edit <code>my_config.yaml</code> to customize basins and periods:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">data</span><span class="p">:</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">dataset</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;camels_us&quot;</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nt">basin_ids</span><span class="p">:</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;01013500&quot;</span><span class="w">  </span><span class="c1"># Add your basin IDs</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;01022500&quot;</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span><span class="nt">train_period</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;1990-10-01&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;2000-09-30&quot;</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span><span class="nt">test_period</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;2000-10-01&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;2010-09-30&quot;</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span><span class="nt">experiment_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my_first_xaj&quot;</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="nt">model</span><span class="p">:</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;xaj_mz&quot;</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="nt">training</span><span class="p">:</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">  </span><span class="nt">algorithm</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;SCE_UA&quot;</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">  </span><span class="nt">loss</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;RMSE&quot;</span>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="w">  </span><span class="nt">SCE_UA</span><span class="p">:</span>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="w">    </span><span class="nt">rep</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span><span class="w">  </span><span class="c1"># Start with 100 for quick testing</span>
+</code></pre></div>
+<h4 id="2-run-calibration">2. Run Calibration</h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>python<span class="w"> </span>calibrate_xaj_unified.py<span class="w"> </span>--config<span class="w"> </span>my_config.yaml
+</code></pre></div>
+<p>This will:
+- Download CAMELS data (first time only)
+- Calibrate XAJ model parameters using SCE-UA algorithm
+- Save results to <code>results/my_first_xaj/</code></p>
+<h4 id="3-evaluate-on-test-period">3. Evaluate on Test Period</h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>python<span class="w"> </span>evaluate_xaj_unified.py<span class="w"> </span>--exp<span class="w"> </span>my_first_xaj<span class="w"> </span>--eval-period<span class="w"> </span><span class="nb">test</span>
+</code></pre></div>
+<h4 id="4-generate-visualizations">4. Generate Visualizations</h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>python<span class="w"> </span>visualize_unified.py<span class="w"> </span>--eval-dir<span class="w"> </span>results/my_first_xaj/evaluation_test
+</code></pre></div>
+<p>Results will be saved as PNG files in the evaluation directory.</p>
+<h3 id="option-b-lstm-model-deep-learning">Option B: LSTM Model (Deep Learning)</h3>
+<p>Best for high-accuracy predictions with large datasets.</p>
+<h4 id="1-navigate-to-lstm-directory">1. Navigate to LSTM Directory</h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nb">cd</span><span class="w"> </span>hydrodhm/run_lstm
+</code></pre></div>
+<h4 id="2-train-lstm-model">2. Train LSTM Model</h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>python<span class="w"> </span>lstm_camels_example.py
+</code></pre></div>
+<p>This script will:
+- Load CAMELS-US data for 10 basins
+- Train a standard LSTM model
+- Save model checkpoints to <code>results/lstm_camels/</code></p>
+<p><strong>Configuration</strong>: Edit <code>lstm_camels_example.py</code> to customize:
+- Basin IDs (<code>gage_id</code> parameter)
+- Training epochs (<code>train_epoch</code> parameter)
+- Input variables (<code>var_t</code> parameter)
+- GPU usage (<code>ctx</code> parameter: <code>[0]</code> for GPU, <code>[-1]</code> for CPU)</p>
+<h3 id="option-c-dpl-xaj-model-hybrid">Option C: DPL-XAJ Model (Hybrid)</h3>
+<p>Combines physical constraints with deep learning.</p>
+<h4 id="1-navigate-to-lstm-directory_1">1. Navigate to LSTM Directory</h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nb">cd</span><span class="w"> </span>hydrodhm/run_lstm
+</code></pre></div>
+<h4 id="2-train-dpl-xaj-model">2. Train DPL-XAJ Model</h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>python<span class="w"> </span>dpl_xaj_example.py
+</code></pre></div>
+<p>This hybrid model:
+- Uses LSTM to predict XAJ model parameters
+- Runs XAJ model with predicted parameters
+- Combines data-driven learning with physical constraints</p>
+<h2 id="understanding-the-results">Understanding the Results</h2>
+<h3 id="xaj-results-structure">XAJ Results Structure</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>results/my_first_xaj/
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>├── calibration_config.yaml          # Configuration used
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>├── calibration_results.json         # Best parameters found
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>├── 01013500_sceua.csv              # Calibration history
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>├── 01022500_sceua.csv              # Calibration history
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>└── evaluation_test/
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>    ├── basins_metrics.csv          # NSE, KGE, RMSE, etc.
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>    ├── basins_denorm_params.csv    # Calibrated parameters
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>    ├── xaj_evaluation_results.nc    # Simulated streamflow
+<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>    └── figures/
+<a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>        ├── timeseries_01013500.png # Time series plot
+<a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>        ├── scatter_01013500.png    # Scatter plot
+<a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a>        ├── fdc_01013500.png        # Flow duration curve
+<a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a>        └── monthly_01013500.png    # Monthly comparison
+</code></pre></div>
+<h3 id="lstm-results-structure">LSTM Results Structure</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>results/lstm_camels/
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>├── 09_November_202509_47PM_model.pth   # Trained model weights
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>├── 09_November_202509_47PM.json        # Training configuration
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>├── metric_streamflow.csv               # Evaluation metrics
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>├── epoch2flow_pred.nc                  # Predicted streamflow
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>├── epoch2flow_obs.nc                   # Observed streamflow
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>└── dapengscaler_stat.json             # Data normalization stats
+</code></pre></div>
+<h2 id="next-steps">Next Steps</h2>
+<h3 id="learn-more">Learn More</h3>
+<ul>
+<li><strong>Detailed Tutorials</strong>: See <a href="../getting-started/quickstart/">Getting Started Guide</a></li>
+<li><strong>XAJ Model</strong>: Learn about <a href="../models/xaj/introduction/">XAJ model structure and parameters</a></li>
+<li><strong>Deep Learning</strong>: Explore <a href="../models/deep-learning/introduction/">LSTM and DPL-XAJ models</a></li>
+<li><strong>API Reference</strong>: Check the <a href="api/xaj.md">API documentation</a></li>
+</ul>
+<h3 id="advanced-usage">Advanced Usage</h3>
+<ul>
+<li><strong>Custom Datasets</strong>: Learn to use your own data (see Usage Guide below)</li>
+<li><strong>Multi-Basin Calibration</strong>: Scale up to hundreds of basins</li>
+<li><strong>Hyperparameter Tuning</strong>: Optimize model performance</li>
+<li><strong>Cross-Validation</strong>: Implement k-fold validation</li>
+</ul>
+<h2 id="common-issues-and-solutions">Common Issues and Solutions</h2>
+<h3 id="issue-hydro_settingyml-not-found">Issue: "hydro_setting.yml not found"</h3>
+<p><strong>Solution</strong>: Create the file in your home directory with the correct path settings.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Check home directory location</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="nb">echo</span><span class="w"> </span><span class="nv">$HOME</span><span class="w">  </span><span class="c1"># Linux/macOS</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="nb">echo</span><span class="w"> </span>%USERPROFILE%<span class="w">  </span><span class="c1"># Windows</span>
+</code></pre></div>
+<h3 id="issue-dataset-download-is-too-slow">Issue: "Dataset download is too slow"</h3>
+<p><strong>Solution</strong>:
+1. Download datasets manually from <a href="https://github.com/OuyangWenyu/hydrodataset#supported-datasets">hydrodataset sources</a>
+2. Place in the <code>datasets-origin</code> directory specified in <code>hydro_setting.yml</code>
+3. The library will detect existing data and skip download</p>
+<h3 id="issue-cuda-out-of-memory-deep-learning">Issue: "CUDA out of memory" (Deep Learning)</h3>
+<p><strong>Solution</strong>:
+- Reduce <code>batch_size</code> in the configuration
+- Use CPU by setting <code>ctx=[-1]</code>
+- Train fewer basins at once</p>
+<h3 id="issue-sce-ua-calibration-is-very-slow">Issue: "SCE-UA calibration is very slow"</h3>
+<p><strong>Solution</strong>:
+- Reduce <code>rep</code> parameter (e.g., from 5000 to 100 for testing)
+- Reduce <code>ngs</code> parameter (e.g., from 100 to 20)
+- Try faster optimizers: <code>scipy</code> or <code>GA</code></p>
+<h2 id="getting-help">Getting Help</h2>
+<ul>
+<li><strong>Documentation</strong>: <a href="https://OuyangWenyu.github.io/HydroDHM">Full documentation</a></li>
+<li><strong>Issues</strong>: <a href="https://github.com/OuyangWenyu/HydroDHM/issues">GitHub Issues</a></li>
+<li><strong>Dependencies</strong>:</li>
+<li><a href="https://github.com/OuyangWenyu/hydrodataset">hydrodataset</a> - Data access</li>
+<li><a href="https://github.com/OuyangWenyu/hydromodel">hydromodel</a> - XAJ model</li>
+<li><a href="https://github.com/OuyangWenyu/torchhydro">torchhydro</a> - Deep learning models</li>
+</ul>
+<h2 id="quick-reference-commands">Quick Reference Commands</h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># XAJ Model Workflow</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="nb">cd</span><span class="w"> </span>hydrodhm/run_xaj
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>python<span class="w"> </span>calibrate_xaj_unified.py<span class="w"> </span>--config<span class="w"> </span>config_camels.yaml
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>python<span class="w"> </span>evaluate_xaj_unified.py<span class="w"> </span>--exp<span class="w"> </span>experiment_name<span class="w"> </span>--eval-period<span class="w"> </span><span class="nb">test</span>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>python<span class="w"> </span>visualize_unified.py<span class="w"> </span>--eval-dir<span class="w"> </span>results/experiment_name/evaluation_test
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="c1"># LSTM Model</span>
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="nb">cd</span><span class="w"> </span>hydrodhm/run_lstm
+<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a>python<span class="w"> </span>lstm_camels_example.py
+<a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a>
+<a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a><span class="c1"># DPL-XAJ Model</span>
+<a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a><span class="nb">cd</span><span class="w"> </span>hydrodhm/run_lstm
+<a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a>python<span class="w"> </span>dpl_xaj_example.py
+</code></pre></div>
+<hr />
+<p>For detailed usage instructions, see the <a href="../usage/">Usage Guide</a>.</p>
 
 
 
@@ -1640,7 +2001,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="November 9, 2025 14:07:08 UTC">November 9, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="November 10, 2025 05:11:28 UTC">November 10, 2025</span>
   </span>
 
     
