@@ -44,9 +44,10 @@ docs = [
 ]
 
 [tool.uv]
-# For PyTorch with CUDA support, use the PyTorch index
-index-url = "https://download.pytorch.org/whl/cu118"
-extra-index-url = ["https://pypi.org/simple"]
+# Use PyPI as default index (supports all platforms including macOS)
+# CUDA versions will be used on Linux/Windows when available from extra-index-url
+index-url = "https://pypi.org/simple"
+extra-index-url = ["https://download.pytorch.org/whl/cu118"]
 
 # Override dependencies from aqua-fetch to use newer pandas
 override-dependencies = [
@@ -56,10 +57,9 @@ override-dependencies = [
 # Allow pre-release versions (e.g., aqua-fetch 1.0.0rc3)
 prerelease = "allow"
 
-[tool.uv.sources]
-# Specify PyTorch packages to come from the PyTorch index
-torch = { index = "pytorch-cuda" }
-torchvision = { index = "pytorch-cuda" }
+# Note: uv will automatically select the appropriate PyTorch version:
+# - macOS: CPU-only version from PyPI (CUDA index doesn't have macOS wheels)
+# - Linux/Windows: CUDA version from extra-index-url when available, falls back to PyPI if not found
 
 [[tool.uv.index]]
 name = "pytorch-cuda"

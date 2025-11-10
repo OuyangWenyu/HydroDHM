@@ -55,6 +55,55 @@ jobs:
                 rm -rf .venv || true
                 rm -f uv.lock || true
                 
+            - name: Configure for macOS (remove CUDA index)
+              if: matrix.os == 'macOS-latest'
+              run: |
+                  # macOS doesn't support CUDA, remove CUDA index from pyproject.toml
+                  python3 << 'EOF'
+                  with open('pyproject.toml', 'r', encoding='utf-8') as f:
+                      lines = f.readlines()
+                  
+                  new_lines = []
+                  in_pytorch_index_block = False
+                  
+                  for i, line in enumerate(lines):
+                      # Check if this line contains extra-index-url with pytorch.org
+                      if 'extra-index-url' in line and 'pytorch.org' in line:
+                          new_lines.append('# ' + line.rstrip() + '  # Disabled for macOS\n')
+                          continue
+                      
+                      # Check if we're entering the pytorch-cuda index block
+                      if '[[tool.uv.index]]' in line:
+                          # Look ahead to see if this is pytorch-cuda
+                          if i + 1 < len(lines) and 'pytorch-cuda' in lines[i + 1]:
+                              in_pytorch_index_block = True
+                              new_lines.append('# ' + line.rstrip() + '  # Disabled for macOS\n')
+                              continue
+                      
+                      # If we're in the pytorch-cuda index block, comment out the lines
+                      if in_pytorch_index_block:
+                          if line.strip() and (line.strip().startswith('name') or 
+                                             line.strip().startswith('url') or 
+                                             line.strip().startswith('explicit')):
+                              new_lines.append('# ' + line.rstrip() + '  # Disabled for macOS\n')
+                              # Check if this is the last line of the block (explicit = true)
+                              if 'explicit' in line:
+                                  in_pytorch_index_block = False
+                              continue
+                          elif not line.strip():  # Empty line
+                              new_lines.append(line)
+                              continue
+                          else:  # Next section started
+                              in_pytorch_index_block = False
+                      
+                      new_lines.append(line)
+                  
+                  with open('pyproject.toml', 'w', encoding='utf-8') as f:
+                      f.writelines(new_lines)
+                  
+                  print("✅ Removed CUDA index from pyproject.toml for macOS")
+                  EOF
+
             - name: Install dependencies
               run: |
                   uv sync --all-extras
