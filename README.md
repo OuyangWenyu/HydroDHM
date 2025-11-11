@@ -41,7 +41,7 @@ uv venv
 # macOS/Linux: source .venv/bin/activate
 
 # Install dependencies
-uv sync
+uv sync --all-extras
 ```
 
 ### 2. Configuration

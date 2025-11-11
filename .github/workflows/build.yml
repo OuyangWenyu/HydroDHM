@@ -163,7 +163,9 @@ jobs:
                   # This is safe because both PyPI and PyTorch index are trusted sources
                   # This resolves the conflict where PyTorch index has numpy with incompatible versions,
                   # while PyPI has compatible versions that satisfy all dependencies (numpy>=2.2.6,<2.3)
-                  uv sync --all-extras --index-strategy unsafe-best-match
+                  - name: Install dependencies
+                  uv sync --all-extras --index-strategy unsafe-best-match --index-url https://pypi.org/simple
+
 
             - name: Create hydro_setting.yml (Ubuntu)
               if: matrix.os == 'ubuntu-latest'

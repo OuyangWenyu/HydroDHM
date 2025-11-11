@@ -53,7 +53,7 @@ uv venv
 # macOS/Linux: source .venv/bin/activate
 
 # 安装依赖
-uv sync
+uv sync --all-extras
 ```
 
 ### 2. 配置

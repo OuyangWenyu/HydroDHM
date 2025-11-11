@@ -11,7 +11,7 @@ dependencies = [
     "geopandas",
     "matplotlib",
     "scikit-learn",
-    "scipy==1.13.*",
+    "scipy",
     "torch",
     "tensorboard",
     "torchvision",
@@ -38,32 +38,33 @@ dependencies = [
 
 [project.optional-dependencies]
 docs = [
-    "mkdocs>=1.5.0",
-    "mkdocs-material>=9.5.0",
-    "mkdocs-git-revision-date-localized-plugin>=1.2.0",
+    "mkdocs>=1.6.0",
+    "mkdocs-material>=9.5.20", 
+    "mkdocstrings[python]>=0.24.0",
+    "mkdocs-autorefs>=0.5.0",
+    "pymdown-extensions>=10.3",
 ]
 
 [tool.uv]
-# Use PyPI as default index (supports all platforms including macOS)
-# CUDA versions will be used on Linux/Windows when available from extra-index-url
+# ✅ 默认使用 PyPI 主源（用于绝大多数依赖）
 index-url = "https://pypi.org/simple"
+
+# ✅ 仅在安装 torch/torchvision 时才使用 CUDA 源
 extra-index-url = ["https://download.pytorch.org/whl/cu118"]
 
-# Override dependencies from aqua-fetch to use newer pandas
+# ✅ 使用更宽松的索引策略，让 uv 能跨源查找兼容版本
+index-strategy = "unsafe-best-match"
+
+# ✅ 强制覆盖旧 requests 限制，保证 hydrodataset 与 mkdocs-material 兼容
 override-dependencies = [
     "pandas>=2.2.0",
+    "requests>=2.32.4",
 ]
 
-# Allow pre-release versions (e.g., aqua-fetch 1.0.0rc3)
+# ✅ 允许预发布版本（例如 scipy 或 hydromodel 的 rc 版）
 prerelease = "allow"
 
-# Note: We use --index-strategy unsafe-best-match in workflow to allow uv to find
-# the best version across all indexes. This is needed because:
-# - PyTorch index has numpy but with versions that don't satisfy all dependencies
-# - PyPI has compatible numpy versions (>=2.2.6,<2.3) that work with scipy and hydromodel
-# - torch and torchvision should come from PyTorch index (CUDA versions for Linux/Windows)
-# - Other packages (numpy, scipy, etc.) should come from PyPI
-
+# ✅ 注册额外的索引源
 [[tool.uv.index]]
 name = "pytorch-cuda"
 url = "https://download.pytorch.org/whl/cu118"
@@ -72,4 +73,3 @@ explicit = true
 [build-system]
 requires = ["setuptools>=45", "wheel", "setuptools-scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
-
