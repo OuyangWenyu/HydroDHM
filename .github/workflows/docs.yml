@@ -78,10 +78,15 @@ jobs:
           print("✅ Disabled CUDA-specific indexes for docs workflow")
           EOF
 
-      - name: Install dependencies
+      - name: Install dependencies (platform-aware)
         run: |
-          UV_EXTRA_INDEX_URL="" uv sync --all-extras --index-strategy unsafe-best-match --index-url https://pypi.org/simple
-          uv pip install mkdocs-material mkdocs-git-revision-date-localized-plugin mkdocstrings pymdown-extensions
+              if ($env:RUNNER_OS -eq "Windows") {
+              $env:UV_EXTRA_INDEX_URL = ""
+              uv sync --all-extras --index-strategy unsafe-best-match
+              } else {
+              UV_EXTRA_INDEX_URL="" uv sync --all-extras --index-strategy unsafe-best-match
+              }
+              uv pip install mkdocs-material mkdocs-git-revision-date-localized-plugin mkdocstrings pymdown-extensions
 
       - name: Configure git
         run: |

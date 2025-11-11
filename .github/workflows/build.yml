@@ -157,13 +157,14 @@ jobs:
                   print("✅ Removed CUDA index from pyproject.toml for macOS")
                   EOF
 
-            - name: Install dependencies
+            - name: Install dependencies (platform-aware)
               run: |
-                  # Use unsafe-best-match strategy to allow uv to find the best version across all indexes
-                  # This is safe because both PyPI and PyTorch index are trusted sources
-                  # This resolves the conflict where PyTorch index has numpy with incompatible versions,
-                  # while PyPI has compatible versions that satisfy all dependencies (numpy>=2.2.6,<2.3)
-                  UV_EXTRA_INDEX_URL="" uv sync --all-extras --index-strategy unsafe-best-match --index-url https://pypi.org/simple
+                    if ($env:RUNNER_OS -eq "Windows") {
+                    $env:UV_EXTRA_INDEX_URL = ""
+                    uv sync --all-extras --index-strategy unsafe-best-match
+                    } else {
+                    UV_EXTRA_INDEX_URL="" uv sync --all-extras --index-strategy unsafe-best-match
+                    }
 
 
             - name: Create hydro_setting.yml (Ubuntu)
