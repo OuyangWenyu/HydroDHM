@@ -157,14 +157,17 @@ jobs:
                   print("✅ Removed CUDA index from pyproject.toml for macOS")
                   EOF
 
-            - name: Install dependencies (platform-aware)
+            - name: Install dependencies (Windows)
+              if: runner.os == 'Windows'
               run: |
-                    if ($env:RUNNER_OS -eq "Windows") {
                     $env:UV_EXTRA_INDEX_URL = ""
                     uv sync --all-extras --index-strategy unsafe-best-match
-                    } else {
+
+            - name: Install dependencies (Linux/macOS)
+              if: runner.os != 'Windows'
+              run: |
                     UV_EXTRA_INDEX_URL="" uv sync --all-extras --index-strategy unsafe-best-match
-                    }
+
 
 
             - name: Create hydro_setting.yml (Ubuntu)
