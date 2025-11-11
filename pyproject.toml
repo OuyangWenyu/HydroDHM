@@ -39,33 +39,35 @@ dependencies = [
 [project.optional-dependencies]
 docs = [
     "mkdocs>=1.6.0",
-    "mkdocs-material>=9.5.20", 
+    "mkdocs-material>=9.5.20",
     "mkdocstrings[python]>=0.24.0",
     "mkdocs-autorefs>=0.5.0",
     "pymdown-extensions>=10.3",
 ]
 
+# ✅ CUDA 11.8 变体（需要时显式选择）
+cuda118 = [
+    # 版本号举例，请按你需要调整
+    "torch==2.4.1+cu118",
+    "torchvision==0.19.1+cu118",
+    # 不要手动加 nvidia-cublas-cu12；它会由上面两者的依赖从 PyPI 解析到正确的 linux wheel
+]
+
 [tool.uv]
 index-url = "https://pypi.org/simple"
-
-# ✅ 在本地开发时启用 CUDA 源
-extra-index-url = ["https://download.pytorch.org/whl/cu118"]
 index-strategy = "unsafe-best-match"
-
-# ✅ 强制覆盖旧 requests 限制，保证 hydrodataset 与 mkdocs-material 兼容
+prerelease = "allow"
 override-dependencies = [
     "pandas>=2.2.0",
     "requests>=2.32.4",
 ]
 
-# ✅ 允许预发布版本（例如 scipy 或 hydromodel 的 rc 版）
-prerelease = "allow"
-
-# ✅ 注册额外的索引源
+# ✅ 将 CUDA 仓库设为 explicit，只有指定 --index 才会用
 [[tool.uv.index]]
 name = "pytorch-cuda"
 url = "https://download.pytorch.org/whl/cu118"
 explicit = true
+
 
 [build-system]
 requires = ["setuptools>=45", "wheel", "setuptools-scm[toml]>=6.2"]
