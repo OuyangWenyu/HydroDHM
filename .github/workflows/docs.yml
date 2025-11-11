@@ -28,66 +28,19 @@ jobs:
       - name: Setup Python
         run: uv python install 3.12
 
-      - name: Disable CUDA index on Ubuntu
-        run: |
-          python3 << 'EOF'
-          with open('pyproject.toml', 'r', encoding='utf-8') as f:
-              lines = f.readlines()
-
-          new_lines = []
-          in_pytorch_index_block = False
-
-          for i, line in enumerate(lines):
-              if 'extra-index-url' in line and 'pytorch.org' in line:
-                  if line.lstrip().startswith('#'):
-                      new_lines.append(line)
-                  else:
-                      new_lines.append('# ' + line.rstrip() + '  # Disabled for docs workflow\n')
-                  continue
-
-              if '[[tool.uv.index]]' in line:
-                  if i + 1 < len(lines) and 'pytorch-cuda' in lines[i + 1]:
-                      if line.lstrip().startswith('#'):
-                          new_lines.append(line)
-                      else:
-                          in_pytorch_index_block = True
-                          new_lines.append('# ' + line.rstrip() + '  # Disabled for docs workflow\n')
-                      continue
-
-              if in_pytorch_index_block:
-                  stripped = line.strip()
-                  if stripped and (stripped.startswith('name') or stripped.startswith('url') or stripped.startswith('explicit')):
-                      if line.lstrip().startswith('#'):
-                          new_lines.append(line)
-                      else:
-                          new_lines.append('# ' + line.rstrip() + '  # Disabled for docs workflow\n')
-                      if 'explicit' in line:
-                          in_pytorch_index_block = False
-                      continue
-                  elif not stripped:
-                      new_lines.append(line)
-                      continue
-                  else:
-                      in_pytorch_index_block = False
-
-              new_lines.append(line)
-
-          with open('pyproject.toml', 'w', encoding='utf-8') as f:
-              f.writelines(new_lines)
-
-          print("✅ Disabled CUDA-specific indexes for docs workflow")
-          EOF
-
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
               $env:UV_EXTRA_INDEX_URL = ""
-              uv sync --all-extras --index-strategy unsafe-best-match
+              uv sync --all-extras --index-strategy unsafe-best-match --index-url https://pypi.org/simple --no-extra-index-urls
 
       - name: Install dependencies (Linux/macOS)
         if: runner.os != 'Windows'
         run: |
-              UV_EXTRA_INDEX_URL="" uv sync --all-extras --index-strategy unsafe-best-match
+              UV_EXTRA_INDEX_URL="" uv sync --all-extras \
+              --index-url https://pypi.org/simple \
+              --index-strategy unsafe-best-match \
+              --no-extra-index-urlsh
 
       - name: Configure git
         run: |
