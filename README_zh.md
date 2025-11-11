@@ -52,7 +52,7 @@ uv venv
 # Windows: .venv\Scripts\activate
 # macOS/Linux: source .venv/bin/activate
 
-# 安装依赖
+# 同步安装依赖
 uv sync --all-extras
 ```
 

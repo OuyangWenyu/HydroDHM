@@ -46,13 +46,10 @@ docs = [
 ]
 
 [tool.uv]
-# ✅ 默认使用 PyPI 主源（用于绝大多数依赖）
 index-url = "https://pypi.org/simple"
 
-# ✅ 仅在安装 torch/torchvision 时才使用 CUDA 源
+# ✅ 在本地开发时启用 CUDA 源
 extra-index-url = ["https://download.pytorch.org/whl/cu118"]
-
-# ✅ 使用更宽松的索引策略，让 uv 能跨源查找兼容版本
 index-strategy = "unsafe-best-match"
 
 # ✅ 强制覆盖旧 requests 限制，保证 hydrodataset 与 mkdocs-material 兼容
