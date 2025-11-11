@@ -1,10 +1,10 @@
 <!--
  * @Author: Wenyu Ouyang
  * @Date: 2025-10-29
- * @LastEditTime: 2025-11-09
- * @LastEditors: Wenyu Ouyang
+ * @LastEditTime: 2025-11-11 18:57:40
+ * @LastEditors: zhuanglaihong
  * @Description: 中文版 README
- * @FilePath: \HydroDHM\README_zh.md
+ * @FilePath: /zlh/zhuanglaihong/HydroDHM/README_zh.md
  * Copyright (c) 2023-2025 Wenyu Ouyang. All rights reserved.
 -->
 
@@ -58,7 +58,7 @@ uv sync --all-extras
 
 ### 2. 配置
 
-在用户主目录创建`hydro_setting.yml`：
+在用户根目录创建`hydro_setting.yml`：
 
 ```yaml
 local_data_path:
@@ -80,7 +80,10 @@ python hydrodhm/data_tools/download_camels.py --list
 python hydrodhm/data_tools/download_camels.py camels_us
 
 # 或指定下载路径
-python hydrodhm/data_tools/download_camels.py camels_us --data-path D:/data/
+python hydrodhm/data_tools/download_camels.py camels_us --data-path path/to/data/CAMELS_US
+
+# 下载后生成缓存的nc文件
+python hydrodhm/data_tools/download_camels.py camels_us --data-path path/to/data/camels --build-cache 
 ```
 
 **注意：** 首次下载需要 1-3 小时（约 15GB）。数据会缓存为 NetCDF 文件，后续访问即时加载。
@@ -91,10 +94,7 @@ python hydrodhm/data_tools/download_camels.py camels_us --data-path D:/data/
 
 **方式C：手动下载**
 
-可能由于网络原因无法自动下载，如果可以您需要手动下载：
-1. 访问 [CAMELS-US on Zenodo](https://zenodo.org/records/15529996)
-2. 下载并解压到您的 `datasets-origin` 目录
-3. 确保目录结构为：`datasets-origin/CAMELS_US/...` (这里的camels_us数据集路径名要大写)
+可能由于网络原因无法自动下载。如果自动下载失败，您可以手动从官方源下载数据集，然后使用我们的工具进行处理。详细的逐步说明，请参阅数据工具文档中的[手动下载指南](hydrodhm/data_tools/README.md#manual-download-guide)。
 
 ### 4. 准备配置文件
 
@@ -117,6 +117,8 @@ cp config_custom.yaml my_config.yaml
 编辑`my_config.yaml`设置您的流域ID、时间段和参数。
 
 ### 5. 运行XAJ模型工作流
+
+第一次运行脚本的时候可能会花费比较长的时间加载数据到缓存目录！
 
 **步骤1：率定模型**
 ```bash

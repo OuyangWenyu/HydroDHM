@@ -48,11 +48,19 @@ uv sync --all-extras
 
 Create `hydro_setting.yml` in your home directory:
 
+> Typical locations for the home directory:
+> - On Windows: `C:\Users\<YourUsername>`
+> - On Linux/macOS: `/home/<yourusername>` or `/Users/<yourusername>`
+
+`hydro_setting.yml` must contain the following paths:
+
 ```yaml
 local_data_path:
-  datasets-origin: 'D:\data'  # Update with your data path
-  cache: 'D:\data\.cache'
+  datasets-origin: 'D:\data'  # The base directory for all hydro datasets
+  cache: 'D:\data\.cache'     # cache directory    
 ```
+  > Note: The CAMELS_US dataset folder must be named `CAMELS_US` (uppercase), and should be placed at `datasets-origin/CAMELS_US` (e.g., `D:\data\CAMELS_US`).
+  > Do NOT use lowercase or other variations in the folder name, or the data tools may fail to recognize the dataset.
 
 ### 3. Download CAMELS Dataset
 
@@ -67,8 +75,11 @@ python hydrodhm/data_tools/download_camels.py --list
 # Download CAMELS-US (uses path from hydro_setting.yml)
 python hydrodhm/data_tools/download_camels.py camels_us
 
-# Or download to a specific path
-python hydrodhm/data_tools/download_camels.py camels_us --data-path D:/data/camels
+# Download to a specific path (It will automatically create `CAMELS_US` dataset folder)
+python hydrodhm/data_tools/download_camels.py camels_us --data-path path/to/data/camels
+
+# After downloading, convert the data into a cached NC format file (uses path from hydro_setting.yml)
+python hydrodhm/data_tools/download_camels.py camels_us --data-path path/to/data/camels --build-cache 
 ```
 
 **Note:** First download takes 1-3 hours (~15GB). Data is cached as NetCDF files for instant future access.
@@ -79,10 +90,7 @@ Skip this step and data will be automatically downloaded when you first run the 
 
 **Option C: Manual Download**
 
-Due to network issues, automatic download may not be possible. If possible, you will need to manually download:
-1. Visit [CAMELS-US on Zenodo](https://zenodo.org/records/15529996)
-2. Download and extract to your `datasets-origin` directory
-3. Ensure the structure matches: `datasets-origin/CAMELS_US/...` (The "camels_us" dataset path here should be capitalized)
+Due to network issues, automatic download may not be possible. If automatic download fails, you can manually download the dataset from the official source and process it using our tools. For detailed step-by-step instructions, see the [Manual Download Guide](hydrodhm/data_tools/README.md#manual-download-guide) in the data tools documentation.
 
 ### 4. Prepare Configuration File
 
@@ -104,6 +112,8 @@ For detailed examples, refer to `config_camels.yaml` and `config_custom.yaml`.
 Edit `my_config.yaml` to set your basin IDs, time periods, and parameters.
 
 ### 5. Run XAJ Model Workflow
+
+The first time the script runs, it may take a relatively long time to load data into the cache directory.
 
 **Step 1: Calibrate the model**
 ```bash

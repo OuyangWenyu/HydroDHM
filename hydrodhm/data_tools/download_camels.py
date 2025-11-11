@@ -26,6 +26,7 @@ import argparse
 import sys
 import os
 from pathlib import Path
+import zipfile
 
 try:
     from hydrodataset import SETTING
@@ -124,6 +125,70 @@ def list_datasets():
     print("\n" + "=" * 80)
     print(f"Total: {len(CAMELS_DATASETS)} datasets available")
     print("=" * 80 + "\n")
+
+
+def extract_all_zips_in_dir(data_path):
+    """Extract all zip files in the specified data path to respective folders."""
+    if not os.path.isdir(data_path):
+        print(f"❌ Data path {data_path} does not exist or is not a directory.")
+        return 1
+    zip_files = [f for f in os.listdir(data_path) if f.lower().endswith('.zip')]
+    if not zip_files:
+        print(f"✅ No zip files found in {data_path}. Nothing to extract.")
+        return 0
+    for zipf in zip_files:
+        zip_path = os.path.join(data_path, zipf)
+        folder_name = os.path.splitext(zipf)[0]
+        extract_dir = os.path.join(data_path, folder_name)
+        if os.path.exists(extract_dir) and os.listdir(extract_dir):
+            print(f"📁 Folder '{folder_name}' already exists and is not empty. Skipping extraction.")
+            continue
+        print(f"🗜️  Extracting {zipf} ...")
+        try:
+            with zipfile.ZipFile(zip_path, 'r') as zf:
+                zf.extractall(extract_dir)
+            print(f"✅ Extracted '{zipf}' to '{folder_name}/'")
+        except Exception as e:
+            print(f"❌ Failed to extract {zipf}: {e}")
+    print("\n✅ All zip files processed. Check structure like:")
+    print("""
+CAMELS_US/
+├── basin_set_full_res/
+├── basin_timeseries_v1p2_metForcing_obsFlow/
+├── basin_timeseries_v1p2_modelOutput_nldas/
+├── basin_timeseries_v1p2_modelOutput_daymet/
+├── basin_timeseries_v1p2_modelOutput_maurer/
+└── ...
+    (plus .txt/.pdf/.xlsx metadata files)
+""")
+    return 0
+
+
+def print_cache_summary(ds, data_path):
+    basin_ids = ds.read_object_ids()
+    # Prepare features (limit to first 5 with total count)
+    dyn = getattr(ds, 'available_dynamic_features', None)
+    sta = getattr(ds, 'available_static_features', None)
+    def _fmt_features(feat):
+        try:
+            total = len(feat)
+            return f"{list(feat)[:5]} (total {total})"
+        except Exception:
+            return str(feat)
+
+    # Resolve cache path from hydro_setting.yml
+    try:
+        from hydrodataset import SETTING
+        cache_path = SETTING.get('local_data_path', {}).get('cache', data_path)
+    except Exception:
+        cache_path = data_path
+
+    print("\n✅ Cache built successfully!")
+    print(f"Basin sample: {basin_ids[:5]} (total {len(basin_ids)})")
+    print(f"Default time range: {getattr(ds, 'default_t_range', None)}")
+    print(f"Dynamic features: {_fmt_features(dyn)}")
+    print(f"Static features: {_fmt_features(sta)}")
+    print(f"\nData is cached under: {cache_path}\nYou can now proceed with model calibration (see run_xaj example).\n")
 
 
 def download_dataset(dataset_name: str, data_path: str = None, force: bool = False):
@@ -360,12 +425,59 @@ How it works:
         help="Force re-download even if data already exists"
     )
 
+    parser.add_argument(
+        "--extract-only",
+        action="store_true",
+        help="Only extract zip files in the data directory, do not download"
+    )
+
+    parser.add_argument(
+        "--build-cache",
+        action="store_true",
+        help="Only verify data structure and build .nc cache without download or extraction"
+    )
+
     return parser.parse_args()
 
 
 def main():
     """Main entry point."""
     args = parse_arguments()
+
+    if args.build_cache:
+        # Determine data_path as normal
+        data_path = args.data_path
+        if data_path is None:
+            try:
+                from hydrodataset import SETTING
+                data_path = SETTING["local_data_path"]["datasets-origin"]
+                print(f"[Info] --build-cache: Using default data path from hydro_setting.yml: {data_path}")
+            except Exception:
+                print("❌ Could not determine data_path from hydro_setting.yml. Please specify with --data-path.")
+                return 1
+        # Ensure dataset name
+        if not args.dataset:
+            print("❌ --build-cache requires a dataset name like camels_us.")
+            return 1
+        # Import and build cache (instantiate dataset)
+        dataset_info = CAMELS_DATASETS[args.dataset]
+        import importlib
+        module = importlib.import_module(dataset_info["module"])
+        dataset_class = getattr(module, dataset_info["class"])
+        try:
+            ds = dataset_class(data_path, download=False)  # only check/build cache
+            print_cache_summary(ds, data_path)
+            return 0
+        except Exception as e:
+            print(f"❌ Failed to build cache: {e}")
+            return 1
+
+    if args.extract_only:
+        # Perform only extraction then exit
+        if not args.data_path:
+            print("❌ Please specify --data-path for extraction.")
+            return 1
+        return extract_all_zips_in_dir(args.data_path)
 
     try:
         if args.list:
@@ -387,11 +499,24 @@ def main():
             print("\n" + "=" * 80 + "\n")
             return 1
 
-        return download_dataset(
+        ret = download_dataset(
             args.dataset,
             data_path=args.data_path,
             force=args.force
         )
+        # After downloading, extract zip files if present
+        if args.data_path and os.path.exists(args.data_path):
+            extract_all_zips_in_dir(args.data_path)
+            try:
+                dataset_info = CAMELS_DATASETS[args.dataset]
+                import importlib
+                module = importlib.import_module(dataset_info["module"])
+                dataset_class = getattr(module, dataset_info["class"])
+                ds = dataset_class(args.data_path, download=False)
+                print_cache_summary(ds, args.data_path)
+            except Exception as e:
+                print(f"⚠️ Can not build cache when initializing dataset: {e}")
+        return ret
 
     except KeyboardInterrupt:
         print("\n\n⚠️  Download interrupted by user")
