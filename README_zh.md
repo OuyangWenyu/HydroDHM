@@ -73,8 +73,14 @@ local_data_path:
 使用我们的下载工具自动获取 CAMELS-US 数据：
 
 ```bash
+# 激活虚拟环境或打开另一个终端
+source .venv/bin/activate  # macOS/Linux
+
 # 列出所有可用的 CAMELS 数据集
 python hydrodhm/data_tools/download_camels.py --list
+
+# 如果提示缺少模块，请使用 uv 运行
+uv run hydrodhm/data_tools/download_camels.py --list
 
 # 下载 CAMELS-US（使用 hydro_setting.yml 中的路径）
 python hydrodhm/data_tools/download_camels.py camels_us

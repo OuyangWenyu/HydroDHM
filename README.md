@@ -69,8 +69,14 @@ local_data_path:
 Use our download tool to automatically fetch CAMELS-US data:
 
 ```bash
+# activate the virtual environment or open another terminal
+source .venv/bin/activate  # macOS/Linux
+
 # List available CAMELS datasets
 python hydrodhm/data_tools/download_camels.py --list
+
+# If it still mentions missing module, please use uv run
+uv run hydrodhm/data_tools/download_camels.py --list
 
 # Download CAMELS-US (uses path from hydro_setting.yml)
 python hydrodhm/data_tools/download_camels.py camels_us
