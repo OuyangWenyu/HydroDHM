@@ -9,13 +9,13 @@ data:
 
   # Basin selection
   basin_ids:
-    - "01013500"  # Add more basin IDs as needed
-    - "01022500"
-    # - "01030500"
+    - "14301000"  # Add more basin IDs as needed
+    # - "14306500"
+    # - "14325000"
 
   # Time periods
-  train_period: ["1990-10-01", "2000-09-30"]  # Training period
-  test_period: ["2000-10-01", "2010-09-30"]   # Testing period
+  train_period: ["1981-01-01", "2009-12-31"]  # Training period
+  test_period: ["2010-01-01", "2014-12-31"]   # Testing period
 
   # Data parameters
   warmup_length: 365  # Warmup period in days
@@ -56,7 +56,7 @@ training:
   # SCE_UA algorithm parameters (Recommended for global optimization)
   SCE_UA:
     random_seed: 1234
-    rep: 100       # Maximum number of model evaluations
+    rep: 1000       # Maximum number of model evaluations
     ngs: 100        # Number of complexes (should be > number of parameters)
     kstop: 50       # Stop criterion (number of evolution loops)
     peps: 0.1       # Convergence threshold (0.1 = 0.1% change)
