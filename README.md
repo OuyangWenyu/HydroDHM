@@ -119,7 +119,9 @@ Edit `my_config.yaml` to set your basin IDs, time periods, and parameters.
 
 ### 5. Run XAJ Model Workflow
 
-The first time the script runs, it may take a relatively long time to load data into the cache directory.
+>**Training time note**:
+The SCE-UA calibration process is computationally intensive.
+For a typical 30-year training period, running 1000 iterations for a single basin takes around 20 minutes on a standard CPU workstation.
 
 **Step 1: Calibrate the model**
 ```bash

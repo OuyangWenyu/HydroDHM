@@ -92,7 +92,7 @@ python hydrodhm/data_tools/download_camels.py camels_us --data-path path/to/data
 python hydrodhm/data_tools/download_camels.py camels_us --data-path path/to/data/camels --build-cache 
 ```
 
-**注意：** 首次下载需要 1-3 小时（约 15GB）。数据会缓存为 NetCDF 文件，后续访问即时加载。
+**注意：** 首次下载需要 1-3 小时（压缩包约 15GB ，解压后约 60GB）。数据会缓存为 NetCDF 文件，后续访问即时加载。
 
 **方式B：首次运行时自动下载**
 
@@ -124,7 +124,9 @@ cp config_custom.yaml my_config.yaml
 
 ### 5. 运行XAJ模型工作流
 
-第一次运行脚本的时候可能会花费比较长的时间加载数据到缓存目录！
+>**训练时间说明**：
+SCE-UA校准过程计算量巨大。
+对于典型的30年训练周期，单个流域进行1000次迭代在标准CPU工作站上大约需要20分钟。
 
 **步骤1：率定模型**
 ```bash
