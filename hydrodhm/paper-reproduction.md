@@ -4,7 +4,7 @@ This document provides instructions to reproduce the experiments presented in th
 
 ## Prerequisites
 
-Please ensure you have completed the Installation, Configuration and Download CAMELS Dataset steps as outlined in the [HydroDHM README](../README.md).
+Please ensure you have completed the Installation, Configuration and Download CAMELS Dataset steps as outlined in the [HydroDHM README](../README.md). And we use NVIDIA RTX 5000 Ada Generation GPU for all experiments.
 
 ## Single Basin LSTM
 
