@@ -1,0 +1,134 @@
+# XAJ Model Calibration Configuration - CAMELS Dataset Example
+# This configuration file demonstrates how to calibrate XAJ model using CAMELS dataset
+
+data:
+  # Dataset configuration
+  dataset: "camels"  # CAMELS dataset type (camels_us, camels_gb, camels_aus, etc.)
+  path: null            # Path to CAMELS data directory(null = auto-detect "datasets-origin" from hydro_setting.yml)
+                        # Or specify parent directory: "D:\\data"
+
+  # Basin selection
+  basin_ids:
+    - "12025000"  # Add more basin IDs as needed
+    # - "01022500"
+    # - "01030500"
+
+  # Time periods
+  train_period: ["1981-01-01", "2009-12-31"]  # Training period
+  test_period: ["2010-01-01", "2014-12-31"]   # Testing period
+
+  # Data parameters
+  warmup_length: 365  # Warmup period in days
+  variables:  # Input variables (CAMELS standardized names)
+    - "prcp"                  # Precipitation
+    - "PET"  # Potential ET
+    - "dayl"
+    - "srad"
+    - "tmax"
+    - "tmin"
+    - "vp"
+    - "streamflow"                     # Observed streamflow
+
+  # Output configuration
+  output_dir: "results/xaj_results/12025000"  # Output directory
+  experiment_name: "xaj_camels_us"  # Experiment name
+
+  # Optional: Cross-validation
+  # cv_fold: 5  # Number of folds for cross-validation
+
+model:
+  # Model type
+  name: "xaj"  # XAJ model variant (xaj, xaj_mz)
+
+  # Model parameters
+  params:
+    source_type: "sources"    # Source data type
+    source_book: "HF"         # Parameter book: "HF" (Hydrological Forecast) or "EH" (Engineering Hydrology)
+    kernel_size: 15           # Routing kernel size
+    time_interval_hours: 24   # Time interval in hours
+
+training:
+  # Calibration algorithm
+  algorithm: "SCE_UA"  # Options: "SCE_UA", "GA", "scipy"
+
+  # Loss function
+  loss: "RMSE"  # Options: "RMSE", "NSE", "KGE"
+
+  # ==============================================================================
+  # ALGORITHM CONFIGURATIONS (Only one algorithm will be used based on 'algorithm' above)
+  # ==============================================================================
+
+  # SCE_UA algorithm parameters (Recommended for global optimization)
+  SCE_UA:
+    random_seed: 1234
+    rep: 1000       # Maximum number of model evaluations
+    ngs: 100        # Number of complexes (should be > number of parameters)
+    kstop: 50       # Stop criterion (number of evolution loops)
+    peps: 0.1       # Convergence threshold (0.1 = 0.1% change)
+    pcento: 0.1     # Percentage of population for convergence check
+
+  # GA (Genetic Algorithm) parameters
+  GA:
+    random_seed: 1234
+    run_counts: 2      # Number of independent runs
+    pop_num: 50        # Population size
+    cross_prob: 0.5    # Crossover probability
+    mut_prob: 0.5      # Mutation probability
+    save_freq: 1       # Save frequency (generations)
+    # Optional: specify max generations
+    # max_generation: 100
+
+  # scipy optimization parameters
+  scipy:
+    method: "differential_evolution"  # scipy method to use
+    # Options: "differential_evolution", "dual_annealing", "shgo", "basinhopping"
+
+    # Parameters for differential_evolution
+    maxiter: 10      # Maximum iterations
+    popsize: 15        # Population size multiplier
+    tol: 0.01          # Tolerance for convergence
+    atol: 0.0          # Absolute tolerance
+    seed: 1234         # Random seed
+
+    # For dual_annealing:
+    # maxiter: 1000
+    # initial_temp: 5230.0
+    # restart_temp_ratio: 2e-05
+    # visit: 2.62
+    # accept: -5.0
+    # seed: 1234
+
+evaluation:
+  # Evaluation metrics
+  metrics:
+    - "NSE"   # Nash-Sutcliffe Efficiency
+    - "KGE"   # Kling-Gupta Efficiency
+    - "RMSE"  # Root Mean Square Error
+    - "PBIAS" # Percent Bias
+
+# ==============================================================================
+# ALGORITHM SELECTION GUIDE
+# ==============================================================================
+#
+# SCE_UA (Shuffled Complex Evolution - Recommended)
+# - Pros: Robust, good global search, proven in hydrology
+# - Cons: Can be slow for large parameter spaces
+# - Best for: Most hydrological calibration tasks
+# - Typical settings: rep=5000-10000, ngs=100
+#
+# GA (Genetic Algorithm)
+# - Pros: Good for discrete/complex parameter spaces
+# - Cons: May need multiple runs for reliability
+# - Best for: When SCE-UA is too slow, exploratory calibration
+# - Typical settings: pop_num=50-100, run_counts=2-5
+#
+# scipy (Scientific Python Optimizers)
+# - Pros: Fast, well-tested implementations
+# - Cons: May get stuck in local minima
+# - Best for: Quick calibration, refining existing parameters
+# - Methods:
+#   * differential_evolution: Global optimizer (recommended)
+#   * dual_annealing: Simulated annealing variant
+#   * shgo: Simplicial homology global optimization
+#   * basinhopping: Basin-hopping algorithm
+
