@@ -68,7 +68,7 @@ def read_pred(model, gage_id, t_range):
 
 if __name__ == "__main__":
     gage_id = "12025000"
-    time_period = ["2012-04-01", "2012-05-15"]
+    time_period = ["2012-01-01", "2012-03-31"]
     tp = read_tp(gage_id, time_period)
     obs = read_obs("xaj", gage_id, time_period)
     xaj_pred = read_pred("xaj", gage_id, time_period)
@@ -88,7 +88,7 @@ if __name__ == "__main__":
     dplxaj_pred_q = dplxaj_pred["streamflow"].values.squeeze()
     dplnnxaj_pred_q = dplnnxaj_pred["streamflow"].values.squeeze()
 
-    # 绘图
+    # plot
     fig, ax = plot_rainfall_runoff(
         t=t,
         p=p,
@@ -113,7 +113,10 @@ if __name__ == "__main__":
     plt_result_dir = os.path.join(result_dir, "figures")
     os.makedirs(plt_result_dir, exist_ok=True)
     plt.savefig(
-        os.path.join(plt_result_dir, f"rainfall_runoff_{gage_id}.png"),
+        os.path.join(
+            plt_result_dir,
+            f"rainfall_runoff_{gage_id}_{time_period[0]}_{time_period[1]}.png",
+        ),
         dpi=600,
         bbox_inches="tight",
     )
