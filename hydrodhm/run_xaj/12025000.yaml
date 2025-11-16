@@ -14,7 +14,7 @@ data:
     # - "01030500"
 
   # Time periods
-  train_period: ["1981-01-01", "2009-12-31"]  # Training period
+  train_period: ["1981-01-01", "2004-12-31"]  # Training period
   test_period: ["2010-01-01", "2014-12-31"]   # Testing period
 
   # Data parameters
@@ -61,7 +61,7 @@ training:
   # SCE_UA algorithm parameters (Recommended for global optimization)
   SCE_UA:
     random_seed: 1234
-    rep: 1000       # Maximum number of model evaluations
+    rep: 100       # Maximum number of model evaluations
     ngs: 100        # Number of complexes (should be > number of parameters)
     kstop: 50       # Stop criterion (number of evolution loops)
     peps: 0.1       # Convergence threshold (0.1 = 0.1% change)

@@ -84,7 +84,7 @@ def main():
         # sampler="KuaiSampler",
         scaler="DapengScaler",
         # Model loading configuration for evaluation
-        model_loader={"load_way": "specified", "test_epoch": 20},
+        model_loader={"load_way": "best"},
         # Date ranges for training, validation, and testing
         train_period=["1980-01-01", "2004-12-31"],
         valid_period=["2005-01-01", "2009-12-31"],
@@ -92,10 +92,15 @@ def main():
         # Loss function and optimizer
         loss_func="RMSESum",
         opt="Adam",
-        opt_param={"lr": 0.01},
+        opt_param={"lr": 0.005},
         lr_scheduler={"lr_factor": 0.95},
+        # Early stopping configuration
+        early_stopping=True,
+        patience=5,
         # Tensor layout
         which_first_tensor="sequence",
+        # metrics
+        metrics=["NSE", "KGE", "RMSE", "Corr", "Bias", "FHV", "FLV", "R2"],
     )
 
     # 2. Load default config and update it with your parameters
