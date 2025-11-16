@@ -32,6 +32,10 @@
 - 全面的评估指标和发表级质量的可视化图表
 - 基于[hydromodel](https://github.com/OuyangWenyu/hydromodel)和[torchhydro](https://github.com/OuyangWenyu/torchhydro)构建
 
+## 论文复现
+
+请在复现论文中的实验之前，先完成以下前三个步骤。详细说明请参阅[论文复现指南](hydrodhm/paper-reproduction.md)。
+
 ## 快速开始
 
 ### 1. 安装

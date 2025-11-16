@@ -109,7 +109,7 @@ def main():
         # Data components
         dataset="StreamflowDataset",
         # sampler="KuaiSampler",
-        scaler="DapengScaler",
+        scaler="StandardScaler",
         # Model loading configuration for evaluation
         model_loader={"load_way": "best"},
         # Date ranges for training, validation, and testing
@@ -119,7 +119,7 @@ def main():
         # Loss function and optimizer
         loss_func="RMSESum",
         opt="Adam",
-        opt_param={"lr": 0.001},
+        opt_param={"lr": 0.0005},
         lr_scheduler={"lr_factor": 0.95},
         early_stopping=True,
         patience=5,

@@ -68,7 +68,8 @@ def read_pred(model, gage_id, t_range):
 
 if __name__ == "__main__":
     gage_id = "12025000"
-    time_period = ["2012-01-01", "2012-03-31"]
+    time_period = ["2013-01-01", "2013-03-31"]
+
     tp = read_tp(gage_id, time_period)
     obs = read_obs("xaj", gage_id, time_period)
     xaj_pred = read_pred("xaj", gage_id, time_period)

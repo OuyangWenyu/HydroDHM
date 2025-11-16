@@ -20,6 +20,10 @@ This repository contains code for the paper "A Differentiable, Physics-Based Hyd
 - Comprehensive evaluation metrics and publication-quality visualizations
 - Built on [hydromodel](https://github.com/OuyangWenyu/hydromodel) and [torchhydro](https://github.com/OuyangWenyu/torchhydro)
 
+## Reproducing Experiments
+
+Please follow the following first 3 steps before reproducing the experiments in the paper. For detailed instructions, please refer to the [Paper Reproduction Guide](hydrodhm/paper-reproduction.md).
+
 ## Quick Start
 
 ### 1. Installation
