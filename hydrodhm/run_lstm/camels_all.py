@@ -109,7 +109,7 @@ def main():
         # Data components
         dataset="StreamflowDataset",
         # sampler="KuaiSampler",
-        scaler="StandardScaler",
+        scaler="DapengScaler",
         # Model loading configuration for evaluation
         model_loader={"load_way": "best"},
         # Date ranges for training, validation, and testing
