@@ -73,3 +73,14 @@ uv run hydrodhm/run_lstm/camels_all.py
 ```
 
 The results will be saved in the directory `results/lstm_results/camels_all`.
+
+## Visualization
+
+```bash
+
+python hydrodhm/plt/12025000.py
+
+or
+
+uv run hydrodhm/plt/12025000.py
+```
