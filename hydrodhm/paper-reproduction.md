@@ -62,6 +62,17 @@ uv run hydrodhm/run_dplnnxaj/12025000.py
 
 The results will be saved in the directory `results/dplnnxaj_results/12025000`.
 
+## Single Basin HBV
+
+```bash
+
+python hydrodhm/run_dplhbv/12025000.py
+
+or
+
+uv run hydrodhm/run_dplhbv/12025000.py
+```
+
 ## Multi-Basin LSTM
 
 ```bash
